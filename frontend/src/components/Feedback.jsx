@@ -1,0 +1,26 @@
+import { CircleAlert, Sprout } from "lucide-react";
+import { Link } from "react-router-dom";
+
+export function Loading() {
+  return <div className="loading-state"><span className="loader" /><span>Growing your page…</span></div>;
+}
+
+export function Notice({ title, text }) {
+  return <section className="empty-state"><CircleAlert size={25} /><h2>{title}</h2><p>{text}</p><Link className="button button-outline" to="/">Back to store</Link></section>;
+}
+
+export function DataTable({ loading, empty, children }) {
+  if (loading) return <div className="table-shell"><Loading /></div>;
+  function hasRows(node) {
+    if (Array.isArray(node)) return node.some(hasRows);
+    if (!node || typeof node !== "object") return false;
+    if (node.type === "tbody") return Array.isArray(node.props.children) ? node.props.children.length > 0 : Boolean(node.props.children);
+    if (node.type === "article") return true;
+    return hasRows(node.props.children);
+  }
+  return <div className="table-shell">{children}{!hasRows(children) && <p className="table-empty">{empty}</p>}</div>;
+}
+
+export function NotFound() {
+  return <main className="page"><section className="empty-state"><Sprout size={26} /><h1>This page took a different path.</h1><Link className="button" to="/">Return to the nursery</Link></section></main>;
+}

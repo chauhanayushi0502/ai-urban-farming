@@ -1,0 +1,6 @@
+import { Heart, Sprout, Truck } from "lucide-react";
+import { Link } from "react-router-dom";
+
+export default function AboutPage() {
+  return <main className="page story-page"><p className="eyebrow">Our story</p><h1>Good plants.<br /><em>Good growing.</em></h1><p className="story-lede">We make it easier to bring nature closer to home, with healthy indoor and outdoor plants, useful growing essentials, and care advice that meets you where you are.</p><div className="story-image" role="img" aria-label="A nursery full of tropical green plants" /><div className="story-values"><article><Sprout /><h2>Thoughtfully grown</h2><p>Plants chosen and cared for with their next home in mind.</p></article><article><Heart /><h2>Here to help</h2><p>From the first leaf to your growing collection, useful guidance is part of the experience.</p></article><article><Truck /><h2>Ready for your home</h2><p>Nursery-packed plants and essentials, ready for a new corner of green.</p></article></div><Link to="/shop" className="button">Explore the collection</Link></main>;
+}

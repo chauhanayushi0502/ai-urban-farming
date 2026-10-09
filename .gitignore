@@ -1,0 +1,12 @@
+# Local and generated files
+.env
+*.log
+.DS_Store
+OPENAI_API_KEY
+GEMINI_API_KEY
+node_modules/
+frontend/dist/
+.env.*.local
+
+# Temporary editor files
+.vscode/
