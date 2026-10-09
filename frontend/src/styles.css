@@ -579,10 +579,61 @@ button:focus-visible, a:focus-visible, input:focus-visible, textarea:focus-visib
 .modal-close:hover { background: #f0f2ea; color: var(--ink); }
 
 /* Diagnosis Modal Content */
-.diagnosis-form { display: grid; gap: 16px; }
-.drag-drop-zone { border: 2px dashed #b8c7b0; background: #f9fbf8; border-radius: 8px; padding: 26px; text-align: center; cursor: pointer; transition: all .2s ease; display: flex; flex-direction: column; align-items: center; gap: 8px; }
+.drag-drop-zone { border: 2px dashed #b8c7b0; background: #f9fbf8; border-radius: 8px; padding: 24px; text-align: center; cursor: pointer; transition: all .2s ease; display: flex; flex-direction: column; align-items: center; gap: 8px; position: relative; }
 .drag-drop-zone:hover { border-color: var(--green); background: #f1f6ef; }
+.drag-drop-zone.active-drag { border-color: var(--green); background: #e8f5e3; box-shadow: 0 0 0 4px rgba(47, 179, 68, 0.15); }
+.drag-drop-zone.has-error { border-color: #d9534f; background: #fdf5f5; }
 .drag-drop-zone img { max-height: 180px; border-radius: 6px; object-fit: contain; }
+.dropzone-error-msg {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  color: #c9302c;
+  font-size: 12px;
+  font-weight: 600;
+  margin-top: 6px;
+  background: #fff0f0;
+  border: 1px solid #fed2d2;
+  border-radius: 6px;
+  padding: 8px 12px;
+  animation: shake-error 0.3s ease-in-out;
+}
+@keyframes shake-error {
+  0%, 100% { transform: translateX(0); }
+  25% { transform: translateX(-4px); }
+  75% { transform: translateX(4px); }
+}
+.dropzone-file-pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  background: white;
+  border: 1px solid #c9dec2;
+  border-radius: 20px;
+  padding: 4px 12px;
+  font-size: 12px;
+  color: var(--green-deep);
+  font-weight: 600;
+  box-shadow: 0 1px 4px rgba(0,0,0,0.05);
+}
+.dropzone-remove-btn {
+  background: #fee2e2;
+  color: #b91c1c;
+  border: none;
+  border-radius: 50%;
+  width: 18px;
+  height: 18px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  font-size: 11px;
+  padding: 0;
+  transition: background .15s ease;
+}
+.dropzone-remove-btn:hover {
+  background: #fca5a5;
+}
 /* Diagnosis Results Display */
 .diagnosis-box { margin-top: 20px; border: 1px solid #d4decb; border-radius: 8px; overflow: hidden; background: white; }
 .diagnosis-banner { padding: 18px 22px; display: flex; justify-content: space-between; align-items: center; gap: 12px; }
@@ -696,14 +747,184 @@ button:focus-visible, a:focus-visible, input:focus-visible, textarea:focus-visib
 .nursery-prod-buy-btn { background: var(--green); color: white; border: none; padding: 6px 12px; border-radius: 4px; font-size: 12px; font-weight: 700; cursor: pointer; display: inline-flex; align-items: center; gap: 5px; transition: background .15s ease; }
 .nursery-prod-buy-btn:hover { background: var(--green-deep); }
 
+/* Dedicated Garden Live Weather & Microclimate Banner */
+.garden-weather-banner {
+  background: linear-gradient(135deg, #f3f8f1 0%, #eaf4e6 100%);
+  border: 1px solid #c9dec2;
+  border-radius: 12px;
+  padding: 16px 20px;
+  margin-bottom: 24px;
+  box-shadow: 0 2px 10px rgba(34, 60, 30, 0.04);
+}
+.garden-weather-top {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 12px;
+  margin-bottom: 14px;
+  padding-bottom: 12px;
+  border-bottom: 1px solid rgba(170, 198, 162, 0.4);
+}
+.garden-weather-loc-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+}
+.live-gps-dot {
+  width: 8px;
+  height: 8px;
+  background-color: #2fb344;
+  border-radius: 50%;
+  display: inline-block;
+  box-shadow: 0 0 0 rgba(47, 179, 68, 0.4);
+  animation: pulse-dot 1.8s infinite;
+}
+@keyframes pulse-dot {
+  0% { box-shadow: 0 0 0 0 rgba(47, 179, 68, 0.7); }
+  70% { box-shadow: 0 0 0 6px rgba(47, 179, 68, 0); }
+  100% { box-shadow: 0 0 0 0 rgba(47, 179, 68, 0); }
+}
+.garden-weather-city-title {
+  font-size: 16px;
+  font-weight: 700;
+  color: var(--green-deep);
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+.garden-weather-controls {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  position: relative;
+}
+.weather-search-dropdown-wrap {
+  position: relative;
+}
+.weather-search-input-box {
+  display: flex;
+  align-items: center;
+  background: white;
+  border: 1px solid #c5d8be;
+  border-radius: 6px;
+  padding: 4px 10px;
+  gap: 6px;
+  box-shadow: 0 1px 4px rgba(0,0,0,0.04);
+}
+.weather-search-input-box input {
+  border: none;
+  outline: none;
+  font-size: 13px;
+  background: transparent;
+  width: 170px;
+  color: var(--green-deep);
+}
+.weather-suggestions-menu {
+  position: absolute;
+  top: calc(100% + 4px);
+  right: 0;
+  width: 260px;
+  background: white;
+  border: 1px solid #c8d9c2;
+  border-radius: 8px;
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.12);
+  z-index: 50;
+  max-height: 220px;
+  overflow-y: auto;
+  padding: 4px 0;
+}
+.weather-suggestion-item {
+  width: 100%;
+  text-align: left;
+  background: none;
+  border: none;
+  padding: 8px 12px;
+  font-size: 12px;
+  color: #2d3e2a;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  border-bottom: 1px solid #f0f4ee;
+  transition: background .12s ease;
+}
+.weather-suggestion-item:last-child {
+  border-bottom: none;
+}
+.weather-suggestion-item:hover {
+  background: #eef6eb;
+  color: var(--green-deep);
+  font-weight: 600;
+}
+
+.garden-weather-stats-row {
+  display: grid;
+  grid-template-columns: repeat(5, 1fr);
+  gap: 10px;
+  margin-bottom: 12px;
+}
+.garden-weather-stat-card {
+  background: white;
+  border: 1px solid #d5e5cf;
+  border-radius: 8px;
+  padding: 10px 12px;
+  text-align: center;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+}
+.garden-weather-stat-card .w-label {
+  font-size: 11px;
+  color: var(--muted);
+  text-transform: uppercase;
+  font-weight: 600;
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  margin-bottom: 4px;
+}
+.garden-weather-stat-card .w-val {
+  font-size: 16px;
+  font-weight: 800;
+  color: var(--green-deep);
+}
+.garden-weather-stat-card .w-sub {
+  font-size: 10px;
+  color: #72826c;
+  margin-top: 2px;
+}
+
+.garden-weather-advice-box {
+  background: rgba(255, 255, 255, 0.8);
+  border-left: 4px solid var(--green);
+  border-radius: 0 8px 8px 0;
+  padding: 10px 14px;
+  font-size: 12px;
+  color: #273824;
+  line-height: 1.5;
+  display: flex;
+  align-items: flex-start;
+  gap: 8px;
+}
+.garden-weather-advice-box strong {
+  color: var(--green-deep);
+}
+
 @media (max-width: 1100px) {
   .nursery-prod-grid { grid-template-columns: repeat(3, 1fr); }
+  .garden-weather-stats-row { grid-template-columns: repeat(3, 1fr); }
 }
 @media (max-width: 768px) {
   .nursery-prod-grid { grid-template-columns: repeat(2, 1fr); }
   .doctor-weather-grid { grid-template-columns: repeat(2, 1fr); }
+  .garden-weather-stats-row { grid-template-columns: repeat(2, 1fr); }
+  .garden-weather-top { flex-direction: column; align-items: flex-start; }
+  .garden-weather-controls { width: 100%; flex-wrap: wrap; }
 }
 @media (max-width: 480px) {
   .nursery-prod-grid { grid-template-columns: 1fr; }
+  .garden-weather-stats-row { grid-template-columns: 1fr; }
 }
 

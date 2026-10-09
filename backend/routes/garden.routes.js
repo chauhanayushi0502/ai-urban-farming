@@ -12,6 +12,7 @@ import {
   askPlantDoctor,
   getDemoData,
   getLiveWeather,
+  searchLocations,
 } from "../controllers/garden.controller.js";
 import { authenticate, optionalAuthenticate } from "../auth/auth.middleware.js";
 import { plantPhotoUpload } from "../middleware/uploads.js";
@@ -24,6 +25,12 @@ router.get("/weather", async (req, res) => {
   const location = req.query.location || "";
   const weather = await getLiveWeather(lat, lon, location);
   res.json(weather);
+});
+
+router.get("/weather/locations", async (req, res) => {
+  const query = req.query.q || "";
+  const results = await searchLocations(query);
+  res.json(results);
 });
 router.get("/demo-data", getDemoData);
 

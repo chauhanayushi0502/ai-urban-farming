@@ -32,20 +32,71 @@ function normalizeSpeciesKey(species = "") {
   return "other";
 }
 
+// Reverse geocode GPS coordinates to city / locality name
+async function reverseGeocode(lat, lon) {
+  try {
+    const url = `https://api.bigdatacloud.net/data/reverse-geocode-client?latitude=${lat}&longitude=${lon}&localityLanguage=en`;
+    const res = await fetch(url, { signal: AbortSignal.timeout(3500) });
+    if (!res.ok) return "";
+    const data = await res.json();
+    const city = data.city || data.locality || "";
+    const state = data.principalSubdivision || "";
+    const country = data.countryName || "";
+    if (city && state && city !== state) return `${city}, ${state}`;
+    if (city && country) return `${city}, ${country}`;
+    if (state && country) return `${state}, ${country}`;
+    return city || state || country || "";
+  } catch {
+    return "";
+  }
+}
+
+// Search locations / cities globally using Open-Meteo Geocoding
+export async function searchLocations(query) {
+  if (!query || query.trim().length < 2) return [];
+  try {
+    const url = `https://geocoding-api.open-meteo.com/v1/search?name=${encodeURIComponent(query.trim())}&count=6&language=en&format=json`;
+    const res = await fetch(url, { signal: AbortSignal.timeout(4000) });
+    if (!res.ok) return [];
+    const data = await res.json();
+    if (!data.results) return [];
+    return data.results.map((item) => {
+      const parts = [item.name, item.admin1, item.country].filter(Boolean);
+      return {
+        id: item.id,
+        name: item.name,
+        state: item.admin1 || "",
+        country: item.country || "",
+        latitude: item.latitude,
+        longitude: item.longitude,
+        label: parts.join(", "),
+      };
+    });
+  } catch (err) {
+    return [];
+  }
+}
+
 // Fetch live weather data from Open-Meteo with automatic GPS/location coordinates
 export async function getLiveWeather(lat = 23.0225, lon = 72.5714, locationLabel = "") {
   try {
     const url = `https://api.open-meteo.com/v1/forecast?latitude=${lat}&longitude=${lon}&current=temperature_2m,relative_humidity_2m,precipitation,weather_code,wind_speed_10m&daily=temperature_2m_max,temperature_2m_min,precipitation_sum&timezone=auto&forecast_days=3`;
-    const response = await fetch(url, { signal: AbortSignal.timeout(6000) });
-    if (!response.ok) throw new Error("Weather service status " + response.status);
-    const data = await response.json();
+    const [weatherRes, detectedPlace] = await Promise.all([
+      fetch(url, { signal: AbortSignal.timeout(6000) }),
+      locationLabel ? Promise.resolve(locationLabel) : reverseGeocode(lat, lon),
+    ]);
+
+    if (!weatherRes.ok) throw new Error("Weather service status " + weatherRes.status);
+    const data = await weatherRes.json();
     const current = data.current || {};
     const daily = data.daily || {};
     const temp = current.temperature_2m ?? 28;
     const humidity = current.relative_humidity_2m ?? 55;
     const precipitation = current.precipitation ?? 0;
+    const windSpeed = current.wind_speed_10m ?? 0;
     const rainToday = (daily.precipitation_sum && daily.precipitation_sum[0]) ?? precipitation;
     const maxTemp = (daily.temperature_2m_max && daily.temperature_2m_max[0]) ?? temp;
+    const minTemp = (daily.temperature_2m_min && daily.temperature_2m_min[0]) ?? (temp - 5);
 
     // Determine gardening conditions & alerts
     let condition = "Sunny / Pleasant";
@@ -75,12 +126,15 @@ export async function getLiveWeather(lat = 23.0225, lon = 72.5714, locationLabel
     }
 
     const tzCity = data.timezone ? data.timezone.replace("_", " ").split("/").pop() : "";
-    const resolvedCity = locationLabel || (tzCity ? `${tzCity} (Auto-Detected GPS)` : `${lat.toFixed(2)}°N, ${lon.toFixed(2)}°E (Auto-Detected)`);
+    const resolvedCity = locationLabel || detectedPlace || (tzCity ? `${tzCity} (Live Location)` : `${lat.toFixed(2)}°N, ${lon.toFixed(2)}°E`);
 
     return {
       temperature: Math.round(temp),
+      maxTemperature: Math.round(maxTemp),
+      minTemperature: Math.round(minTemp),
       humidity: Math.round(humidity),
       precipitation: rainToday,
+      windSpeed: Math.round(windSpeed),
       condition,
       wateringFactor,
       tip,
@@ -94,14 +148,17 @@ export async function getLiveWeather(lat = 23.0225, lon = 72.5714, locationLabel
     // Fallback if offline
     return {
       temperature: 28,
+      maxTemperature: 32,
+      minTemperature: 22,
       humidity: 58,
       precipitation: 0,
+      windSpeed: 8,
       condition: "Temperate Garden Weather",
       wateringFactor: 1.0,
       tip: "Check soil moisture before watering. Water at root level in early morning.",
       rainAlert: false,
       fungalRisk: false,
-      city: locationLabel || "Auto-Detected Local Climate",
+      city: locationLabel || "Live Local Climate",
       latitude: lat,
       longitude: lon,
     };
