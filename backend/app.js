@@ -13,6 +13,7 @@ app.use(express.json({ limit: "1mb" }));
 app.use(cookieParser());
 app.use("/assets", express.static(assetDirectory, { maxAge: "1d" }));
 app.use("/api", apiRoutes);
+app.get("/", (_req, res) => res.json({ status: "online", message: "Green Leaf Plant Nursery API Server is running", endpoints: "/api" }));
 app.get("/api/*", (_req, res) => res.status(404).json({ message: "API route not found." }));
 app.use(errorHandler);
 
