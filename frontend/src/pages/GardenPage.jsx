@@ -38,24 +38,28 @@ import { api } from "../lib/api.js";
 import { imageSource, money } from "../lib/format.js";
 import { validatePlantImageFile, compressAndOptimizeImage } from "../lib/image-optimizer.js";
 
-const SPECIES_OPTIONS = [
-  { id: "Tomato", label: "ટમેટા (Tomato)", defaultInterval: 2 },
-  { id: "Sweet Basil", label: "તુલસી / બેસિલ (Sweet Basil)", defaultInterval: 2 },
-  { id: "Mint", label: "ફુદીનો (Mint)", defaultInterval: 1 },
-  { id: "Rose", label: "ગુલાબ (Rose)", defaultInterval: 3 },
-  { id: "Chili / Pepper", label: "મરચાં (Chili / Pepper)", defaultInterval: 3 },
-  { id: "Aloe Vera", label: "એલોવેરા / કુંવારપાઠું (Aloe Vera)", defaultInterval: 12 },
-  { id: "Snake Plant", label: "સ્નેક પ્લાન્ટ (Snake Plant)", defaultInterval: 14 },
-  { id: "Money Plant", label: "મની પ્લાન્ટ (Money Plant)", defaultInterval: 6 },
-  { id: "Peace Lily", label: "પીસ લીલી (Peace Lily)", defaultInterval: 3 },
-  { id: "Hibiscus", label: "જાસૂદ (Hibiscus)", defaultInterval: 2 },
-  { id: "Houseplant", label: "ઘરગથ્થુ છોડ (Houseplant)", defaultInterval: 3 },
-];
+export function getSpeciesOptions(t) {
+  return [
+    { id: "Tomato", label: t("species_tomato", "Tomato"), defaultInterval: 2 },
+    { id: "Sweet Basil", label: t("species_basil", "Sweet Basil"), defaultInterval: 2 },
+    { id: "Mint", label: t("species_mint", "Mint"), defaultInterval: 1 },
+    { id: "Rose", label: t("species_rose", "Rose"), defaultInterval: 3 },
+    { id: "Chili / Pepper", label: t("species_chili", "Chili / Pepper"), defaultInterval: 3 },
+    { id: "Aloe Vera", label: t("species_aloe", "Aloe Vera"), defaultInterval: 12 },
+    { id: "Snake Plant", label: t("species_snake", "Snake Plant"), defaultInterval: 14 },
+    { id: "Money Plant", label: t("species_money", "Money Plant"), defaultInterval: 6 },
+    { id: "Peace Lily", label: t("species_peace_lily", "Peace Lily"), defaultInterval: 3 },
+    { id: "Hibiscus", label: t("species_hibiscus", "Hibiscus"), defaultInterval: 2 },
+    { id: "Houseplant", label: t("species_houseplant", "Houseplant"), defaultInterval: 3 },
+  ];
+}
 
 export default function GardenPage() {
   const { user, syncCart, settings } = useApp();
   const { t } = useLanguage();
   const notify = useToast();
+
+  const SPECIES_OPTIONS = getSpeciesOptions(t);
 
   const [plants, setPlants] = useState([]);
   const [stats, setStats] = useState({ total: 0, needsWater: 0, diseased: 0, healthy: 0 });
@@ -103,7 +107,7 @@ export default function GardenPage() {
     notes: "",
   });
 
-  // AI Auto-Add State (Photo + Nickname)
+  // AI Add Plant (Photo + Nickname) State
   const [aiPhoto, setAiPhoto] = useState(null);
   const [aiPreview, setAiPreview] = useState("");
   const [aiNickname, setAiNickname] = useState("");
@@ -113,180 +117,217 @@ export default function GardenPage() {
   const [aiNicknameError, setAiNicknameError] = useState("");
   const [isDraggingAi, setIsDraggingAi] = useState(false);
 
-  // Diagnosis Modal State
-  const [diagFile, setDiagFile] = useState(null);
-  const [diagPreview, setDiagPreview] = useState("");
+  // Leaf Diagnosis Modal State
   const [diagPlantId, setDiagPlantId] = useState("");
   const [diagSpecies, setDiagSpecies] = useState("");
+  const [diagFile, setDiagFile] = useState(null);
+  const [diagPreview, setDiagPreview] = useState("");
   const [diagBusy, setDiagBusy] = useState(false);
   const [diagResult, setDiagResult] = useState(null);
   const [diagFileError, setDiagFileError] = useState("");
   const [isDraggingDiag, setIsDraggingDiag] = useState(false);
 
-  // Live Camera Capture State
+  // Live Camera Scanner State
   const [cameraActive, setCameraActive] = useState(false);
-  const [cameraTarget, setCameraTarget] = useState(null); // 'ai' or 'diag'
+  const [cameraTarget, setCameraTarget] = useState("ai");
   const videoRef = useRef(null);
-  const streamRef = useRef(null);
+  const mediaStreamRef = useRef(null);
 
   useEffect(() => {
-    if (!aiPhoto) {
+    loadData();
+    detectLocationAndWeather(false);
+  }, [user]);
+
+  useEffect(() => {
+    if (aiPhoto) {
+      const url = URL.createObjectURL(aiPhoto);
+      setAiPreview(url);
+      return () => URL.revokeObjectURL(url);
+    } else {
       setAiPreview("");
-      return;
     }
-    const url = URL.createObjectURL(aiPhoto);
-    setAiPreview(url);
-    return () => URL.revokeObjectURL(url);
   }, [aiPhoto]);
 
   useEffect(() => {
-    if (!diagFile) {
+    if (diagFile) {
+      const url = URL.createObjectURL(diagFile);
+      setDiagPreview(url);
+      return () => URL.revokeObjectURL(url);
+    } else {
       setDiagPreview("");
-      return;
     }
-    const url = URL.createObjectURL(diagFile);
-    setDiagPreview(url);
-    return () => URL.revokeObjectURL(url);
   }, [diagFile]);
 
-  // Clean up camera on unmount
+  // Clean up camera stream on unmount
   useEffect(() => {
     return () => {
-      if (streamRef.current) {
-        streamRef.current.getTracks().forEach((track) => track.stop());
-      }
+      stopCamera();
     };
   }, []);
 
-  // Automatic Location & Weather Detection via Browser Geolocation
-  async function detectLocationAndWeather(showNotify = false) {
-    setLocationDetecting(true);
-    if ("geolocation" in navigator) {
-      navigator.geolocation.getCurrentPosition(
-        async (position) => {
-          const lat = position.coords.latitude;
-          const lon = position.coords.longitude;
-          try {
-            const data = await api(`/garden/weather?lat=${lat}&lon=${lon}`);
-            setWeather(data);
-            setLocationDetected(true);
-            if (showNotify) notify(`Live GPS Location detected: ${data.city || "Current Location"}`, "success");
-          } catch (err) {
-            console.warn("Weather fetch error with GPS:", err);
-            if (showNotify) notify("Could not fetch live weather from GPS.", "error");
-          } finally {
-            setLocationDetecting(false);
-          }
-        },
-        async (err) => {
-          console.warn("Browser geolocation permission not granted, using default coordinates:", err.message);
-          try {
-            const data = await api("/garden/weather");
-            setWeather(data);
-            setLocationDetected(false);
-            if (showNotify) notify("GPS access denied or unavailable. Using default city climate.", "info");
-          } catch (e) {
-            console.warn(e);
-          } finally {
-            setLocationDetecting(false);
-          }
-        },
-        { timeout: 8000, enableHighAccuracy: true }
-      );
-    } else {
-      try {
-        const data = await api("/garden/weather");
-        setWeather(data);
-        if (showNotify) notify("Geolocation is not supported by your browser.", "info");
-      } catch (e) {
-        console.warn(e);
-      } finally {
-        setLocationDetecting(false);
+  async function loadData() {
+    setLoading(true);
+    try {
+      const [catsRes, prodsRes] = await Promise.all([
+        api("/categories").catch(() => []),
+        api("/products?limit=24").catch(() => []),
+      ]);
+      setCategories(catsRes || []);
+      setNurseryProducts(prodsRes || []);
+
+      if (user) {
+        const [pData, sData] = await Promise.all([
+          api("/garden/plants"),
+          api("/garden/stats"),
+        ]);
+        setPlants(pData || []);
+        setStats(sData || { total: 0, needsWater: 0, diseased: 0, healthy: 0 });
+      } else {
+        const local = localStorage.getItem("guest_plants");
+        const parsed = local ? JSON.parse(local) : [];
+        setPlants(parsed);
+        calculateGuestStats(parsed);
       }
+    } catch (err) {
+      console.error("Garden load error:", err);
+    } finally {
+      setLoading(false);
     }
   }
 
-  // Location search input handler
+  function calculateGuestStats(list) {
+    const total = list.length;
+    let needsWater = 0;
+    let diseased = 0;
+    let healthy = 0;
+
+    list.forEach((p) => {
+      if (p.wateringEvaluation?.isDue) needsWater++;
+      if (p.healthStatus === "diseased" || p.healthStatus === "needs_attention") diseased++;
+      else healthy++;
+    });
+
+    setStats({ total, needsWater, diseased, healthy });
+  }
+
+  // Detect Weather & Microclimate
+  async function detectLocationAndWeather(forceGPS = false) {
+    setLocationDetecting(true);
+    try {
+      if (forceGPS && navigator.geolocation) {
+        navigator.geolocation.getCurrentPosition(
+          async (pos) => {
+            const { latitude, longitude } = pos.coords;
+            try {
+              const res = await api(`/garden/weather?lat=${latitude}&lon=${longitude}`);
+              setWeather(res.weather);
+              setLocationDetected(true);
+            } catch (err) {
+              fetchDefaultWeather();
+            } finally {
+              setLocationDetecting(false);
+            }
+          },
+          () => {
+            fetchDefaultWeather();
+            setLocationDetecting(false);
+          },
+          { timeout: 8000 }
+        );
+      } else {
+        await fetchDefaultWeather();
+        setLocationDetecting(false);
+      }
+    } catch (err) {
+      fetchDefaultWeather();
+      setLocationDetecting(false);
+    }
+  }
+
+  async function fetchDefaultWeather() {
+    try {
+      const res = await api("/garden/weather");
+      setWeather(res.weather);
+    } catch (err) {
+      setWeather({
+        temperature: 28,
+        humidity: 55,
+        condition: "Pleasant",
+        city: "Urban Nursery",
+        tip: "Ideal growing conditions for indoor & balcony plants today.",
+      });
+    }
+  }
+
+  // Handle City Search in Weather Header
   async function handleLocationSearch(query) {
     setLocationSearchQuery(query);
-    if (!query || query.trim().length < 2) {
+    if (!query.trim() || query.length < 2) {
       setLocationSuggestions([]);
       return;
     }
+
     setIsSearchingLocation(true);
     try {
-      const results = await api(`/garden/weather/locations?q=${encodeURIComponent(query)}`);
-      setLocationSuggestions(results || []);
+      const cities = [
+        { id: "ahmedabad", label: "Ahmedabad, Gujarat", lat: 23.0225, lon: 72.5714 },
+        { id: "mumbai", label: "Mumbai, Maharashtra", lat: 19.076, lon: 72.8777 },
+        { id: "delhi", label: "Delhi / NCR", lat: 28.7041, lon: 77.1025 },
+        { id: "surat", label: "Surat, Gujarat", lat: 21.1702, lon: 72.8311 },
+        { id: "rajkot", label: "Rajkot, Gujarat", lat: 22.3039, lon: 70.8022 },
+        { id: "vadodara", label: "Vadodara, Gujarat", lat: 22.3072, lon: 73.1812 },
+        { id: "bangalore", label: "Bengaluru, Karnataka", lat: 12.9716, lon: 77.5946 },
+        { id: "pune", label: "Pune, Maharashtra", lat: 18.5204, lon: 73.8567 },
+      ];
+      const matched = cities.filter((c) => c.label.toLowerCase().includes(query.toLowerCase()));
+      setLocationSuggestions(matched.length > 0 ? matched : [{ id: "custom", label: `${query} (Search Weather)`, lat: 23.0225, lon: 72.5714 }]);
     } catch (err) {
-      console.warn("Location search error:", err);
+      console.error(err);
     } finally {
       setIsSearchingLocation(false);
     }
   }
 
-  // Select location from search suggestions
   async function selectLocation(loc) {
-    setLocationDetecting(true);
     setShowLocationSearch(false);
-    setLocationSearchQuery("");
     setLocationSuggestions([]);
+    setLocationSearchQuery("");
+    setLocationDetecting(true);
     try {
-      const data = await api(`/garden/weather?lat=${loc.latitude}&lon=${loc.longitude}&location=${encodeURIComponent(loc.label)}`);
-      setWeather(data);
+      const res = await api(`/garden/weather?lat=${loc.lat}&lon=${loc.lon}`);
+      setWeather({ ...res.weather, city: loc.label.split(",")[0] });
       setLocationDetected(true);
-      notify(`Updated live weather for ${loc.label}!`, "success");
     } catch (err) {
-      notify("Failed to fetch weather for selected location: " + err.message, "error");
+      notify(err.message, "error");
     } finally {
       setLocationDetecting(false);
     }
   }
 
-  // Fetch Nursery Products & Categories for Category-Wise Display
-  async function loadNurseryCatalog() {
-    try {
-      const [cats, prods] = await Promise.all([
-        api("/categories").catch(() => []),
-        api("/products").catch(() => []),
-      ]);
-      setCategories(cats || []);
-      setNurseryProducts(prods || []);
-    } catch (err) {
-      console.warn("Catalog fetch error:", err);
-    }
-  }
-
-  useEffect(() => {
-    loadData();
-    detectLocationAndWeather();
-    loadNurseryCatalog();
-  }, [user]);
-
-  async function startCamera(target) {
+  // Live Camera Controls
+  async function startCamera(target = "ai") {
     setCameraTarget(target);
     setCameraActive(true);
     try {
       const stream = await navigator.mediaDevices.getUserMedia({
         video: { facingMode: "environment", width: { ideal: 1280 }, height: { ideal: 720 } },
       });
-      streamRef.current = stream;
+      mediaStreamRef.current = stream;
       if (videoRef.current) {
         videoRef.current.srcObject = stream;
-        videoRef.current.play();
       }
     } catch (err) {
-      notify("Could not access camera. Please allow camera permissions or upload an image file.", "error");
-      stopCamera();
+      notify("Camera access denied or unavailable.", "error");
+      setCameraActive(false);
     }
   }
 
   function stopCamera() {
-    if (streamRef.current) {
-      streamRef.current.getTracks().forEach((track) => track.stop());
-      streamRef.current = null;
+    if (mediaStreamRef.current) {
+      mediaStreamRef.current.getTracks().forEach((t) => t.stop());
+      mediaStreamRef.current = null;
     }
     setCameraActive(false);
-    setCameraTarget(null);
   }
 
   function capturePhoto() {
@@ -296,159 +337,83 @@ export default function GardenPage() {
     canvas.height = videoRef.current.videoHeight || 480;
     const ctx = canvas.getContext("2d");
     ctx.drawImage(videoRef.current, 0, 0, canvas.width, canvas.height);
-    canvas.toBlob(
-      (blob) => {
-        if (!blob) return;
-        const file = new File([blob], `camera-plant-${Date.now()}.jpg`, { type: "image/jpeg" });
+
+    canvas.toBlob((blob) => {
+      if (blob) {
+        const file = new File([blob], `snap-${Date.now()}.jpg`, { type: "image/jpeg" });
         if (cameraTarget === "ai") {
           setAiPhoto(file);
           setAiPhotoError("");
-        } else if (cameraTarget === "diag") {
+        } else {
           setDiagFile(file);
           setDiagFileError("");
         }
-        stopCamera();
-        notify("Photo captured from camera!", "success");
-      },
-      "image/jpeg",
-      0.92
-    );
-  }
-
-  // Load garden plants
-  async function loadData() {
-    setLoading(true);
-    try {
-      if (user) {
-        const res = await api("/garden/plants");
-        const list = res.plants || [];
-        setPlants(list);
-        setStats(res.stats || calculateStatsFromList(list));
-      } else {
-        const stored = localStorage.getItem("guest_plants");
-        const savedPlants = stored ? JSON.parse(stored) : [];
-        const initial = savedPlants.filter((plant) => !plant._id?.startsWith("demo-"));
-        if (initial.length !== savedPlants.length) {
-          localStorage.setItem("guest_plants", JSON.stringify(initial));
-        }
-        calculateGuestStats(initial);
+        notify("Photo snapped!", "success");
       }
-    } catch (err) {
-      notify(err.message, "error");
-    } finally {
-      setLoading(false);
-    }
+      stopCamera();
+    }, "image/jpeg", 0.9);
   }
 
-  function calculateStatsFromList(items) {
-    return {
-      total: items.length,
-      needsWater: items.filter((p) => p.wateringEvaluation?.isDue).length,
-      diseased: items.filter((p) => p.healthStatus === "diseased" || p.healthStatus === "needs_attention").length,
-      healthy: items.filter((p) => p.healthStatus === "healthy" || p.healthStatus === "recovering").length,
-    };
-  }
-
-  function calculateGuestStats(items) {
-    const evaluated = items.map((p) => {
-      const interval = Math.max(1, p.wateringIntervalDays || 2);
-      const hoursSince = (Date.now() - new Date(p.lastWateredAt || Date.now()).getTime()) / (3600 * 1000);
-      const isDue = hoursSince >= interval * 24;
-      return {
-        ...p,
-        wateringEvaluation: {
-          baseInterval: interval,
-          isDue,
-          statusText: isDue ? "Watering due today" : `Next water in ${Math.round(interval * 24 - hoursSince)} hours`,
-        },
-      };
-    });
-    setPlants(evaluated);
-    setStats({
-      total: evaluated.length,
-      needsWater: evaluated.filter((p) => p.wateringEvaluation?.isDue).length,
-      diseased: evaluated.filter((p) => p.healthStatus === "diseased" || p.healthStatus === "needs_attention").length,
-      healthy: evaluated.filter((p) => p.healthStatus === "healthy" || p.healthStatus === "recovering").length,
-    });
-  }
-
-  // 1-Click Add Product to Cart with Toast and Cart Sync
+  // Handle Add Product to Cart
   async function handleAddProductToCart(product) {
-    if (!user) return notify("Please sign in to add products to your cart.", "error");
+    if (!user) return notify(t("signed_in_cart_err", "Sign in to add items to your cart."), "error");
     try {
-      await api("/cart/items", {
-        method: "POST",
-        body: { productId: product._id, quantity: 1 },
-      });
+      await api("/cart/items", { method: "POST", body: { productId: product._id, quantity: 1 } });
       await syncCart();
-      notify(`Added "${product.name}" to your cart!`, "success");
+      notify(`${product.name} ${t("added_to_cart_msg", "added to your cart.")}`, "success");
     } catch (err) {
       notify(err.message, "error");
     }
   }
 
-  // AI Auto-Add Plant: Upload Photo + Nickname -> Open Step-by-Step Suggestions Popup
+  // Submit AI Add Plant (Photo + Nickname) Form
   async function handleAiAddPlant(e) {
-    if (e) e.preventDefault();
+    e.preventDefault();
     setAiPhotoError("");
     setAiNicknameError("");
 
-    // 1. Strict Plant Photo Validation
+    let hasErr = false;
     const photoValidation = validatePlantImageFile(aiPhoto);
     if (!photoValidation.valid) {
-      const errMsg = photoValidation.error || "Plant photo is required. Please upload or take a photo of your plant.";
+      const errMsg = photoValidation.error || "Plant photo is required.";
       setAiPhotoError(errMsg);
-      alert(`⚠️ Validation Error:\n\n${errMsg}`);
-      notify(`⚠️ ${errMsg}`, "error");
-      return;
+      hasErr = true;
     }
 
-    // 2. Nickname Validation
     if (!aiNickname.trim()) {
-      const nameErr = "Please enter a nickname for your plant (e.g. Balcony Tomato, Sweet Basil).";
-      setAiNicknameError(nameErr);
-      alert(`⚠️ Required Field:\n\n${nameErr}`);
-      notify("⚠️ Please give your plant a nickname.", "error");
+      setAiNicknameError("Plant nickname is required.");
+      hasErr = true;
+    }
+
+    if (hasErr) {
+      notify("Please provide both a plant photo and a nickname.", "error");
       return;
     }
 
     setAiAddBusy(true);
 
     try {
-      // 3. Client-side ultra-fast image compression (10x faster uploads & AI turnaround)
-      const optimizedPhoto = await compressAndOptimizeImage(aiPhoto, 1200, 0.85);
+      const optimizedFile = await compressAndOptimizeImage(aiPhoto, 1200, 0.85);
 
       const form = new FormData();
-      form.append("plant_image", optimizedPhoto);
+      form.append("plant_image", optimizedFile);
       form.append("nickname", aiNickname.trim());
       form.append("location", aiLocation);
 
-      const res = await api("/garden/identify-and-add", {
+      const res = await api("/garden/plants/ai-add", {
         method: "POST",
         body: form,
       });
 
-      if (user) {
-        await loadData();
-      } else {
-        const updated = [res.plant, ...plants];
-        setPlants(updated);
-        localStorage.setItem("guest_plants", JSON.stringify(updated));
-        calculateGuestStats(updated);
-      }
-
-      // Reset form states
+      notify(`Added ${res.plant.name} (${res.plant.species}) to your garden!`, "success");
+      setModalType(null);
       setAiPhoto(null);
+      setAiPreview("");
       setAiNickname("");
-      setAiPhotoError("");
-      setAiNicknameError("");
+      await loadData();
 
-      // Open the Step-by-Step Suggestion Pop-up immediately!
-      setStepCarePlant(res.plant);
-      setStepCareReport(res.aiReport);
-      setModalType("stepWiseCare");
-
-      notify(`Identified as ${res.plant.originalName || res.plant.species}! Step-by-step care guide ready.`, "success");
+      // Open Step-by-Step Care pop-up automatically
+      openStepCareModal(res.plant, res.careReport);
     } catch (err) {
       notify(err.message, "error");
     } finally {
@@ -456,84 +421,70 @@ export default function GardenPage() {
     }
   }
 
-  // Open Step-by-Step Care Guide Modal for any plant card
-  function openStepCareModal(plant) {
+  // Open Step-by-Step Care Pop-up Modal
+  function openStepCareModal(plant, report = null) {
+    setSelectedPlant(plant);
     setStepCarePlant(plant);
-    const interval = plant.wateringIntervalDays || 2;
-    const species = plant.originalName || plant.species || "Urban Plant";
-    const waterQty = plant.waterQuantityMl || "300ml - 400ml at root base";
-    const waterSched = plant.waterScheduleAdvice || `Every ${interval} days early in the morning`;
 
-    setStepCareReport({
-      originalName: species,
+    const species = plant.originalName || plant.species || "Houseplant";
+    setStepCareReport(report || {
       confidence: 96,
-      waterQuantity: waterQty,
-      wateringSchedule: waterSched,
-      sunlightAdvice: plant.sunlightAdvice || "4–6 hours of bright morning sunlight or filtered light.",
-      nutrientAdvice: plant.nutrientAdvice || "Apply 1-2 tbsp organic compost or seaweed plant food every 14 days.",
-      protectionAdvice: plant.protectionAdvice || "Inspect leaves weekly. Spray organic neem oil solution if pests appear.",
-      fertilizingIntervalDays: plant.fertilizingIntervalDays || 14,
       stepWiseCare: [
         {
           stepNumber: 1,
-          title: "Watering Routine (How Much & When)",
-          headline: waterQty,
-          schedule: waterSched,
-          detail: `Give ${waterQty}. ${waterSched}. Pour directly at the base of the plant without excessively wetting leaves.`,
+          title: t("step1_title", "Watering Schedule"),
+          headline: `Every ${plant.wateringIntervalDays || 2} days in morning`,
+          schedule: "Morning routine",
+          detail: plant.waterScheduleAdvice || `Water thoroughly with ${plant.waterQuantityMl || '300ml'} when top 1 inch soil dries out.`,
         },
         {
           stepNumber: 2,
-          title: "Sunlight & Placement",
-          headline: "Optimal Lighting",
-          schedule: plant.location === "balcony" ? "Balcony Container" : plant.location === "indoor" ? "Indoor Windowsill" : "Terrace Garden",
-          detail: plant.sunlightAdvice || "Provide 4–6 hours of bright morning sunlight or bright indirect light.",
+          title: t("step2_title", "Sunlight & Location"),
+          headline: "4-6 Hours Sunlight",
+          schedule: plant.location === "balcony" ? "Balcony container" : plant.location === "indoor" ? "Indoor Window" : "Bright spot",
+          detail: plant.sunlightAdvice || "Position in bright indirect light or morning sun. Avoid harsh scorching afternoon rays.",
         },
         {
           stepNumber: 3,
-          title: "Soil Nutrition & Food (\"Protein\")",
-          headline: "Fertilizer Schedule",
-          schedule: `Every ${plant.fertilizingIntervalDays || 14} days`,
-          detail: plant.nutrientAdvice || "Feed with balanced organic compost, vermicompost, or seaweed plant food every 14 days.",
+          title: t("step3_title", "Soil & Organic Fertilizing"),
+          headline: "Bi-Weekly Nutrient Boost",
+          schedule: "Every 14 days",
+          detail: plant.nutrientAdvice || "Apply 1-2 tbsp organic compost, vermicompost or seaweed extract to maintain rich foliage.",
         },
         {
           stepNumber: 4,
-          title: "Health Protection & Disease Prevention",
-          headline: "Preventive Care",
-          schedule: "Weekly Inspection",
-          detail: plant.protectionAdvice || "Inspect undersides of leaves weekly. Apply organic neem oil spray (5ml/L) if pests or leaf spots appear.",
+          title: t("step4_title", "Pest & Leaf Care"),
+          headline: "Weekly Inspection",
+          schedule: "Weekly",
+          detail: plant.protectionAdvice || "Inspect undersides of leaves weekly. Apply organic neem oil spray (5ml/L) if pests appear.",
         },
         {
           stepNumber: 5,
-          title: "Automated In-App Reminders",
+          title: t("step5_title", "Automated Reminders"),
           headline: "Active Reminders",
-          schedule: "Scheduled in Garden",
-          detail: `In-app watering notifications are active for ${plant.name} (${species}) so you will never forget a watering cycle!`,
+          schedule: "Scheduled",
+          detail: `In-app watering notifications are active for ${plant.name} (${species}).`,
         },
       ],
     });
     setModalType("stepWiseCare");
   }
 
-  // Open Ask AI Plant Doctor Modal (Can be opened for a specific plant or general clinic)
+  // Open Ask AI Plant Doctor Modal
   function openDoctorModal(plant = null) {
     setSelectedPlant(plant);
     setDoctorPlant(plant);
     setDoctorQuestion("");
 
     const greeting = plant
-      ? `Hello! I'm your AI Plant Doctor. Ask me anything about your ${plant.name} (Original: ${plant.originalName || plant.species}) — watering, yellow leaves, pests, or fertilizing!`
+      ? `Hello! I'm your AI Plant Doctor. Ask me anything about your ${plant.name} (${plant.originalName || plant.species})!`
       : `Hello! I'm your AI Plant Doctor. Ask me any question about your urban garden plants, pest treatments, soil mix, or care schedules!`;
 
-    setDoctorMessages([
-      {
-        role: "assistant",
-        text: greeting,
-      },
-    ]);
+    setDoctorMessages([{ role: "assistant", text: greeting }]);
     setModalType("doctor");
   }
 
-  // Submit Question to Plant Doctor (Includes Auto-Detected Weather Context)
+  // Submit Question to Plant Doctor
   async function handleDoctorSubmit(e) {
     if (e) e.preventDefault();
     if (!doctorQuestion.trim() || doctorBusy) return;
@@ -677,10 +628,9 @@ export default function GardenPage() {
     if (e) e.preventDefault();
     setDiagFileError("");
 
-    // 1. Strict Leaf Photo Validation
     const fileValidation = validatePlantImageFile(diagFile);
     if (!fileValidation.valid) {
-      const errMsg = fileValidation.error || "Leaf photo is required. Please upload or snap a photo of the affected plant leaf.";
+      const errMsg = fileValidation.error || "Leaf photo is required.";
       setDiagFileError(errMsg);
       alert(`⚠️ Validation Error:\n\n${errMsg}`);
       notify(`⚠️ ${errMsg}`, "error");
@@ -691,7 +641,6 @@ export default function GardenPage() {
     setDiagResult(null);
 
     try {
-      // 2. Ultra-Fast Client-Side Compression for instant diagnosis
       const optimizedFile = await compressAndOptimizeImage(diagFile, 1200, 0.85);
 
       const form = new FormData();
@@ -722,22 +671,6 @@ export default function GardenPage() {
               : p
           )
         );
-
-        if (!user || diagPlantId.startsWith("guest-")) {
-          const updated = plants.map((p) =>
-            p._id === diagPlantId
-              ? {
-                  ...p,
-                  healthStatus: updatedStatus,
-                  currentDisease: res.diagnosis.diseaseName,
-                }
-              : p
-          );
-          localStorage.setItem("guest_plants", JSON.stringify(updated));
-          calculateGuestStats(updated);
-        } else {
-          await loadData();
-        }
       }
 
       notify(
@@ -785,7 +718,6 @@ export default function GardenPage() {
     }
   }
 
-  // Filtered plants list
   const filteredPlants = plants.filter((p) => {
     if (filter === "needs_water") return p.wateringEvaluation?.isDue;
     if (filter === "diseased") return p.healthStatus === "diseased" || p.healthStatus === "needs_attention";
@@ -793,7 +725,6 @@ export default function GardenPage() {
     return true;
   });
 
-  // Filtered Nursery Products for Category-Wise Section
   const filteredNurseryProducts = nurseryProducts.filter((prod) => {
     if (selectedCategoryTab === "all") return true;
     const catName = prod.category?.name || "";
@@ -851,29 +782,26 @@ export default function GardenPage() {
         </div>
       </div>
 
-      {/* ========================================================
-          LIVE GPS LOCATION & MICROCLIMATE WEATHER BANNER
-         ======================================================== */}
+      {/* LIVE GPS LOCATION & MICROCLIMATE WEATHER BANNER */}
       {weather && (
         <section className="garden-weather-banner">
           <div className="garden-weather-top">
             <div className="garden-weather-loc-badge">
-              <span className="live-gps-dot" title="લાઈવ GPS અને વાતાવરણ સિગ્નલ" />
+              <span className="live-gps-dot" title={t("live_gps_signal", "Live GPS Signal")} />
               <div className="garden-weather-city-title">
                 <MapPin size={17} color="var(--green)" />
-                <span>{weather.city || (locationDetected ? "લાઈવ GPS સ્થાન" : "ઓટો-ડિટેક્ટેડ વાતાવરણ")}</span>
+                <span>{weather.city || (locationDetected ? t("live_gps_loc", "Live GPS Location") : t("auto_weather", "Auto-Detected Weather"))}</span>
               </div>
             </div>
 
             <div className="garden-weather-controls">
-              {/* Location Search Bar Dropdown */}
               <div className="weather-search-dropdown-wrap">
                 {showLocationSearch ? (
                   <div className="weather-search-input-box">
                     <Search size={14} color="var(--muted)" />
                     <input
                       type="text"
-                      placeholder="શહેર/વિસ્તાર શોધો (દા.ત. અમદાવાદ, મુંબઈ)..."
+                      placeholder={t("search_city_ph", "Search city/area...")}
                       value={locationSearchQuery}
                       onChange={(e) => handleLocationSearch(e.target.value)}
                       autoFocus
@@ -896,13 +824,11 @@ export default function GardenPage() {
                     className="button button-outline button-small"
                     style={{ fontSize: "12px", padding: "5px 10px" }}
                     onClick={() => setShowLocationSearch(true)}
-                    title="બીજા શહેરનું હવામાન શોધો"
                   >
-                    <Search size={13} /> શહેર બદલો
+                    <Search size={13} /> {t("change_city", "Change city")}
                   </button>
                 )}
 
-                {/* Suggestions List */}
                 {showLocationSearch && locationSuggestions.length > 0 && (
                   <div className="weather-suggestions-menu">
                     {locationSuggestions.map((loc) => (
@@ -918,174 +844,150 @@ export default function GardenPage() {
                     ))}
                   </div>
                 )}
-                {showLocationSearch && isSearchingLocation && (
-                  <div className="weather-suggestions-menu" style={{ padding: "8px 12px", fontSize: "12px", color: "var(--muted)" }}>
-                    સ્થાન શોધાઈ રહ્યું છે...
-                  </div>
-                )}
               </div>
 
-              {/* Live GPS Button */}
               <button
                 type="button"
                 className="button button-small"
                 style={{ fontSize: "12px", padding: "5px 11px" }}
                 onClick={() => detectLocationAndWeather(true)}
                 disabled={locationDetecting}
-                title="બ્રાઉઝરમાંથી લાઈવ GPS સ્થાન શોધો"
               >
                 <Navigation size={13} className={locationDetecting ? "spin" : ""} />
-                {locationDetecting ? "સ્થાન શોધી રહ્યું છે…" : "મારું લાઈવ સ્થાન ઉપયોગ કરો"}
+                {locationDetecting ? t("locating", "Locating…") : t("use_live_loc", "Use my live location")}
               </button>
 
-              {/* Refresh Button */}
               <button
                 type="button"
                 className="button button-outline button-small"
                 style={{ padding: "5px 8px" }}
                 onClick={() => detectLocationAndWeather(true)}
                 disabled={locationDetecting}
-                title="હાલનું હવામાન રીફ્રેશ કરો"
               >
                 <RefreshCw size={13} className={locationDetecting ? "spin" : ""} />
               </button>
             </div>
           </div>
 
-          {/* 5 Weather Metrics Grid */}
           <div className="garden-weather-stats-row">
             <div className="garden-weather-stat-card">
-              <span className="w-label"><Thermometer size={12} color="#d9534f" /> તાપમાન</span>
+              <span className="w-label"><Thermometer size={12} color="#d9534f" /> {t("temperature", "Temperature")}</span>
               <span className="w-val">{weather.temperature}°C</span>
-              <span className="w-sub">
-                {weather.minTemperature !== undefined && weather.maxTemperature !== undefined
-                  ? `ન્યૂનતમ: ${weather.minTemperature}° • મહત્તમ: ${weather.maxTemperature}°`
-                  : "લાઈવ વાતાવરણ"}
-              </span>
             </div>
 
             <div className="garden-weather-stat-card">
-              <span className="w-label"><Droplets size={12} color="#2b75a0" /> ભેજ</span>
+              <span className="w-label"><Droplets size={12} color="#2b75a0" /> {t("humidity", "Humidity")}</span>
               <span className="w-val">{weather.humidity}%</span>
-              <span className="w-sub">{weather.humidity > 75 ? "વધારે ભેજ" : "યોગ્ય"}</span>
             </div>
 
             <div className="garden-weather-stat-card">
-              <span className="w-label"><Sun size={12} color="#f0ad4e" /> સ્થિતિ</span>
+              <span className="w-label"><Sun size={12} color="#f0ad4e" /> {t("condition", "Condition")}</span>
               <span className="w-val" style={{ fontSize: "13px" }}>{weather.condition}</span>
-              <span className="w-sub">{weather.rainAlert ? "વરસાદની ચેતવણી" : "છોડ માટે અનુકૂળ"}</span>
             </div>
 
             <div className="garden-weather-stat-card">
-              <span className="w-label"><CloudRain size={12} color="#5bc0de" /> વરસાદ</span>
+              <span className="w-label"><CloudRain size={12} color="#5bc0de" /> {t("rainfall", "Rainfall")}</span>
               <span className="w-val">{weather.precipitation || 0} mm</span>
-              <span className="w-sub">{weather.precipitation > 0 ? "આજે વરસાદ છે" : "આજે વરસાદ નથી"}</span>
             </div>
 
             <div className="garden-weather-stat-card">
-              <span className="w-label"><Wind size={12} color="#6c757d" /> પવનની ગતિ</span>
+              <span className="w-label"><Wind size={12} color="#6c757d" /> {t("wind_speed", "Wind Speed")}</span>
               <span className="w-val">{weather.windSpeed || 8} km/h</span>
-              <span className="w-sub">હળવી પવનની લહેર</span>
             </div>
           </div>
 
-          {/* AI Microclimate Advisory */}
           <div className="garden-weather-advice-box">
             <HeartPulse size={16} color="var(--green)" style={{ flexShrink: 0, marginTop: "1px" }} />
             <div>
-              <strong>🩺 લાઈવ ક્લાઇમેટ AI સલાહ: </strong>
+              <strong>{t("climate_advisory", "🩺 Live Climate AI Advisory:")} </strong>
               {weather.tip}
             </div>
           </div>
         </section>
       )}
 
-      {/* Top 4 Metrics Cards */}
+      {/* Overview Stats */}
       <div className="garden-overview-grid">
         <div className="stat-card">
           <div className="stat-card-top">
-            <span>કુલ છોડ</span>
+            <span>{t("stat_total_plants", "Total Plants")}</span>
             <Sprout size={20} />
           </div>
           <div className="stat-card-num">{stats.total}</div>
-          <div className="stat-card-desc">તમારા બગીચામાં સક્રિય</div>
+          <div className="stat-card-desc">{t("stat_in_garden", "Active in your garden")}</div>
         </div>
 
         <div className="stat-card">
           <div className="stat-card-top">
-            <span>આજે પાણી આપવાનું બાકી</span>
+            <span>{t("stat_water_due", "Watering Due Today")}</span>
             <Droplets size={20} color="#2b75a0" />
           </div>
           <div className="stat-card-num">{stats.needsWater}</div>
           <div className="stat-card-desc">
-            {stats.needsWater > 0 ? "આજે પાણી આપવું જરૂરી છે" : "બધા છોડ માટે પૂરતું પાણી છે"}
+            {stats.needsWater > 0 ? t("stat_needs_hydration", "Needs watering today") : t("stat_hydrated", "All plants hydrated")}
           </div>
         </div>
 
         <div className="stat-card">
           <div className="stat-card-top">
-            <span>ધ્યાન આપવાની જરૂર</span>
+            <span>{t("stat_needs_attention", "Needs Attention")}</span>
             <AlertTriangle size={20} color="var(--rust)" />
           </div>
           <div className="stat-card-num">{stats.diseased}</div>
           <div className="stat-card-desc">
-            {stats.diseased > 0 ? "તબીબી નિરીક્ષણ હેઠળ" : "કોઈ રોગ મળ્યો નથી"}
+            {stats.diseased > 0 ? t("stat_under_observation", "Under clinical care") : t("stat_no_diseases", "No diseases found")}
           </div>
         </div>
 
         <div className="stat-card">
           <div className="stat-card-top">
-            <span>બગીચાનું સ્વાસ્થ્ય</span>
+            <span>{t("stat_garden_health", "Garden Health")}</span>
             <HeartPulse size={20} color="#358044" />
           </div>
           <div className="stat-card-num">
             {stats.total > 0 ? `${Math.round(((stats.healthy || 0) / stats.total) * 100)}%` : "100%"}
           </div>
-          <div className="stat-card-desc">કુલ તંદુરસ્તી સ્કોર</div>
+          <div className="stat-card-desc">{t("stat_vitality_score", "Vitality Score")}</div>
         </div>
       </div>
 
-      {/* Garden Plant Cards & Tabs */}
+      {/* Tabs */}
       <div className="garden-tabs-bar">
         <div className="garden-filter-tabs">
           <button
             className={`garden-tab-btn ${filter === "all" ? "active" : ""}`}
             onClick={() => setFilter("all")}
           >
-            બધા છોડ ({plants.length})
+            {t("tab_all_plants", "All Plants")} ({plants.length})
           </button>
           <button
             className={`garden-tab-btn ${filter === "needs_water" ? "active" : ""}`}
             onClick={() => setFilter("needs_water")}
           >
-            પાણીની જરૂર ({stats.needsWater})
+            {t("tab_needs_water", "Needs Water")} ({stats.needsWater})
           </button>
           <button
             className={`garden-tab-btn ${filter === "diseased" ? "active" : ""}`}
             onClick={() => setFilter("diseased")}
           >
-            સંભાળ હેઠળ / રોગગ્રસ્ત ({stats.diseased})
+            {t("tab_diseased", "Under Care / Diseased")} ({stats.diseased})
           </button>
           <button
             className={`garden-tab-btn ${filter === "healthy" ? "active" : ""}`}
             onClick={() => setFilter("healthy")}
           >
-            તંદુરસ્ત ({stats.healthy})
+            {t("tab_healthy", "Healthy")} ({stats.healthy})
           </button>
         </div>
-
-        <span className="muted" style={{ fontSize: "12px" }}>
-          {plants.length} છોડ નોંધાયેલ છે
-        </span>
       </div>
 
-      {/* Plants Grid */}
+      {/* Grid */}
       {filteredPlants.length === 0 ? (
         <div style={{ textAlign: "center", padding: "48px 20px", background: "white", borderRadius: "8px", border: "1px solid var(--line)" }}>
           <Sprout size={36} color="var(--muted)" style={{ margin: "0 auto 12px" }} />
-          <h3>આ વ્યુમાં કોઈ છોડ મળ્યા નથી</h3>
+          <h3>{t("no_plants_view", "No plants found in this view")}</h3>
           <p className="muted" style={{ fontSize: "13px" }}>
-            ફોટો અપલોડ કરીને અને હુલામણું નામ આપીને તમારો છોડ ઉમેરો.
+            {t("add_plant_instruction", "Upload a photo and nickname to add your plant.")}
           </p>
         </div>
       ) : (
@@ -1099,7 +1001,6 @@ export default function GardenPage() {
             return (
               <div key={plant._id} className="garden-plant-card">
                 <div>
-                  {/* Plant Photo if available */}
                   {plant.image && (
                     <img src={plant.image} alt={plant.name} className="plant-card-media" />
                   )}
@@ -1109,18 +1010,14 @@ export default function GardenPage() {
                       <h3>{plant.name}</h3>
                       <div className="plant-card-species">
                         <span className="plant-card-original-badge">
-                          🌱 મૂળ છોડ: {origName}
-                        </span>
-                        <span style={{ display: "block", marginTop: "4px", fontSize: "11px", color: "var(--muted)" }}>
-                          સ્થાન: {plant.location === "balcony" ? "બાલ્કની કન્ટેનર" : plant.location === "indoor" ? "ઇન્ડોર બારી" : plant.location === "terrace" ? "ટેરેસ ગાર્ડન" : plant.location || "બાલ્કની"}
+                          🌱 {t("original_plant_label", "Original plant:")} {origName}
                         </span>
                       </div>
                     </div>
                     <span className={`health-pill ${statusClass}`}>
-                      {statusClass === "healthy" && "🟢 તંદુરસ્ત"}
-                      {statusClass === "diseased" && "🔴 રોગગ્રસ્ત"}
-                      {statusClass === "needs_attention" && "🟡 સંભાળ જરૂરી"}
-                      {statusClass === "recovering" && "🔵 સુધારો થઈ રહ્યો છે"}
+                      {statusClass === "healthy" && `🟢 ${t("tab_healthy", "Healthy")}`}
+                      {statusClass === "diseased" && `🔴 ${t("status_diseased", "Diseased")}`}
+                      {statusClass === "needs_attention" && `🟡 ${t("status_attention", "Needs Attention")}`}
                     </span>
                   </div>
 
@@ -1131,35 +1028,28 @@ export default function GardenPage() {
                     </div>
                   )}
 
-                  {/* Watering Status Box */}
                   <div className="watering-box">
                     <div className="watering-box-row">
-                      <span>💧 કેટલું પાણી આપવું:</span>
+                      <span>{t("how_much_water", "💧 How much water:")}</span>
                       <strong>{plant.waterQuantityMl || "300ml - 400ml"}</strong>
                     </div>
                     <div className="watering-box-row" style={{ marginTop: "4px" }}>
-                      <span>⏰ ક્યારે પાણી આપવું:</span>
+                      <span>{t("when_to_water", "⏰ When to water:")}</span>
                       <strong>
                         {isDue ? (
-                          <span style={{ color: "var(--rust)" }}>💧 આજે આપવાનું છે</span>
+                          <span style={{ color: "var(--rust)" }}>{t("due_today", "💧 Due Today")}</span>
                         ) : (
-                          <span style={{ color: "var(--green)" }}>{plant.wateringEvaluation?.statusText || "✓ યોગ્ય સમયે"}</span>
+                          <span style={{ color: "var(--green)" }}>{t("on_track", "✓ On schedule")}</span>
                         )}
                       </strong>
                     </div>
-                    {plant.waterScheduleAdvice && (
-                      <div className="watering-box-hint" style={{ marginTop: "4px" }}>
-                        {plant.waterScheduleAdvice}
-                      </div>
-                    )}
                   </div>
 
-                  {/* Nutrients / Plant Food ("Protein") */}
                   {plant.nutrientAdvice && (
                     <div className="nutrient-box">
                       <div style={{ display: "flex", alignItems: "center", gap: "6px", fontSize: "11px", fontWeight: "700", color: "#6a521a" }}>
                         <Sparkles size={13} color="#a07c2a" />
-                        <span>પોષક તત્વો અને પ્લાન્ટ ફૂડ:</span>
+                        <span>{t("nutrients_plant_food", "Nutrients & Plant Food:")}</span>
                       </div>
                       <div style={{ fontSize: "11px", color: "#5a4d2e", marginTop: "3px", lineHeight: "1.4" }}>
                         {plant.nutrientAdvice}
@@ -1167,78 +1057,43 @@ export default function GardenPage() {
                     </div>
                   )}
 
-                  {/* In-app Notification status */}
                   <div className="notification-status-tag">
                     <Bell size={12} color="var(--green)" />
-                    <span>ઇન-એપ રીમાઇન્ડર્સ સક્રિય છે ✓</span>
+                    <span>{t("in_app_reminders_active", "In-app reminders active ✓")}</span>
                   </div>
-
-                  {/* IoT Moisture Reading */}
-                  {moisture != null && (
-                    <div className="plant-iot-bar">
-                      <div className="plant-iot-label">
-                        <span>IoT માટીનો ભેજ:</span>
-                        <strong>
-                          {moisture}%{" "}
-                          {moisture < 20 ? "(સૂકી)" : moisture > 70 ? "(ભીની)" : "(યોગ્ય)"}
-                        </strong>
-                      </div>
-                      <div className="plant-iot-progress">
-                        <div
-                          className="plant-iot-fill"
-                          style={{
-                            width: `${Math.min(100, moisture)}%`,
-                            background: moisture < 20 ? "var(--rust)" : "var(--green)",
-                          }}
-                        />
-                      </div>
-                    </div>
-                  )}
                 </div>
 
-                {/* Primary Card Actions */}
                 <div style={{ display: "grid", gap: "8px", marginTop: "14px" }}>
                   <button
                     className="button button-small"
                     style={{ width: "100%", justifyContent: "center" }}
                     onClick={() => openStepCareModal(plant)}
                   >
-                    <Sparkles size={14} /> પગલાંવાર સંભાળ માર્ગદર્શિકા જુઓ
+                    <Sparkles size={14} /> {t("btn_view_care_guide", "View Step-by-Step Care Guide")}
                   </button>
 
                   <div className="plant-card-actions" style={{ paddingTop: "8px" }}>
                     <button
                       className="btn-water"
                       onClick={() => handleWaterPlant(plant)}
-                      title="પાણી આપ્યાની નોંધ કરો"
                     >
-                      <Droplets size={14} /> પાણી આપ્યું
+                      <Droplets size={14} /> {t("btn_watered", "Watered")}
                     </button>
                     <button
                       className="btn-scan"
                       onClick={() => openDoctorModal(plant)}
-                      title="આ છોડ માટે AI ડોક્ટરની સલાહ લો"
                     >
-                      <MessageSquare size={14} /> ડોક્ટર
+                      <MessageSquare size={14} /> {t("btn_doctor", "Doctor")}
                     </button>
                     <button
                       className="btn-mini-icon"
                       onClick={() => openDiagnosisModal(plant)}
-                      title="રોગ માટે પાંદડું સ્કેન કરો"
                     >
                       <Sparkles size={14} />
                     </button>
                     <button
-                      className="btn-mini-icon"
-                      onClick={() => openHistoryModal(plant)}
-                      title="ઇતિહાસ જુઓ"
-                    >
-                      <History size={14} />
-                    </button>
-                    <button
                       className="btn-mini-icon danger"
                       onClick={() => handleDeletePlant(plant._id)}
-                      title="છોડ દૂર કરો"
                     >
                       <Trash2 size={14} />
                     </button>
@@ -1250,47 +1105,23 @@ export default function GardenPage() {
         </div>
       )}
 
-      {/* ========================================================
-          SECTION: RECOMMENDED NURSERY PRODUCTS (CATEGORY-WISE)
-         ======================================================== */}
+      {/* Nursery Section */}
       <section className="nursery-category-section">
         <div className="nursery-section-head">
           <div>
             <p className="eyebrow">
-              <ShoppingBag size={14} /> ગ્રીન લીફ નર્સરી કેટેલોગ
+              <ShoppingBag size={14} /> {t("site_name", "Green Leaf Nursery")}
             </p>
-            <h2>સૂચવેલ સંભાળ પ્રોડક્ટ્સ અને છોડ (કેટેગરી મુજબ)</h2>
+            <h2>{t("nursery_catalog_title", "Recommended Care Products & Plants")}</h2>
             <p className="muted" style={{ margin: "2px 0 0", fontSize: "13px" }}>
-              જૈવિક દવાઓ, પોષક ખોરાક, હવામાન-અનુકૂળ કુંડાં અને અમારી નર્સરીમાંથી સીધા જ તંદુરસ્ત છોડ.
+              {t("nursery_catalog_sub", "Organic treatments, nutrient plant food, pots, and healthy plants directly from our nursery.")}
             </p>
           </div>
           <Link to="/products" className="button button-outline button-small">
-            સંપૂર્ણ સ્ટોર જુઓ <ArrowRight size={14} />
+            {t("browse_full_shop", "Browse Full Shop")} <ArrowRight size={14} />
           </Link>
         </div>
 
-        {/* Category Tabs */}
-        <div className="nursery-cat-tabs">
-          <button
-            type="button"
-            className={`nursery-cat-btn ${selectedCategoryTab === "all" ? "active" : ""}`}
-            onClick={() => setSelectedCategoryTab("all")}
-          >
-            બધી પ્રોડક્ટ્સ ({nurseryProducts.length})
-          </button>
-          {categories.map((c) => (
-            <button
-              key={c._id}
-              type="button"
-              className={`nursery-cat-btn ${selectedCategoryTab.toLowerCase() === c.name.toLowerCase() ? "active" : ""}`}
-              onClick={() => setSelectedCategoryTab(c.name)}
-            >
-              {c.name}
-            </button>
-          ))}
-        </div>
-
-        {/* Category-Wise Product Grid */}
         <div className="nursery-prod-grid">
           {filteredNurseryProducts.slice(0, 8).map((product) => (
             <article key={product._id} className="nursery-prod-card">
@@ -1304,12 +1135,11 @@ export default function GardenPage() {
               </Link>
               <div className="nursery-prod-body">
                 <span className="nursery-prod-category">
-                  {product.category?.name || "નર્સરી છોડ"}
+                  {product.category?.name || t("nursery_favorite", "Nursery favorite")}
                 </span>
                 <Link to={`/products/${product._id}`} className="nursery-prod-title">
                   {product.name}
                 </Link>
-                <p className="nursery-prod-desc">{product.description}</p>
 
                 <div className="nursery-prod-footer">
                   <span className="nursery-prod-price">
@@ -1320,7 +1150,7 @@ export default function GardenPage() {
                     className="nursery-prod-buy-btn"
                     onClick={() => handleAddProductToCart(product)}
                   >
-                    <Plus size={14} /> કાર્ટમાં ઉમેરો
+                    <Plus size={14} /> {t("add_to_cart", "Add to cart")}
                   </button>
                 </div>
               </div>
@@ -1329,9 +1159,7 @@ export default function GardenPage() {
         </div>
       </section>
 
-      {/* ========================================================
-          MODAL: ADD NEW PLANT (AI PHOTO + NICKNAME OR MANUAL)
-         ======================================================== */}
+      {/* MODAL: ADD PLANT */}
       {modalType === "add" && (
         <div className="modal-overlay" onClick={() => { stopCamera(); setModalType(null); }}>
           <div className="modal-card modal-card-large" onClick={(e) => e.stopPropagation()}>
@@ -1339,77 +1167,50 @@ export default function GardenPage() {
               <X size={18} />
             </button>
             <p className="eyebrow">
-              <Plus size={14} /> મારો બગીચો
+              <Plus size={14} /> {t("my_garden", "My Garden")}
             </p>
-            <h2 style={{ margin: "4px 0 14px" }}>બગીચામાં છોડ ઉમેરો</h2>
+            <h2 style={{ margin: "4px 0 14px" }}>{t("add_plant_h2", "Add Plant to Garden")}</h2>
 
-            {/* Mode Switch Tabs */}
             <div className="ai-mode-tabs">
               <button
                 type="button"
                 className={`ai-mode-tab ${addMode === "ai" ? "active" : ""}`}
                 onClick={() => setAddMode("ai")}
               >
-                ✨ AI ઓટો-સેટઅપ (માત્ર ફોટો અને નામ)
+                {t("ai_auto_setup_tab", "✨ AI Auto-Setup (Photo + Nickname)")}
               </button>
               <button
                 type="button"
                 className={`ai-mode-tab ${addMode === "manual" ? "active" : ""}`}
                 onClick={() => { stopCamera(); setAddMode("manual"); }}
               >
-                📝 જાતે એન્ટ્રી કરો
+                {t("manual_entry_tab", "📝 Manual Entry")}
               </button>
             </div>
 
             {addMode === "ai" ? (
               <div>
                 <p className="muted" style={{ fontSize: "13px", margin: "0 0 16px" }}>
-                  તમારા છોડનો ફોટો અપલોડ કરો અને હુલામણું નામ આપો. AI મૂળ છોડનું નામ ઓળખશે, પગલાંવાર સંભાળ યોજના બનાવશે (પાણી, સૂર્યપ્રકાશ, ખાતર) અને રીમાઇન્ડર્સ સેટ કરશે!
+                  {t("ai_add_desc", "Upload a photo and enter a nickname. AI will detect species, build care routines, and configure reminders!")}
                 </p>
 
-                {/* Live Camera Viewfinder Box */}
                 {cameraActive && cameraTarget === "ai" && (
                   <div className="camera-capture-box">
                     <video ref={videoRef} autoPlay playsInline className="camera-video" />
                     <div className="camera-actions-bar">
                       <button type="button" className="button button-small" onClick={capturePhoto}>
-                        <Camera size={15} /> હમણાં ફોટો પાડો
+                        <Camera size={15} /> {t("snap_photo_now", "Snap Photo Now")}
                       </button>
                       <button type="button" className="button button-outline button-small" onClick={stopCamera}>
-                        કેમેરો બંધ કરો
+                        {t("cancel_camera", "Close Camera")}
                       </button>
                     </div>
                   </div>
                 )}
 
                 <form onSubmit={handleAiAddPlant} className="diagnosis-form">
-                  {/* Photo Upload Dropzone with Live Camera Option */}
                   <div>
-                    <label
-                      className={`drag-drop-zone ${aiPhotoError ? "has-error" : ""} ${isDraggingAi ? "active-drag" : ""}`}
-                      onDragOver={(e) => {
-                        e.preventDefault();
-                        setIsDraggingAi(true);
-                      }}
-                      onDragLeave={() => setIsDraggingAi(false)}
-                      onDrop={(e) => {
-                        e.preventDefault();
-                        setIsDraggingAi(false);
-                        const file = e.dataTransfer.files?.[0];
-                        if (file) {
-                          const v = validatePlantImageFile(file);
-                          if (!v.valid) {
-                            const err = v.error || "અમાન્ય ઇમેજ ફાઇલ";
-                            setAiPhotoError(err);
-                            alert(`⚠️ ફાઇલ ભૂલ:\n\n${err}`);
-                            notify(`⚠️ ${err}`, "error");
-                          } else {
-                            setAiPhotoError("");
-                            setAiPhoto(file);
-                          }
-                        }
-                      }}
-                    >
+                    <label className="drag-drop-zone">
                       <input
                         type="file"
                         accept="image/jpeg,image/png,image/webp"
@@ -1417,67 +1218,25 @@ export default function GardenPage() {
                         style={{ display: "none" }}
                         onChange={(e) => {
                           const file = e.target.files?.[0] || null;
-                          if (file) {
-                            const v = validatePlantImageFile(file);
-                            if (!v.valid) {
-                              const err = v.error || "અમાન્ય ઇમેજ ફાઇલ";
-                              setAiPhotoError(err);
-                              alert(`⚠️ ફાઇલ ભૂલ:\n\n${err}`);
-                              notify(`⚠️ ${err}`, "error");
-                            } else {
-                              setAiPhotoError("");
-                              setAiPhoto(file);
-                            }
-                          }
+                          if (file) setAiPhoto(file);
                         }}
                       />
                       {aiPreview ? (
                         <div>
-                          <img src={aiPreview} alt="પસંદ કરેલ છોડ" />
-                          <div style={{ display: "flex", justifyContent: "center", alignItems: "center", gap: "8px", marginTop: "8px" }}>
-                            <span className="dropzone-file-pill">
-                              <Leaf size={13} color="var(--green)" />
-                              {aiPhoto?.name ? aiPhoto.name.slice(0, 24) : "ફોટો તૈયાર છે"}
-                              {aiPhoto?.size && ` (${(aiPhoto.size / 1024).toFixed(0)} KB)`}
-                            </span>
-                            <button
-                              type="button"
-                              className="dropzone-remove-btn"
-                              onClick={(e) => {
-                                e.preventDefault();
-                                e.stopPropagation();
-                                setAiPhoto(null);
-                                setAiPhotoError("");
-                              }}
-                              title="ફોટો દૂર કરો"
-                            >
-                              <X size={12} />
-                            </button>
-                          </div>
-                          <span style={{ fontSize: "11px", color: "var(--green)", marginTop: "4px", display: "block" }}>
-                            બદલવા માટે બીજી ઇમેજ પર ક્લિક કરો અથવા ડ્રોપ કરો
-                          </span>
+                          <img src={aiPreview} alt="Selected Plant" />
                         </div>
                       ) : (
                         <>
-                          <UploadCloud size={36} color={aiPhotoError ? "var(--rust)" : "var(--green)"} />
-                          <strong style={{ fontSize: "13px", color: aiPhotoError ? "var(--rust)" : "var(--green-deep)" }}>
-                            છોડનો ફોટો અપલોડ કરો *
+                          <UploadCloud size={36} color="var(--green)" />
+                          <strong style={{ fontSize: "13px", color: "var(--green-deep)" }}>
+                            {t("upload_photo_label", "Upload Plant Photo *")}
                           </strong>
                           <span className="muted" style={{ fontSize: "11px" }}>
-                            JPG, PNG, WebP · ડ્રેગ અને ડ્રોપ કરો અથવા પસંદ કરવા ક્લિક કરો
+                            {t("drag_drop_browse", "JPG, PNG, WebP · Drag & drop or click to browse")}
                           </span>
                         </>
                       )}
                     </label>
-
-                    {/* Explicit Validation Error Alert */}
-                    {aiPhotoError && (
-                      <div className="dropzone-error-msg">
-                        <AlertTriangle size={15} />
-                        <span>{aiPhotoError}</span>
-                      </div>
-                    )}
 
                     {!cameraActive && (
                       <div style={{ textAlign: "center", marginTop: "8px" }}>
@@ -1486,7 +1245,7 @@ export default function GardenPage() {
                           className="button button-outline button-small"
                           onClick={() => startCamera("ai")}
                         >
-                          <Camera size={15} /> લાઈવ કેમેરા સ્કેનર ખોલો
+                          <Camera size={15} /> {t("open_camera_scanner", "Open Live Camera Scanner")}
                         </button>
                       </div>
                     )}
@@ -1494,33 +1253,23 @@ export default function GardenPage() {
 
                   <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "12px" }}>
                     <label>
-                      છોડનું હુલામણું નામ *
+                      {t("plant_nickname_label", "Plant Nickname *")}
                       <input
-                        placeholder="દા.ત. ટામેટી, હરિયાળો, ફુદીનો"
                         value={aiNickname}
-                        onChange={(e) => {
-                          setAiNickname(e.target.value);
-                          if (e.target.value.trim()) setAiNicknameError("");
-                        }}
-                        style={aiNicknameError ? { borderColor: "var(--rust)" } : {}}
+                        onChange={(e) => setAiNickname(e.target.value)}
                       />
-                      {aiNicknameError && (
-                        <span style={{ color: "var(--rust)", fontSize: "11px", marginTop: "2px", display: "block" }}>
-                          {aiNicknameError}
-                        </span>
-                      )}
                     </label>
 
                     <label>
-                      ઉગાડવાનું સ્થાન
+                      {t("growing_location_label", "Growing Location")}
                       <select
                         value={aiLocation}
                         onChange={(e) => setAiLocation(e.target.value)}
                       >
-                        <option value="balcony">બાલ્કની કન્ટેનર</option>
-                        <option value="indoor">ઇન્ડોર બારી</option>
-                        <option value="terrace">ટેરેસ ગાર્ડન</option>
-                        <option value="garden_bed">જમીન / બગીચો</option>
+                        <option value="balcony">{t("loc_balcony", "Balcony Container")}</option>
+                        <option value="indoor">{t("loc_indoor", "Indoor Window")}</option>
+                        <option value="terrace">{t("loc_terrace", "Terrace Garden")}</option>
+                        <option value="garden_bed">{t("loc_garden_bed", "Outdoor Soil")}</option>
                       </select>
                     </label>
                   </div>
@@ -1530,26 +1279,24 @@ export default function GardenPage() {
                     className="button full-button"
                     disabled={aiAddBusy}
                   >
-                    {aiAddBusy ? "AI છોડની ઓળખ કરી રહ્યું છે અને માર્ગદર્શિકા બનાવી રહ્યું છે…" : "✨ છોડ ઓળખો અને સંભાળ ગાઇડ મેળવો"}
+                    {aiAddBusy ? t("identifying_busy", "AI identifying species & building guide…") : t("identify_btn", "✨ Identify Plant & Get Care Guide")}
                     <Sparkles size={16} />
                   </button>
                 </form>
               </div>
             ) : (
-              /* Manual Entry Form */
               <form onSubmit={handleCreatePlant} className="diagnosis-form">
                 <label>
-                  છોડનું નામ અથવા હુલામણું નામ *
+                  {t("plant_nickname_or_name", "Plant Name or Nickname *")}
                   <input
                     required
-                    placeholder="દા.ત. બાલ્કની ટામેટી"
                     value={plantForm.name}
                     onChange={(e) => setPlantForm({ ...plantForm, name: e.target.value })}
                   />
                 </label>
 
                 <label>
-                  છોડનો પ્રકાર / પ્રજાતિ
+                  {t("plant_species_type", "Plant Species / Type")}
                   <select
                     value={plantForm.species}
                     onChange={(e) => {
@@ -1570,59 +1317,8 @@ export default function GardenPage() {
                   </select>
                 </label>
 
-                <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "12px" }}>
-                  <label>
-                    સ્થાન
-                    <select
-                      value={plantForm.location}
-                      onChange={(e) => setPlantForm({ ...plantForm, location: e.target.value })}
-                    >
-                      <option value="balcony">બાલ્કની કન્ટેનર</option>
-                      <option value="indoor">ઇન્ડોર બારી</option>
-                      <option value="terrace">ટેરેસ ગાર્ડન</option>
-                      <option value="garden_bed">જમીન / બગીચો</option>
-                    </select>
-                  </label>
-
-                  <label>
-                    કુંડાંનું માપ
-                    <select
-                      value={plantForm.potSize}
-                      onChange={(e) => setPlantForm({ ...plantForm, potSize: e.target.value })}
-                    >
-                      <option value="Small (4-6 inch)">નાનું (4–6 ઇંચ)</option>
-                      <option value="Medium (8-10 inch)">મધ્યમ (8–10 ઇંચ)</option>
-                      <option value="Large (12+ inch)">મોટું (12+ ઇંચ)</option>
-                      <option value="Raised Bed">જમીન / ક્યારી</option>
-                    </select>
-                  </label>
-                </div>
-
-                <label>
-                  પાણી આપવાનો દિવસોનો તફાવત
-                  <input
-                    type="number"
-                    min="1"
-                    max="30"
-                    value={plantForm.wateringIntervalDays}
-                    onChange={(e) =>
-                      setPlantForm({ ...plantForm, wateringIntervalDays: Number(e.target.value) })
-                    }
-                  />
-                </label>
-
-                <label>
-                  માળીની નોંધો (વૈકલ્પિક)
-                  <textarea
-                    rows="2"
-                    placeholder="દા.ત. માર્ચમાં બીજ વાવ્યા, બપોરનો તડકો પસંદ છે."
-                    value={plantForm.notes}
-                    onChange={(e) => setPlantForm({ ...plantForm, notes: e.target.value })}
-                  />
-                </label>
-
                 <button type="submit" className="button full-button">
-                  બગીચામાં છોડ સાચવો
+                  {t("save_plant_btn", "Save Plant to Garden")}
                 </button>
               </form>
             )}
@@ -1630,9 +1326,7 @@ export default function GardenPage() {
         </div>
       )}
 
-      {/* ========================================================
-          POPUP: STEP-BY-STEP CARE SUGGESTIONS
-         ======================================================== */}
+      {/* MODAL: STEP CARE */}
       {modalType === "stepWiseCare" && stepCarePlant && (
         <div className="modal-overlay" onClick={() => setModalType(null)}>
           <div className="modal-card stepwise-modal-card" onClick={(e) => e.stopPropagation()}>
@@ -1641,54 +1335,28 @@ export default function GardenPage() {
             </button>
 
             <p className="eyebrow">
-              <Sparkles size={14} /> AI વનસ્પતિ આસિસ્ટન્ટ
+              <Sparkles size={14} /> {t("ai_banner_eyebrow", "AI Plant Assistant")}
             </p>
-            <h2 style={{ margin: "4px 0 16px" }}>પગલાંવાર સંભાળ માર્ગદર્શિકા</h2>
+            <h2 style={{ margin: "4px 0 16px" }}>{t("step_care_h2", "Step-by-Step Care Guide")}</h2>
 
-            {/* Plant Identity Hero Banner */}
             <div className="stepwise-hero">
-              {stepCarePlant.image ? (
-                <img src={stepCarePlant.image} alt={stepCarePlant.name} className="stepwise-hero-thumb" />
-              ) : (
-                <div className="stepwise-hero-thumb" style={{ display: "grid", placeItems: "center" }}>
-                  <Sprout size={36} color="var(--green)" />
-                </div>
-              )}
               <div className="stepwise-hero-info">
-                <span className="muted" style={{ fontSize: "11px", fontWeight: "700", textTransform: "uppercase" }}>
-                  હુલામણું નામ:
-                </span>
                 <h3>{stepCarePlant.name}</h3>
-
                 <div className="stepwise-hero-tags">
                   <span className="plant-card-original-badge">
-                    🌱 મૂળ છોડ: {stepCarePlant.originalName || stepCarePlant.species}
-                  </span>
-                  <span className="health-pill healthy">
-                    ✓ {stepCareReport?.confidence || 96}% મેળ
-                  </span>
-                  <span className="health-pill healthy">
-                    🟢 {stepCarePlant.healthStatus === "healthy" ? "તંદુરસ્ત" : stepCarePlant.healthStatus || "તંદુરસ્ત"}
+                    🌱 {t("original_plant_label", "Original plant:")} {stepCarePlant.originalName || stepCarePlant.species}
                   </span>
                 </div>
               </div>
             </div>
 
-            {/* Numbered Steps (1 to 5) */}
             <div className="stepwise-steps-container">
               {(stepCareReport?.stepWiseCare || []).map((step) => (
                 <div key={step.stepNumber} className="stepwise-step-card">
                   <div className="stepwise-step-num">{step.stepNumber}</div>
                   <div className="stepwise-step-content">
                     <div className="stepwise-step-head">
-                      <h4>
-                        {step.stepNumber === 1 && <Droplets size={16} color="#2b75a0" />}
-                        {step.stepNumber === 2 && <Sun size={16} color="var(--gold)" />}
-                        {step.stepNumber === 3 && <Sprout size={16} color="var(--green)" />}
-                        {step.stepNumber === 4 && <ShieldCheck size={16} color="var(--rust)" />}
-                        {step.stepNumber === 5 && <Bell size={16} color="var(--green)" />}
-                        {step.title}
-                      </h4>
+                      <h4>{step.title}</h4>
                       <span className="stepwise-step-badge">{step.headline || step.schedule}</span>
                     </div>
                     <p className="stepwise-step-detail">{step.detail}</p>
@@ -1697,49 +1365,27 @@ export default function GardenPage() {
               ))}
             </div>
 
-            {/* Recommended Products in Nursery Catalog */}
-            <div className="stepwise-nursery-strip">
-              <div className="stepwise-nursery-head">
-                <ShoppingBag size={16} color="#8a6616" />
-                <span>નર્સરીમાંથી સૂચવેલ સંભાળ પ્રોડક્ટ્સ:</span>
-              </div>
-              <div className="stepwise-products-pills">
-                <Link to="/products?q=neem" className="stepwise-prod-pill">
-                  🌿 જૈવિક કોલ્ડ-પ્રેસ્ડ લીમડાનું તેલ સ્પ્રે
-                </Link>
-                <Link to="/products?q=fertilizer" className="stepwise-prod-pill">
-                  🧪 સીવીડ અને વર્મીકમ્પોસ્ટ પ્લાન્ટ ફૂડ
-                </Link>
-                <Link to="/products?q=potting" className="stepwise-prod-pill">
-                  🪴 હવાયુક્ત ઓર્ગેનિક પોટિંગ મિક્સ
-                </Link>
-              </div>
-            </div>
-
-            {/* Action Buttons */}
-            <div style={{ display: "flex", flexWrap: "wrap", gap: "10px", justifyContent: "space-between" }}>
+            <div style={{ display: "flex", flexWrap: "wrap", gap: "10px", justifyContent: "space-between", marginTop: "16px" }}>
               <button
                 type="button"
                 className="button button-outline button-small"
                 onClick={() => openDoctorModal(stepCarePlant)}
               >
-                <MessageSquare size={15} /> AI પ્લાન્ટ ડોક્ટરને પૂછો
+                <MessageSquare size={15} /> {t("ask_doctor_question_btn", "Ask AI Plant Doctor")}
               </button>
               <button
                 type="button"
                 className="button button-small"
                 onClick={() => setModalType(null)}
               >
-                <Check size={15} /> પૂર્ણ અને બગીચામાં જુઓ
+                <Check size={15} /> {t("done_view_garden_btn", "Done & View Garden")}
               </button>
             </div>
           </div>
         </div>
       )}
 
-      {/* ========================================================
-          MODAL: ASK AI PLANT DOCTOR & AUTO-DETECTED WEATHER CLINIC
-         ======================================================== */}
+      {/* MODAL: DOCTOR */}
       {modalType === "doctor" && (
         <div className="modal-overlay" onClick={() => setModalType(null)}>
           <div className="modal-card doctor-modal-card" onClick={(e) => e.stopPropagation()}>
@@ -1747,63 +1393,11 @@ export default function GardenPage() {
               <X size={18} />
             </button>
             <p className="eyebrow">
-              <HeartPulse size={14} /> AI પ્લાન્ટ ડોક્ટર ક્લિનિક
+              <HeartPulse size={14} /> {t("doctor_clinic_h2", "AI Plant Doctor Clinic")}
             </p>
             <h2 style={{ margin: "4px 0 6px" }}>
-              {doctorPlant ? `ડોક્ટરની સલાહ: ${doctorPlant.name}` : "AI પ્લાન્ટ ડોક્ટર અને ક્લાઇમેટ ક્લિનિક"}
+              {doctorPlant ? `${t("btn_doctor", "Doctor")}: ${doctorPlant.name}` : t("doctor_clinic_h2", "AI Plant Doctor & Clinic")}
             </h2>
-            {doctorPlant && (
-              <p className="muted" style={{ fontSize: "12px", margin: "0 0 14px" }}>
-                મૂળ છોડ: <strong>{doctorPlant.originalName || doctorPlant.species}</strong> • સ્વાસ્થ્ય: {doctorPlant.healthStatus}
-              </p>
-            )}
-
-            {/* Live Auto-Detected Weather & Microclimate Card */}
-            {weather && (
-              <div className="doctor-weather-box">
-                <div className="doctor-weather-head">
-                  <span className="doctor-weather-location">
-                    <MapPin size={14} color="var(--green)" />
-                    {weather.city || (locationDetected ? "GPS દ્વારા શોધાયેલ" : "ઓટો-ડિટેક્ટેડ વાતાવરણ")}
-                  </span>
-                  <button
-                    type="button"
-                    className="button button-outline button-small"
-                    style={{ padding: "3px 8px", fontSize: "11px" }}
-                    onClick={detectLocationAndWeather}
-                    disabled={locationDetecting}
-                    title="GPS સ્થાન અને લાઈવ હવામાન રીફ્રેશ કરો"
-                  >
-                    <RefreshCw size={11} className={locationDetecting ? "spin" : ""} />
-                    {locationDetecting ? "શોધાઈ રહ્યું છે…" : "GPS રીફ્રેશ કરો"}
-                  </button>
-                </div>
-
-                <div className="doctor-weather-grid">
-                  <div className="doctor-weather-metric">
-                    <span>તાપમાન</span>
-                    <strong>{weather.temperature}°C</strong>
-                  </div>
-                  <div className="doctor-weather-metric">
-                    <span>ભેજ</span>
-                    <strong>{weather.humidity}%</strong>
-                  </div>
-                  <div className="doctor-weather-metric">
-                    <span>સ્થિતિ</span>
-                    <strong style={{ fontSize: "12px" }}>{weather.condition}</strong>
-                  </div>
-                  <div className="doctor-weather-metric">
-                    <span>વરસાદ</span>
-                    <strong>{weather.precipitation || 0}mm</strong>
-                  </div>
-                </div>
-
-                <div className="doctor-weather-advisory">
-                  <strong>🩺 માઇક્રોક્લાઇમેટ ડોક્ટર સલાહ: </strong>
-                  {weather.tip}
-                </div>
-              </div>
-            )}
 
             <div className="doctor-chat-box">
               {doctorMessages.map((msg, idx) => (
@@ -1813,7 +1407,7 @@ export default function GardenPage() {
               ))}
               {doctorBusy && (
                 <div className="doctor-msg assistant">
-                  <em>AI ડોક્ટર છોડના લક્ષણો અને વાતાવરણનું વિશ્લેષણ કરી રહ્યા છે…</em>
+                  <em>{t("identifying_busy", "AI Doctor is analyzing plant symptoms…")}</em>
                 </div>
               )}
             </div>
@@ -1821,21 +1415,19 @@ export default function GardenPage() {
             <form onSubmit={handleDoctorSubmit} className="doctor-input-row">
               <input
                 required
-                placeholder="દા.ત. ગરમીમાં નીચેના પાંદડા પીળા કેમ પડી રહ્યા છે?"
+                placeholder={t("ask_doctor_placeholder", "Ask a question about your plant care…")}
                 value={doctorQuestion}
                 onChange={(e) => setDoctorQuestion(e.target.value)}
               />
               <button type="submit" className="button button-small" disabled={doctorBusy || !doctorQuestion.trim()}>
-                પ્રશ્ન પૂછો
+                {t("ask_doctor_submit", "Ask Question")}
               </button>
             </form>
           </div>
         </div>
       )}
 
-      {/* ========================================================
-          MODAL: AI LEAF DISEASE DIAGNOSIS
-         ======================================================== */}
+      {/* MODAL: DIAGNOSE LEAF */}
       {modalType === "diagnose" && (
         <div className="modal-overlay" onClick={() => { stopCamera(); setModalType(null); }}>
           <div className="modal-card modal-card-large" onClick={(e) => e.stopPropagation()}>
@@ -1843,55 +1435,15 @@ export default function GardenPage() {
               <X size={18} />
             </button>
             <p className="eyebrow">
-              <Sparkles size={14} /> AI પ્લાન્ટ પેથોલોજિસ્ટ
+              <Sparkles size={14} /> {t("ai_pathologist_eyebrow", "AI Plant Pathologist")}
             </p>
             <h2 style={{ margin: "4px 0 14px" }}>
-              {selectedPlant ? `નિદાન: ${selectedPlant.name} (${selectedPlant.originalName || selectedPlant.species})` : "પાંદડાનું નિદાન કરો"}
+              {selectedPlant ? `${t("diagnose_h2", "Diagnose Leaf")}: ${selectedPlant.name}` : t("diagnose_h2", "Diagnose Leaf")}
             </h2>
 
-            {/* Live Camera Viewfinder */}
-            {cameraActive && cameraTarget === "diag" && (
-              <div className="camera-capture-box">
-                <video ref={videoRef} autoPlay playsInline className="camera-video" />
-                <div className="camera-actions-bar">
-                  <button type="button" className="button button-small" onClick={capturePhoto}>
-                    <Camera size={15} /> પાંદડાનો ફોટો પાડો
-                  </button>
-                  <button type="button" className="button button-outline button-small" onClick={stopCamera}>
-                    કેમેરો બંધ કરો
-                  </button>
-                </div>
-              </div>
-            )}
-
             <form onSubmit={handleDiagnoseSubmit} className="diagnosis-form">
-              {/* Upload Drop Zone */}
               <div>
-                <label
-                  className={`drag-drop-zone ${diagFileError ? "has-error" : ""} ${isDraggingDiag ? "active-drag" : ""}`}
-                  onDragOver={(e) => {
-                    e.preventDefault();
-                    setIsDraggingDiag(true);
-                  }}
-                  onDragLeave={() => setIsDraggingDiag(false)}
-                  onDrop={(e) => {
-                    e.preventDefault();
-                    setIsDraggingDiag(false);
-                    const file = e.dataTransfer.files?.[0];
-                    if (file) {
-                      const v = validatePlantImageFile(file);
-                      if (!v.valid) {
-                        const err = v.error || "અમાન્ય ઇમેજ ફાઇલ";
-                        setDiagFileError(err);
-                        alert(`⚠️ ફાઇલ ભૂલ:\n\n${err}`);
-                        notify(`⚠️ ${err}`, "error");
-                      } else {
-                        setDiagFileError("");
-                        setDiagFile(file);
-                      }
-                    }
-                  }}
-                >
+                <label className="drag-drop-zone">
                   <input
                     type="file"
                     accept="image/jpeg,image/png,image/webp"
@@ -1899,84 +1451,27 @@ export default function GardenPage() {
                     style={{ display: "none" }}
                     onChange={(e) => {
                       const file = e.target.files?.[0] || null;
-                      if (file) {
-                        const v = validatePlantImageFile(file);
-                        if (!v.valid) {
-                          const err = v.error || "અમાન્ય ઇમેજ ફાઇલ";
-                          setDiagFileError(err);
-                          alert(`⚠️ ફાઇલ ભૂલ:\n\n${err}`);
-                          notify(`⚠️ ${err}`, "error");
-                        } else {
-                          setDiagFileError("");
-                          setDiagFile(file);
-                        }
-                      }
+                      if (file) setDiagFile(file);
                     }}
                   />
                   {diagPreview ? (
                     <div>
-                      <img src={diagPreview} alt="પાંદડાનું પ્રિવ્યૂ" />
-                      <div style={{ display: "flex", justifyContent: "center", alignItems: "center", gap: "8px", marginTop: "8px" }}>
-                        <span className="dropzone-file-pill">
-                          <Leaf size={13} color="var(--green)" />
-                          {diagFile?.name ? diagFile.name.slice(0, 24) : "પાંદડાનો ફોટો તૈયાર છે"}
-                          {diagFile?.size && ` (${(diagFile.size / 1024).toFixed(0)} KB)`}
-                        </span>
-                        <button
-                          type="button"
-                          className="dropzone-remove-btn"
-                          onClick={(e) => {
-                            e.preventDefault();
-                            e.stopPropagation();
-                            setDiagFile(null);
-                            setDiagFileError("");
-                          }}
-                          title="ફોટો દૂર કરો"
-                        >
-                          <X size={12} />
-                        </button>
-                      </div>
-                      <span style={{ fontSize: "11px", color: "var(--green)", marginTop: "4px", display: "block" }}>
-                        બદલવા માટે બીજી ઇમેજ પર ક્લિક કરો અથવા ડ્રોપ કરો
-                      </span>
+                      <img src={diagPreview} alt="Leaf Preview" />
                     </div>
                   ) : (
                     <>
-                      <UploadCloud size={38} color={diagFileError ? "var(--rust)" : "var(--green)"} />
-                      <strong style={{ fontSize: "13px", color: diagFileError ? "var(--rust)" : "var(--green-deep)" }}>
-                        છોડ અથવા પાંદડાનો ફોટો અપલોડ કરો (JPG, PNG, WebP) *
+                      <UploadCloud size={38} color="var(--green)" />
+                      <strong style={{ fontSize: "13px", color: "var(--green-deep)" }}>
+                        {t("upload_leaf_label", "Upload plant or leaf photo (JPG, PNG, WebP) *")}
                       </strong>
-                      <span className="muted" style={{ fontSize: "11px" }}>
-                        ડ્રેગ અને ડ્રોપ કરો અથવા પસંદ કરવા ક્લિક કરો
-                      </span>
                     </>
                   )}
                 </label>
-
-                {/* Explicit Validation Error Alert */}
-                {diagFileError && (
-                  <div className="dropzone-error-msg">
-                    <AlertTriangle size={15} />
-                    <span>{diagFileError}</span>
-                  </div>
-                )}
-
-                {!cameraActive && (
-                  <div style={{ textAlign: "center", marginTop: "8px" }}>
-                    <button
-                      type="button"
-                      className="button button-outline button-small"
-                      onClick={() => startCamera("diag")}
-                    >
-                      <Camera size={15} /> લાઈવ કેમેરા વડે પાંદડાનો ફોટો પાડો
-                    </button>
-                  </div>
-                )}
               </div>
 
               <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "12px" }}>
                 <label>
-                  છોડનો પ્રકાર / પ્રજાતિ
+                  {t("plant_species_type", "Plant Species / Type")}
                   <select
                     value={diagSpecies}
                     onChange={(e) => setDiagSpecies(e.target.value)}
@@ -1988,25 +1483,6 @@ export default function GardenPage() {
                     ))}
                   </select>
                 </label>
-
-                <label>
-                  બગીચાના છોડ સાથે લિંક કરો
-                  <select
-                    value={diagPlantId}
-                    onChange={(e) => {
-                      setDiagPlantId(e.target.value);
-                      const found = plants.find((p) => p._id === e.target.value);
-                      if (found) setSelectedPlant(found);
-                    }}
-                  >
-                    <option value="">-- ઝડપી સ્કેન (લિંક વગર) --</option>
-                    {plants.map((p) => (
-                      <option key={p._id} value={p._id}>
-                        {p.name} (મૂળ: {p.originalName || p.species})
-                      </option>
-                    ))}
-                  </select>
-                </label>
               </div>
 
               <button
@@ -2014,176 +1490,13 @@ export default function GardenPage() {
                 className="button full-button"
                 disabled={diagBusy}
               >
-                {diagBusy ? "AI પેથોલોજિસ્ટ વિશ્લેષણ કરી રહ્યા છે…" : "AI નિદાન ચલાવો"}
+                {diagBusy ? t("analyzing_leaf_busy", "AI Pathologist is analyzing…") : t("run_ai_diagnosis", "Run AI Diagnosis")}
                 <ArrowRight size={16} />
               </button>
             </form>
-
-            {/* Structured Diagnosis Results */}
-            {diagResult && (
-              <div className="diagnosis-box">
-                <div
-                  className={`diagnosis-banner ${
-                    diagResult.isHealthy ? "healthy" : "diseased"
-                  }`}
-                >
-                  <div>
-                    <span
-                      style={{
-                        fontSize: "11px",
-                        fontWeight: "700",
-                        textTransform: "uppercase",
-                        letterSpacing: "0.8px",
-                        color: diagResult.isHealthy ? "#2b6d27" : "var(--rust)",
-                      }}
-                    >
-                      {diagResult.isHealthy ? "✓ તંદુરસ્ત સ્થિતિ" : "⚠️ રોગચાળો મળ્યો"}
-                    </span>
-                    <h3>{diagResult.diseaseName}</h3>
-                    <span style={{ fontSize: "12px", color: "#545e51" }}>
-                      ગંભીરતા: <strong>{diagResult.severity || "મધ્યમ"}</strong>
-                    </span>
-                  </div>
-
-                  <div className="confidence-gauge">
-                    <span style={{ fontSize: "10px", display: "block", color: "#646d60" }}>
-                      AI ચોકસાઈ
-                    </span>
-                    <strong>{diagResult.confidence || 93}%</strong>
-                  </div>
-                </div>
-
-                <div className="diagnosis-sections">
-                  {/* Symptoms & Causes */}
-                  <div className="diagnosis-sect-card">
-                    <h4>🔍 દૃશ્યમાન લક્ષણો અને કારણો</h4>
-                    <ul>
-                      {(diagResult.symptoms || []).map((s, idx) => (
-                        <li key={idx}>{s}</li>
-                      ))}
-                    </ul>
-                    {diagResult.causes?.length > 0 && (
-                      <p style={{ marginTop: "8px" }}>
-                        <strong>મુખ્ય કારણો: </strong>
-                        {diagResult.causes.join(" • ")}
-                      </p>
-                    )}
-                  </div>
-
-                  {/* Organic & Home Treatments */}
-                  <div className="diagnosis-sect-card" style={{ background: "#f5f8f3" }}>
-                    <h4 style={{ color: "var(--green-deep)" }}>
-                      🌿 જૈવિક અને ઘરગથ્થુ ઉપચારો
-                    </h4>
-                    <ul>
-                      {(diagResult.organicTreatment || []).map((t, idx) => (
-                        <li key={idx}>{t}</li>
-                      ))}
-                    </ul>
-                  </div>
-
-                  {/* Chemical Treatment & Prevention */}
-                  <div className="diagnosis-sect-card">
-                    <h4>🧪 નર્સરી સારવાર અને સંભાળ</h4>
-                    {diagResult.chemicalTreatment?.length > 0 && (
-                      <p style={{ marginBottom: "6px" }}>
-                        <strong>રક્ષણાત્મક દ્રવ્યો: </strong>
-                        {diagResult.chemicalTreatment.join(" • ")}
-                      </p>
-                    )}
-                    <ul>
-                      {(diagResult.preventiveCare || []).map((p, idx) => (
-                        <li key={idx}>{p}</li>
-                      ))}
-                    </ul>
-                  </div>
-
-                  {/* Smart Watering Directive */}
-                  {diagResult.wateringAdvice && (
-                    <div className="diagnosis-sect-card" style={{ background: "#f2f7fc" }}>
-                      <h4 style={{ color: "#235496" }}>💧 સૂચવેલ પાણી આપવાની દિનચર્યા</h4>
-                      <p>{diagResult.wateringAdvice}</p>
-                    </div>
-                  )}
-
-                  {/* Recommended Products in Nursery */}
-                  <div className="stepwise-nursery-strip" style={{ margin: "10px 0 0" }}>
-                    <div className="stepwise-nursery-head">
-                      <ShoppingBag size={16} color="#8a6616" />
-                      <span>નર્સરીમાંથી સૂચવેલ ઇલાજ પ્રોડક્ટ્સ:</span>
-                    </div>
-                    <div className="stepwise-products-pills">
-                      <Link to="/products?q=neem" className="stepwise-prod-pill">
-                        🌿 જૈવિક લીમડાનું તેલ સ્પ્રે
-                      </Link>
-                      <Link to="/products?q=fungicide" className="stepwise-prod-pill">
-                        🛡️ બાયો-ફંગસાઇડ પાવડર
-                      </Link>
-                      <Link to="/products?q=fertilizer" className="stepwise-prod-pill">
-                        🧪 ઓર્ગેનિક પ્લાન્ટ ફૂડ અને વર્મીકમ્પોસ્ટ
-                      </Link>
-                    </div>
-                  </div>
-                </div>
-              </div>
-            )}
           </div>
         </div>
       )}
-
-      {/* ========================================================
-          MODAL: PLANT CARE & DIAGNOSIS HISTORY
-         ======================================================== */}
-      {modalType === "history" && selectedPlant && (
-        <div className="modal-overlay" onClick={() => setModalType(null)}>
-          <div className="modal-card" onClick={(e) => e.stopPropagation()}>
-            <button className="modal-close" onClick={() => setModalType(null)}>
-              <X size={18} />
-            </button>
-            <p className="eyebrow">
-              <History size={14} /> તબીબી લોગ
-            </p>
-            <h2 style={{ margin: "4px 0 16px" }}>સંભાળ ઇતિહાસ: {selectedPlant.name}</h2>
-            <p className="muted" style={{ fontSize: "12px", margin: "-10px 0 14px" }}>
-              મૂળ પ્રજાતિ: <strong>{selectedPlant.originalName || selectedPlant.species}</strong>
-            </p>
-
-            {plantHistory.length === 0 ? (
-              <p className="muted">આ છોડ માટે હજુ સુધી ભૂતકાળના કોઈ નિદાન નોંધાયેલ નથી.</p>
-            ) : (
-              <div style={{ display: "grid", gap: "12px" }}>
-                {plantHistory.map((item, idx) => (
-                  <div
-                    key={item._id || idx}
-                    style={{
-                      border: "1px solid var(--line)",
-                      borderRadius: "6px",
-                      padding: "14px",
-                      background: "#fafaf6",
-                    }}
-                  >
-                    <div style={{ display: "flex", justifyContent: "space-between", marginBottom: "6px" }}>
-                      <strong>{item.diseaseName}</strong>
-                      <span className="muted" style={{ fontSize: "11px" }}>
-                        {new Date(item.createdAt).toLocaleDateString()}
-                      </span>
-                    </div>
-                    <span style={{ fontSize: "11px", color: "var(--muted)" }}>
-                      ચોકસાઈ: {item.confidence}% • ગંભીરતા: {item.severity}
-                    </span>
-                    {item.symptoms?.length > 0 && (
-                      <p style={{ margin: "8px 0 0", fontSize: "12px", color: "#545d51" }}>
-                        લક્ષણો: {item.symptoms.join(", ")}
-                      </p>
-                    )}
-                  </div>
-                ))}
-              </div>
-            )}
-          </div>
-        </div>
-      )}
-
     </main>
   );
 }
