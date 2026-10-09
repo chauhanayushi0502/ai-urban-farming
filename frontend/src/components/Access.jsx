@@ -1,6 +1,7 @@
 import { ArrowRight, UserRound } from "lucide-react";
 import { Link, useLocation } from "react-router-dom";
 import { useApp } from "../context/AppContext.jsx";
+import { useLanguage } from "../i18n/LanguageContext.jsx";
 import { Loading, Notice } from "./Feedback.jsx";
 import AdminShell from "./AdminShell.jsx";
 
@@ -14,13 +15,35 @@ export function Protected({ children }) {
 
 export function AdminProtected({ children }) {
   const { user, ready } = useApp();
+  const { t } = useLanguage();
   const location = useLocation();
   if (!ready) return <Loading />;
   if (!user) return <NavigateToLogin path={location.pathname} />;
-  if (user.role !== "admin") return <main className="page"><Notice title="એડમિનિસ્ટ્રેટર એક્સેસ જરૂરી છે" text="આ પેજ ખોલવા માટે એડમિનિસ્ટ્રેટર એકાઉન્ટ વડે સાઇન ઇન કરો." /></main>;
+  if (user.role !== "admin") {
+    return (
+      <main className="page">
+        <Notice 
+          title={t("admin_access_required", "Administrator Access Required")} 
+          text={t("admin_access_desc", "Sign in with an administrator account to view this page.")} 
+        />
+      </main>
+    );
+  }
   return <AdminShell>{children}</AdminShell>;
 }
 
 function NavigateToLogin({ path }) {
-  return <main className="page"><section className="empty-state"><UserRound size={25} /><h1>આગળ વધવા સાઇન ઇન કરો</h1><p>તમારું એકાઉન્ટ તમારું કાર્ટ, ઓર્ડર અને સાચવેલા છોડ એકસાથે રાખે છે.</p><Link className="button" to={`/login?redirect=${encodeURIComponent(path)}`}>સાઇન ઇન કરો <ArrowRight size={17} /></Link></section></main>;
+  const { t } = useLanguage();
+  return (
+    <main className="page">
+      <section className="empty-state">
+        <UserRound size={25} />
+        <h1>{t("signin_to_continue", "Sign in to continue")}</h1>
+        <p>{t("account_keeps_together", "Your account keeps your cart, orders, and saved plants together.")}</p>
+        <Link className="button" to={`/login?redirect=${encodeURIComponent(path)}`}>
+          {t("nav_signin", "Sign in")} <ArrowRight size={17} />
+        </Link>
+      </section>
+    </main>
+  );
 }

@@ -2,11 +2,13 @@ import { useState } from "react";
 import { Bell, CheckCheck } from "lucide-react";
 import { Link } from "react-router-dom";
 import { useToast } from "../context/AppContext.jsx";
+import { useLanguage } from "../i18n/LanguageContext.jsx";
 import { useLoad } from "../hooks/useLoad.js";
 import { api } from "../lib/api.js";
 
 export default function NotificationBell() {
   const { data, setData } = useLoad("/notifications", { items: [], unreadCount: 0 });
+  const { t } = useLanguage();
   const notify = useToast();
   const [open, setOpen] = useState(false);
 
@@ -37,5 +39,49 @@ export default function NotificationBell() {
     } catch (error) { notify(error.message, "error"); }
   }
 
-  return <div className="notification-menu"><button className="icon-button notification-trigger" onClick={toggle} aria-label={`સૂચનાઓ, ${data.unreadCount || 0} અણવાંચેલી`} title="સૂચનાઓ"><Bell size={19} />{data.unreadCount > 0 && <span className="count-badge">{data.unreadCount}</span>}</button>{open && <section className="notification-popover"><header><strong>સૂચનાઓ</strong><button onClick={markAllRead} disabled={!data.unreadCount}><CheckCheck size={15} /> બધા વાંચેલા તરીકે માર્ક કરો</button></header>{data.items.length ? <div className="notification-list">{data.items.map((item) => <Link key={item._id} to={item.link || "/orders"} onClick={() => { if (!item.readAt) markRead(item._id); setOpen(false); }} className={item.readAt ? "notification-item" : "notification-item unread"}><span className="notification-dot" /><span><strong>{item.title}</strong><small>{item.message}</small><time>{new Date(item.createdAt).toLocaleString()}</time></span></Link>)}</div> : <p className="notification-empty">તમે બધું જોઈ લીધું છે.</p>}</section>}</div>;
+  return (
+    <div className="notification-menu">
+      <button 
+        className="icon-button notification-trigger" 
+        onClick={toggle} 
+        aria-label={`${t("notifications", "Notifications")}, ${data.unreadCount || 0} ${t("unread", "unread")}`} 
+        title={t("notifications", "Notifications")}
+      >
+        <Bell size={19} />
+        {data.unreadCount > 0 && <span className="count-badge">{data.unreadCount}</span>}
+      </button>
+
+      {open && (
+        <section className="notification-popover">
+          <header>
+            <strong>{t("notifications", "Notifications")}</strong>
+            <button onClick={markAllRead} disabled={!data.unreadCount}>
+              <CheckCheck size={15} /> {t("mark_all_read", "Mark all read")}
+            </button>
+          </header>
+          {data.items.length ? (
+            <div className="notification-list">
+              {data.items.map((item) => (
+                <Link 
+                  key={item._id} 
+                  to={item.link || "/orders"} 
+                  onClick={() => { if (!item.readAt) markRead(item._id); setOpen(false); }} 
+                  className={item.readAt ? "notification-item" : "notification-item unread"}
+                >
+                  <span className="notification-dot" />
+                  <span>
+                    <strong>{item.title}</strong>
+                    <small>{item.message}</small>
+                    <time>{new Date(item.createdAt).toLocaleString()}</time>
+                  </span>
+                </Link>
+              ))}
+            </div>
+          ) : (
+            <p className="notification-empty">{t("all_caught_up", "You're all caught up.")}</p>
+          )}
+        </section>
+      )}
+    </div>
+  );
 }

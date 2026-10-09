@@ -1,11 +1,37 @@
 import { ArrowLeft, Mail, Package, Settings, ShoppingBag, Sprout, Tags, Truck } from "lucide-react";
 import { Link, NavLink } from "react-router-dom";
-
-const sections = [
-  ["/admin", "ઓવરવ્યૂ", Package], ["/admin/products", "પ્રોડક્ટ્સ", ShoppingBag], ["/admin/categories", "કેટેગરીઝ", Tags],
-  ["/admin/orders", "ઓર્ડર્સ", Truck], ["/admin/inventory", "ઇન્વેન્ટરી", Sprout], ["/admin/messages", "સંદેશાઓ", Mail], ["/admin/settings", "સેટિંગ્સ", Settings],
-];
+import { useLanguage } from "../i18n/LanguageContext.jsx";
 
 export default function AdminShell({ children }) {
-  return <div className="admin-layout"><aside className="admin-sidebar"><p className="eyebrow">ગ્રીન લીફ</p><h2>નર્સરી એડમિન</h2><nav>{sections.map(([path, title, Icon]) => <NavLink end={path === "/admin"} to={path} key={path}><Icon size={17} />{title}</NavLink>)}</nav><Link to="/" className="admin-store-link"><ArrowLeft size={16} /> સ્ટોર પર પાછા ફરો</Link></aside><div className="admin-content">{children}</div></div>;
+  const { t } = useLanguage();
+
+  const sections = [
+    ["/admin", t("admin_overview", "Overview"), Package],
+    ["/admin/products", t("admin_products", "Products"), ShoppingBag],
+    ["/admin/categories", t("admin_categories", "Categories"), Tags],
+    ["/admin/orders", t("admin_orders", "Orders"), Truck],
+    ["/admin/inventory", t("admin_inventory", "Inventory"), Sprout],
+    ["/admin/messages", t("admin_messages", "Messages"), Mail],
+    ["/admin/settings", t("admin_settings", "Settings"), Settings],
+  ];
+
+  return (
+    <div className="admin-layout">
+      <aside className="admin-sidebar">
+        <p className="eyebrow">{t("site_name", "Green Leaf")}</p>
+        <h2>{t("admin_title", "Nursery Admin")}</h2>
+        <nav>
+          {sections.map(([path, title, Icon]) => (
+            <NavLink end={path === "/admin"} to={path} key={path}>
+              <Icon size={17} />{title}
+            </NavLink>
+          ))}
+        </nav>
+        <Link to="/" className="admin-store-link">
+          <ArrowLeft size={16} /> {t("back_to_store", "Back to store")}
+        </Link>
+      </aside>
+      <div className="admin-content">{children}</div>
+    </div>
+  );
 }

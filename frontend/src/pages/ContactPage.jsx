@@ -1,10 +1,12 @@
 import { useState } from "react";
 import { ArrowRight, Clock3, Mail, MapPin, Phone } from "lucide-react";
 import { useApp, useToast } from "../context/AppContext.jsx";
+import { useLanguage } from "../i18n/LanguageContext.jsx";
 import { api } from "../lib/api.js";
 
 export default function ContactPage() {
   const { settings } = useApp();
+  const { t } = useLanguage();
   const notify = useToast();
   const [busy, setBusy] = useState(false);
 
@@ -12,10 +14,77 @@ export default function ContactPage() {
     event.preventDefault();
     setBusy(true);
     const values = Object.fromEntries(new FormData(event.currentTarget).entries());
-    try { await api("/contact", { method: "POST", body: values }); event.currentTarget.reset(); notify("આભાર. તમારો સંદેશ મળી ગયો છે."); }
-    catch (error) { notify(error.message, "error"); }
-    finally { setBusy(false); }
+    try { 
+      await api("/contact", { method: "POST", body: values }); 
+      event.currentTarget.reset(); 
+      notify(t("contact_success_msg", "Thank you. Your message has been received.")); 
+    } catch (error) { 
+      notify(error.message, "error"); 
+    } finally { 
+      setBusy(false); 
+    }
   }
 
-  return <main className="page contact-page"><div className="page-heading"><div><p className="eyebrow">અમે મદદ માટે તૈયાર છીએ</p><h1>અમારી સાથે છોડ વિશે વાત કરો.</h1><p className="muted">ઓર્ડર વિશે અથવા યોગ્ય છોડ પસંદ કરવા અંગે પ્રશ્નો છે? અમને સંદેશ મોકલો.</p></div></div><div className="contact-layout"><section className="contact-details"><p><MapPin size={18} /><span><strong>મુલાકાત લો</strong>{settings.address}</span></p><p><Mail size={18} /><span><strong>ઇમેઇલ</strong><a href={`mailto:${settings.contact_email}`}>{settings.contact_email}</a></span></p><p><Phone size={18} /><span><strong>ફોન કરો</strong><a href={`tel:${settings.contact_phone}`}>{settings.contact_phone}</a></span></p><p><Clock3 size={18} /><span><strong>સમય</strong>સવારે 9 થી સાંજે 7, સોમવાર થી શનિવાર</span></p></section><form className="contact-form form-stack" onSubmit={submit}><label>તમારું નામ<input name="name" required maxLength="100" /></label><label>ઇમેઇલ સરનામું<input name="email" type="email" required /></label><label>અમે કેવી રીતે મદદ કરી શકીએ?<textarea name="message" rows="5" required maxLength="3000" /></label><button className="button" disabled={busy}>સંદેશ મોકલો <ArrowRight size={17} /></button></form></div></main>;
+  return (
+    <main className="page contact-page">
+      <div className="page-heading">
+        <div>
+          <p className="eyebrow">{t("contact_eyebrow", "We're here to help")}</p>
+          <h1>{t("contact_h1", "Talk plants with us.")}</h1>
+          <p className="muted">{t("contact_desc", "Have questions about an order or choosing the right plant? Send us a message.")}</p>
+        </div>
+      </div>
+
+      <div className="contact-layout">
+        <section className="contact-details">
+          <p>
+            <MapPin size={18} />
+            <span>
+              <strong>{t("visit_us", "Visit us")}</strong>
+              {settings.address || "Green Leaf Nursery, Main Road"}
+            </span>
+          </p>
+          <p>
+            <Mail size={18} />
+            <span>
+              <strong>{t("email_us", "Email us")}</strong>
+              <a href={`mailto:${settings.contact_email}`}>{settings.contact_email}</a>
+            </span>
+          </p>
+          <p>
+            <Phone size={18} />
+            <span>
+              <strong>{t("call_us", "Call us")}</strong>
+              <a href={`tel:${settings.contact_phone}`}>{settings.contact_phone}</a>
+            </span>
+          </p>
+          <p>
+            <Clock3 size={18} />
+            <span>
+              <strong>{t("hours_label", "Hours")}</strong>
+              {t("working_hours", "9:00 AM - 7:00 PM, Mon to Sat")}
+            </span>
+          </p>
+        </section>
+
+        <form className="contact-form form-stack" onSubmit={submit}>
+          <label>
+            {t("your_name", "Your name")}
+            <input name="name" required maxLength="100" />
+          </label>
+          <label>
+            {t("email_address", "Email address")}
+            <input name="email" type="email" required />
+          </label>
+          <label>
+            {t("how_can_we_help", "How can we help?")}
+            <textarea name="message" rows="5" required maxLength="3000" />
+          </label>
+          <button className="button" disabled={busy}>
+            {t("send_message", "Send message")} <ArrowRight size={17} />
+          </button>
+        </form>
+      </div>
+    </main>
+  );
 }
