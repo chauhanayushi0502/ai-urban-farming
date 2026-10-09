@@ -8,5 +8,5 @@ export default function SearchPage() {
   const query = params.get("q") || "";
   const { data: products, loading } = useLoad(`/products?q=${encodeURIComponent(query)}`, []);
 
-  return <main className="page"><div className="page-heading"><div><p className="eyebrow">Nursery search</p><h1>Results for “{query}”</h1><p className="muted">{products.length} plants and growing essentials</p></div></div>{loading ? <Loading /> : <ProductGrid products={products} />}</main>;
+  return <main className="page"><div className="page-heading"><div><p className="eyebrow">નર્સરી શોધો</p><h1>“{query}” માટે પરિણામો</h1><p className="muted">{products.length} છોડ અને ઉછેર માટે જરૂરી વસ્તુઓ</p></div></div>{loading ? <Loading /> : <ProductGrid products={products} />}</main>;
 }

@@ -7,7 +7,7 @@ export function AppProvider({ children }) {
   const [user, setUser] = useState(null);
   const [ready, setReady] = useState(false);
   const [cartCount, setCartCount] = useState(0);
-  const [settings, setSettings] = useState({ currency: "₹", site_name: "Green Leaf Plant Nursery" });
+  const [settings, setSettings] = useState({ currency: "₹", site_name: "ગ્રીન લીફ પ્લાન્ટ નર્સરી" });
   const [toast, setToast] = useState(null);
 
   async function refreshUser() {

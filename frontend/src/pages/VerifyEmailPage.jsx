@@ -15,5 +15,5 @@ export default function VerifyEmailPage() {
     return () => { active = false; };
   }, [params]);
 
-  return <main className="page"><section className="empty-state">{state.loading ? <span className="loader" /> : state.error ? <CircleAlert size={25} /> : <Check size={25} />}<h1>{state.loading ? "Verifying email…" : state.error ? "Verification link unavailable" : "Email verified"}</h1>{!state.loading && <p>{state.error || state.message}</p>}{!state.loading && <Link className="button" to="/login">Continue to sign in</Link>}</section></main>;
+  return <main className="page"><section className="empty-state">{state.loading ? <span className="loader" /> : state.error ? <CircleAlert size={25} /> : <Check size={25} />}<h1>{state.loading ? "ઇમેઇલ ચકાસાઈ રહ્યું છે…" : state.error ? "વેરિફિકેશન લિંક ઉપલબ્ધ નથી" : "ઇમેઇલ ચકાસાયેલ છે"}</h1>{!state.loading && <p>{state.error || state.message}</p>}{!state.loading && <Link className="button" to="/login">સાઇન ઇન કરવા આગળ વધો</Link>}</section></main>;
 }

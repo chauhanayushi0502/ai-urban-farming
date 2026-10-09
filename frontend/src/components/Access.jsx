@@ -17,10 +17,10 @@ export function AdminProtected({ children }) {
   const location = useLocation();
   if (!ready) return <Loading />;
   if (!user) return <NavigateToLogin path={location.pathname} />;
-  if (user.role !== "admin") return <main className="page"><Notice title="Administrator access required" text="Sign in with an administrator account to open this page." /></main>;
+  if (user.role !== "admin") return <main className="page"><Notice title="એડમિનિસ્ટ્રેટર એક્સેસ જરૂરી છે" text="આ પેજ ખોલવા માટે એડમિનિસ્ટ્રેટર એકાઉન્ટ વડે સાઇન ઇન કરો." /></main>;
   return <AdminShell>{children}</AdminShell>;
 }
 
 function NavigateToLogin({ path }) {
-  return <main className="page"><section className="empty-state"><UserRound size={25} /><h1>Sign in to continue</h1><p>Your account keeps your cart, orders, and saved plants together.</p><Link className="button" to={`/login?redirect=${encodeURIComponent(path)}`}>Sign in <ArrowRight size={17} /></Link></section></main>;
+  return <main className="page"><section className="empty-state"><UserRound size={25} /><h1>આગળ વધવા સાઇન ઇન કરો</h1><p>તમારું એકાઉન્ટ તમારું કાર્ટ, ઓર્ડર અને સાચવેલા છોડ એકસાથે રાખે છે.</p><Link className="button" to={`/login?redirect=${encodeURIComponent(path)}`}>સાઇન ઇન કરો <ArrowRight size={17} /></Link></section></main>;
 }

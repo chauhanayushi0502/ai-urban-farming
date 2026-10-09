@@ -19,18 +19,18 @@ export default function AdminCategories() {
       setEditing(null);
       event.currentTarget.reset();
       setData(await api("/categories"));
-      notify("Category saved.");
+      notify("કેટેગરી સાચવવામાં આવી.");
     } catch (error) { notify(error.message, "error"); }
   }
 
   async function remove(category) {
-    if (!window.confirm(`Delete ${category.name}?`)) return;
+    if (!window.confirm(`${category.name} કાઢી નાખવું છે?`)) return;
     try {
       await api(`/admin/categories/${category._id}`, { method: "DELETE" });
       setData(categories.filter((item) => item._id !== category._id));
-      notify("Category deleted.");
+      notify("કેટેગરી કાઢી નાખવામાં આવી.");
     } catch (error) { notify(error.message, "error"); }
   }
 
-  return <div className="admin-page"><div className="page-heading"><div><p className="eyebrow">Browse structure</p><h1>Categories</h1></div></div><form className="admin-form compact-form" onSubmit={submit} key={editing?._id || "new"}><h2>{editing ? "Edit category" : "Add category"}</h2><div className="admin-form-grid"><label>Category name<input name="name" defaultValue={editing?.name || ""} required /></label><label>Category image<input name="image" type="file" accept="image/jpeg,image/png,image/webp" /></label></div><div className="form-actions"><button className="button">{editing ? "Save category" : "Add category"}</button>{editing && <button type="button" className="button button-outline" onClick={() => setEditing(null)}>Cancel</button>}</div></form><DataTable loading={loading} empty="No categories have been added yet."><div className="admin-category-list">{categories.map((category) => <article key={category._id}><img src={imageSource(category.image)} alt="" /><div><strong>{category.name}</strong><span className="muted">{category.productCount || ""}</span></div><button className="table-action" title="Edit" onClick={() => setEditing(category)}><Pencil size={16} /></button><button className="table-action danger" title="Delete" onClick={() => remove(category)}><Trash2 size={16} /></button></article>)}</div></DataTable></div>;
+  return <div className="admin-page"><div className="page-heading"><div><p className="eyebrow">બ્રાઉઝ માળખું</p><h1>કેટેગરીઝ</h1></div></div><form className="admin-form compact-form" onSubmit={submit} key={editing?._id || "new"}><h2>{editing ? "કેટેગરીમાં ફેરફાર કરો" : "કેટેગરી ઉમેરો"}</h2><div className="admin-form-grid"><label>કેટેગરીનું નામ<input name="name" defaultValue={editing?.name || ""} required /></label><label>કેટેગરીની ઇમેજ<input name="image" type="file" accept="image/jpeg,image/png,image/webp" /></label></div><div className="form-actions"><button className="button">{editing ? "કેટેગરી સાચવો" : "કેટેગરી ઉમેરો"}</button>{editing && <button type="button" className="button button-outline" onClick={() => setEditing(null)}>રદ કરો</button>}</div></form><DataTable loading={loading} empty="હજુ સુધી કોઈ કેટેગરી ઉમેરવામાં આવી નથી."><div className="admin-category-list">{categories.map((category) => <article key={category._id}><img src={imageSource(category.image)} alt="" /><div><strong>{category.name}</strong><span className="muted">{category.productCount || ""}</span></div><button className="table-action" title="ફેરફાર કરો" onClick={() => setEditing(category)}><Pencil size={16} /></button><button className="table-action danger" title="કાઢી નાખો" onClick={() => remove(category)}><Trash2 size={16} /></button></article>)}</div></DataTable></div>;
 }

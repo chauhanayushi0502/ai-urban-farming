@@ -3,6 +3,7 @@ import { Protected, AdminProtected } from "./components/Access.jsx";
 import { Footer, Header, ToastMessage } from "./components/SiteLayout.jsx";
 import { NotFound } from "./components/Feedback.jsx";
 import { AppProvider, useApp } from "./context/AppContext.jsx";
+import { LanguageProvider } from "./i18n/LanguageContext.jsx";
 import AboutPage from "./pages/AboutPage.jsx";
 import AuthPage from "./pages/AuthPage.jsx";
 import CartPage from "./pages/CartPage.jsx";
@@ -61,5 +62,11 @@ function AppRoutes() {
 }
 
 export default function AppRouter() {
-  return <AppProvider><AppRoutes /></AppProvider>;
+  return (
+    <LanguageProvider>
+      <AppProvider>
+        <AppRoutes />
+      </AppProvider>
+    </LanguageProvider>
+  );
 }

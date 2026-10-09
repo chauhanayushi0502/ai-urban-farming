@@ -16,10 +16,10 @@ export const tokenCookie = {
 };
 
 export const settingsDefaults = {
-  site_name: "Green Leaf Plant Nursery",
+  site_name: "ગ્રીન લીફ પ્લાન્ટ નર્સરી",
   contact_email: "greenleafnursery@gmail.com",
   contact_phone: "+91 98765 43210",
-  address: "Ahmedabad, Gujarat, India",
+  address: "અમદાવાદ, ગુજરાત, ભારત",
   facebook: "#",
   instagram: "#",
   twitter: "#",

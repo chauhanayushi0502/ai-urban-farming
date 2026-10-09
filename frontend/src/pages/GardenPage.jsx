@@ -33,26 +33,28 @@ import {
   Thermometer,
 } from "lucide-react";
 import { useToast, useApp } from "../context/AppContext.jsx";
+import { useLanguage } from "../i18n/LanguageContext.jsx";
 import { api } from "../lib/api.js";
 import { imageSource, money } from "../lib/format.js";
 import { validatePlantImageFile, compressAndOptimizeImage } from "../lib/image-optimizer.js";
 
 const SPECIES_OPTIONS = [
-  { id: "Tomato", label: "Tomato", defaultInterval: 2 },
-  { id: "Sweet Basil", label: "Sweet Basil", defaultInterval: 2 },
-  { id: "Mint", label: "Mint", defaultInterval: 1 },
-  { id: "Rose", label: "Rose", defaultInterval: 3 },
-  { id: "Chili / Pepper", label: "Chili / Pepper", defaultInterval: 3 },
-  { id: "Aloe Vera", label: "Aloe Vera / Succulent", defaultInterval: 12 },
-  { id: "Snake Plant", label: "Snake Plant", defaultInterval: 14 },
-  { id: "Money Plant", label: "Money Plant", defaultInterval: 6 },
-  { id: "Peace Lily", label: "Peace Lily", defaultInterval: 3 },
-  { id: "Hibiscus", label: "Hibiscus", defaultInterval: 2 },
-  { id: "Houseplant", label: "Houseplant", defaultInterval: 3 },
+  { id: "Tomato", label: "ટમેટા (Tomato)", defaultInterval: 2 },
+  { id: "Sweet Basil", label: "તુલસી / બેસિલ (Sweet Basil)", defaultInterval: 2 },
+  { id: "Mint", label: "ફુદીનો (Mint)", defaultInterval: 1 },
+  { id: "Rose", label: "ગુલાબ (Rose)", defaultInterval: 3 },
+  { id: "Chili / Pepper", label: "મરચાં (Chili / Pepper)", defaultInterval: 3 },
+  { id: "Aloe Vera", label: "એલોવેરા / કુંવારપાઠું (Aloe Vera)", defaultInterval: 12 },
+  { id: "Snake Plant", label: "સ્નેક પ્લાન્ટ (Snake Plant)", defaultInterval: 14 },
+  { id: "Money Plant", label: "મની પ્લાન્ટ (Money Plant)", defaultInterval: 6 },
+  { id: "Peace Lily", label: "પીસ લીલી (Peace Lily)", defaultInterval: 3 },
+  { id: "Hibiscus", label: "જાસૂદ (Hibiscus)", defaultInterval: 2 },
+  { id: "Houseplant", label: "ઘરગથ્થુ છોડ (Houseplant)", defaultInterval: 3 },
 ];
 
 export default function GardenPage() {
   const { user, syncCart, settings } = useApp();
+  const { t } = useLanguage();
   const notify = useToast();
 
   const [plants, setPlants] = useState([]);
@@ -804,11 +806,11 @@ export default function GardenPage() {
       <div className="garden-header">
         <div className="garden-title">
           <p className="eyebrow">
-            <Sprout size={15} /> Urban Agriculture & AI Care
+            <Sprout size={15} /> {t("garden_eyebrow", "Urban Agriculture & AI Care")}
           </p>
-          <h1>AI Plant Doctor & Garden Assistant</h1>
+          <h1>{t("garden_h1", "AI Plant Doctor & Garden Assistant")}</h1>
           <p>
-            Upload your plant photo and nickname to instantly get the original botanical name, step-by-step care routines, and automated reminders.
+            {t("garden_desc", "Upload your plant photo and nickname to get instant botanical species detection, step-by-step care routines, and automated reminders.")}
           </p>
         </div>
         <div className="garden-header-actions">
@@ -816,13 +818,13 @@ export default function GardenPage() {
             className="button button-outline button-small"
             onClick={() => openDoctorModal(null)}
           >
-            <HeartPulse size={15} /> 🩺 AI Doctor & Climate Clinic
+            <HeartPulse size={15} /> {t("garden_btn_doctor", "🩺 AI Doctor & Climate Clinic")}
           </button>
           <button
             className="button button-outline button-small"
             onClick={() => openDiagnosisModal()}
           >
-            <Sparkles size={15} /> Quick Leaf Scan
+            <Sparkles size={15} /> {t("garden_btn_scan", "Quick Leaf Scan")}
           </button>
           <button
             className="button button-small"
@@ -844,7 +846,7 @@ export default function GardenPage() {
               setModalType("add");
             }}
           >
-            <Plus size={16} /> Add Plant (Photo & Nickname)
+            <Plus size={16} /> {t("garden_btn_add", "Add Plant (Photo & Name)")}
           </button>
         </div>
       </div>
@@ -856,10 +858,10 @@ export default function GardenPage() {
         <section className="garden-weather-banner">
           <div className="garden-weather-top">
             <div className="garden-weather-loc-badge">
-              <span className="live-gps-dot" title="Live GPS & Climate Signal" />
+              <span className="live-gps-dot" title="લાઈવ GPS અને વાતાવરણ સિગ્નલ" />
               <div className="garden-weather-city-title">
                 <MapPin size={17} color="var(--green)" />
-                <span>{weather.city || (locationDetected ? "Live GPS Location" : "Auto-Detected Climate")}</span>
+                <span>{weather.city || (locationDetected ? "લાઈવ GPS સ્થાન" : "ઓટો-ડિટેક્ટેડ વાતાવરણ")}</span>
               </div>
             </div>
 
@@ -871,7 +873,7 @@ export default function GardenPage() {
                     <Search size={14} color="var(--muted)" />
                     <input
                       type="text"
-                      placeholder="Search city/area (e.g. Mumbai, Pune)..."
+                      placeholder="શહેર/વિસ્તાર શોધો (દા.ત. અમદાવાદ, મુંબઈ)..."
                       value={locationSearchQuery}
                       onChange={(e) => handleLocationSearch(e.target.value)}
                       autoFocus
@@ -894,9 +896,9 @@ export default function GardenPage() {
                     className="button button-outline button-small"
                     style={{ fontSize: "12px", padding: "5px 10px" }}
                     onClick={() => setShowLocationSearch(true)}
-                    title="Search weather for another city or locality"
+                    title="બીજા શહેરનું હવામાન શોધો"
                   >
-                    <Search size={13} /> Change City
+                    <Search size={13} /> શહેર બદલો
                   </button>
                 )}
 
@@ -918,7 +920,7 @@ export default function GardenPage() {
                 )}
                 {showLocationSearch && isSearchingLocation && (
                   <div className="weather-suggestions-menu" style={{ padding: "8px 12px", fontSize: "12px", color: "var(--muted)" }}>
-                    Searching locations...
+                    સ્થાન શોધાઈ રહ્યું છે...
                   </div>
                 )}
               </div>
@@ -930,10 +932,10 @@ export default function GardenPage() {
                 style={{ fontSize: "12px", padding: "5px 11px" }}
                 onClick={() => detectLocationAndWeather(true)}
                 disabled={locationDetecting}
-                title="Detect live GPS location from browser"
+                title="બ્રાઉઝરમાંથી લાઈવ GPS સ્થાન શોધો"
               >
                 <Navigation size={13} className={locationDetecting ? "spin" : ""} />
-                {locationDetecting ? "Locating…" : "Use My Live Location"}
+                {locationDetecting ? "સ્થાન શોધી રહ્યું છે…" : "મારું લાઈવ સ્થાન ઉપયોગ કરો"}
               </button>
 
               {/* Refresh Button */}
@@ -943,7 +945,7 @@ export default function GardenPage() {
                 style={{ padding: "5px 8px" }}
                 onClick={() => detectLocationAndWeather(true)}
                 disabled={locationDetecting}
-                title="Refresh current live weather"
+                title="હાલનું હવામાન રીફ્રેશ કરો"
               >
                 <RefreshCw size={13} className={locationDetecting ? "spin" : ""} />
               </button>
@@ -953,37 +955,37 @@ export default function GardenPage() {
           {/* 5 Weather Metrics Grid */}
           <div className="garden-weather-stats-row">
             <div className="garden-weather-stat-card">
-              <span className="w-label"><Thermometer size={12} color="#d9534f" /> Temperature</span>
+              <span className="w-label"><Thermometer size={12} color="#d9534f" /> તાપમાન</span>
               <span className="w-val">{weather.temperature}°C</span>
               <span className="w-sub">
                 {weather.minTemperature !== undefined && weather.maxTemperature !== undefined
-                  ? `L: ${weather.minTemperature}° • H: ${weather.maxTemperature}°`
-                  : "Live Ambient"}
+                  ? `ન્યૂનતમ: ${weather.minTemperature}° • મહત્તમ: ${weather.maxTemperature}°`
+                  : "લાઈવ વાતાવરણ"}
               </span>
             </div>
 
             <div className="garden-weather-stat-card">
-              <span className="w-label"><Droplets size={12} color="#2b75a0" /> Humidity</span>
+              <span className="w-label"><Droplets size={12} color="#2b75a0" /> ભેજ</span>
               <span className="w-val">{weather.humidity}%</span>
-              <span className="w-sub">{weather.humidity > 75 ? "High moisture" : "Optimal"}</span>
+              <span className="w-sub">{weather.humidity > 75 ? "વધારે ભેજ" : "યોગ્ય"}</span>
             </div>
 
             <div className="garden-weather-stat-card">
-              <span className="w-label"><Sun size={12} color="#f0ad4e" /> Condition</span>
+              <span className="w-label"><Sun size={12} color="#f0ad4e" /> સ્થિતિ</span>
               <span className="w-val" style={{ fontSize: "13px" }}>{weather.condition}</span>
-              <span className="w-sub">{weather.rainAlert ? "Rain alert" : "Gardening friendly"}</span>
+              <span className="w-sub">{weather.rainAlert ? "વરસાદની ચેતવણી" : "છોડ માટે અનુકૂળ"}</span>
             </div>
 
             <div className="garden-weather-stat-card">
-              <span className="w-label"><CloudRain size={12} color="#5bc0de" /> Rainfall</span>
+              <span className="w-label"><CloudRain size={12} color="#5bc0de" /> વરસાદ</span>
               <span className="w-val">{weather.precipitation || 0} mm</span>
-              <span className="w-sub">{weather.precipitation > 0 ? "Precipitation today" : "No rain today"}</span>
+              <span className="w-sub">{weather.precipitation > 0 ? "આજે વરસાદ છે" : "આજે વરસાદ નથી"}</span>
             </div>
 
             <div className="garden-weather-stat-card">
-              <span className="w-label"><Wind size={12} color="#6c757d" /> Wind Speed</span>
+              <span className="w-label"><Wind size={12} color="#6c757d" /> પવનની ગતિ</span>
               <span className="w-val">{weather.windSpeed || 8} km/h</span>
-              <span className="w-sub">Gentle breeze</span>
+              <span className="w-sub">હળવી પવનની લહેર</span>
             </div>
           </div>
 
@@ -991,7 +993,7 @@ export default function GardenPage() {
           <div className="garden-weather-advice-box">
             <HeartPulse size={16} color="var(--green)" style={{ flexShrink: 0, marginTop: "1px" }} />
             <div>
-              <strong>🩺 Live Climate AI Advisory: </strong>
+              <strong>🩺 લાઈવ ક્લાઇમેટ AI સલાહ: </strong>
               {weather.tip}
             </div>
           </div>
@@ -1002,44 +1004,44 @@ export default function GardenPage() {
       <div className="garden-overview-grid">
         <div className="stat-card">
           <div className="stat-card-top">
-            <span>Total Plants</span>
+            <span>કુલ છોડ</span>
             <Sprout size={20} />
           </div>
           <div className="stat-card-num">{stats.total}</div>
-          <div className="stat-card-desc">Active in your garden</div>
+          <div className="stat-card-desc">તમારા બગીચામાં સક્રિય</div>
         </div>
 
         <div className="stat-card">
           <div className="stat-card-top">
-            <span>Water Due Today</span>
+            <span>આજે પાણી આપવાનું બાકી</span>
             <Droplets size={20} color="#2b75a0" />
           </div>
           <div className="stat-card-num">{stats.needsWater}</div>
           <div className="stat-card-desc">
-            {stats.needsWater > 0 ? "Needs hydration today" : "All plants sufficiently hydrated"}
+            {stats.needsWater > 0 ? "આજે પાણી આપવું જરૂરી છે" : "બધા છોડ માટે પૂરતું પાણી છે"}
           </div>
         </div>
 
         <div className="stat-card">
           <div className="stat-card-top">
-            <span>Needs Attention</span>
+            <span>ધ્યાન આપવાની જરૂર</span>
             <AlertTriangle size={20} color="var(--rust)" />
           </div>
           <div className="stat-card-num">{stats.diseased}</div>
           <div className="stat-card-desc">
-            {stats.diseased > 0 ? "Under medical observation" : "No diseases detected"}
+            {stats.diseased > 0 ? "તબીબી નિરીક્ષણ હેઠળ" : "કોઈ રોગ મળ્યો નથી"}
           </div>
         </div>
 
         <div className="stat-card">
           <div className="stat-card-top">
-            <span>Garden Health</span>
+            <span>બગીચાનું સ્વાસ્થ્ય</span>
             <HeartPulse size={20} color="#358044" />
           </div>
           <div className="stat-card-num">
             {stats.total > 0 ? `${Math.round(((stats.healthy || 0) / stats.total) * 100)}%` : "100%"}
           </div>
-          <div className="stat-card-desc">Overall vitality score</div>
+          <div className="stat-card-desc">કુલ તંદુરસ્તી સ્કોર</div>
         </div>
       </div>
 
@@ -1050,30 +1052,30 @@ export default function GardenPage() {
             className={`garden-tab-btn ${filter === "all" ? "active" : ""}`}
             onClick={() => setFilter("all")}
           >
-            All Plants ({plants.length})
+            બધા છોડ ({plants.length})
           </button>
           <button
             className={`garden-tab-btn ${filter === "needs_water" ? "active" : ""}`}
             onClick={() => setFilter("needs_water")}
           >
-            Needs Water ({stats.needsWater})
+            પાણીની જરૂર ({stats.needsWater})
           </button>
           <button
             className={`garden-tab-btn ${filter === "diseased" ? "active" : ""}`}
             onClick={() => setFilter("diseased")}
           >
-            Under Care / Diseased ({stats.diseased})
+            સંભાળ હેઠળ / રોગગ્રસ્ત ({stats.diseased})
           </button>
           <button
             className={`garden-tab-btn ${filter === "healthy" ? "active" : ""}`}
             onClick={() => setFilter("healthy")}
           >
-            Healthy ({stats.healthy})
+            તંદુરસ્ત ({stats.healthy})
           </button>
         </div>
 
         <span className="muted" style={{ fontSize: "12px" }}>
-          {plants.length} plant{plants.length !== 1 ? "s" : ""} registered
+          {plants.length} છોડ નોંધાયેલ છે
         </span>
       </div>
 
@@ -1081,9 +1083,9 @@ export default function GardenPage() {
       {filteredPlants.length === 0 ? (
         <div style={{ textAlign: "center", padding: "48px 20px", background: "white", borderRadius: "8px", border: "1px solid var(--line)" }}>
           <Sprout size={36} color="var(--muted)" style={{ margin: "0 auto 12px" }} />
-          <h3>No plants found in this view</h3>
+          <h3>આ વ્યુમાં કોઈ છોડ મળ્યા નથી</h3>
           <p className="muted" style={{ fontSize: "13px" }}>
-            Add your plant by uploading a photo and giving it a nickname.
+            ફોટો અપલોડ કરીને અને હુલામણું નામ આપીને તમારો છોડ ઉમેરો.
           </p>
         </div>
       ) : (
@@ -1107,18 +1109,18 @@ export default function GardenPage() {
                       <h3>{plant.name}</h3>
                       <div className="plant-card-species">
                         <span className="plant-card-original-badge">
-                          🌱 Original: {origName}
+                          🌱 મૂળ છોડ: {origName}
                         </span>
                         <span style={{ display: "block", marginTop: "4px", fontSize: "11px", color: "var(--muted)" }}>
-                          Location: {plant.location || "balcony"}
+                          સ્થાન: {plant.location === "balcony" ? "બાલ્કની કન્ટેનર" : plant.location === "indoor" ? "ઇન્ડોર બારી" : plant.location === "terrace" ? "ટેરેસ ગાર્ડન" : plant.location || "બાલ્કની"}
                         </span>
                       </div>
                     </div>
                     <span className={`health-pill ${statusClass}`}>
-                      {statusClass === "healthy" && "🟢 Healthy"}
-                      {statusClass === "diseased" && "🔴 Diseased"}
-                      {statusClass === "needs_attention" && "🟡 Needs Care"}
-                      {statusClass === "recovering" && "🔵 Recovering"}
+                      {statusClass === "healthy" && "🟢 તંદુરસ્ત"}
+                      {statusClass === "diseased" && "🔴 રોગગ્રસ્ત"}
+                      {statusClass === "needs_attention" && "🟡 સંભાળ જરૂરી"}
+                      {statusClass === "recovering" && "🔵 સુધારો થઈ રહ્યો છે"}
                     </span>
                   </div>
 
@@ -1132,16 +1134,16 @@ export default function GardenPage() {
                   {/* Watering Status Box */}
                   <div className="watering-box">
                     <div className="watering-box-row">
-                      <span>💧 How Much Water:</span>
+                      <span>💧 કેટલું પાણી આપવું:</span>
                       <strong>{plant.waterQuantityMl || "300ml - 400ml"}</strong>
                     </div>
                     <div className="watering-box-row" style={{ marginTop: "4px" }}>
-                      <span>⏰ When to Water:</span>
+                      <span>⏰ ક્યારે પાણી આપવું:</span>
                       <strong>
                         {isDue ? (
-                          <span style={{ color: "var(--rust)" }}>💧 Due Today</span>
+                          <span style={{ color: "var(--rust)" }}>💧 આજે આપવાનું છે</span>
                         ) : (
-                          <span style={{ color: "var(--green)" }}>{plant.wateringEvaluation?.statusText || "✓ On Track"}</span>
+                          <span style={{ color: "var(--green)" }}>{plant.wateringEvaluation?.statusText || "✓ યોગ્ય સમયે"}</span>
                         )}
                       </strong>
                     </div>
@@ -1157,7 +1159,7 @@ export default function GardenPage() {
                     <div className="nutrient-box">
                       <div style={{ display: "flex", alignItems: "center", gap: "6px", fontSize: "11px", fontWeight: "700", color: "#6a521a" }}>
                         <Sparkles size={13} color="#a07c2a" />
-                        <span>Nutrients & Plant Food:</span>
+                        <span>પોષક તત્વો અને પ્લાન્ટ ફૂડ:</span>
                       </div>
                       <div style={{ fontSize: "11px", color: "#5a4d2e", marginTop: "3px", lineHeight: "1.4" }}>
                         {plant.nutrientAdvice}
@@ -1168,17 +1170,17 @@ export default function GardenPage() {
                   {/* In-app Notification status */}
                   <div className="notification-status-tag">
                     <Bell size={12} color="var(--green)" />
-                    <span>In-App Reminders Active ✓</span>
+                    <span>ઇન-એપ રીમાઇન્ડર્સ સક્રિય છે ✓</span>
                   </div>
 
                   {/* IoT Moisture Reading */}
                   {moisture != null && (
                     <div className="plant-iot-bar">
                       <div className="plant-iot-label">
-                        <span>IoT Soil Moisture:</span>
+                        <span>IoT માટીનો ભેજ:</span>
                         <strong>
                           {moisture}%{" "}
-                          {moisture < 20 ? "(Dry)" : moisture > 70 ? "(Damp)" : "(Good)"}
+                          {moisture < 20 ? "(સૂકી)" : moisture > 70 ? "(ભીની)" : "(યોગ્ય)"}
                         </strong>
                       </div>
                       <div className="plant-iot-progress">
@@ -1201,42 +1203,42 @@ export default function GardenPage() {
                     style={{ width: "100%", justifyContent: "center" }}
                     onClick={() => openStepCareModal(plant)}
                   >
-                    <Sparkles size={14} /> View Step-by-Step Care Guide
+                    <Sparkles size={14} /> પગલાંવાર સંભાળ માર્ગદર્શિકા જુઓ
                   </button>
 
                   <div className="plant-card-actions" style={{ paddingTop: "8px" }}>
                     <button
                       className="btn-water"
                       onClick={() => handleWaterPlant(plant)}
-                      title="Log that you watered this plant today"
+                      title="પાણી આપ્યાની નોંધ કરો"
                     >
-                      <Droplets size={14} /> Watered
+                      <Droplets size={14} /> પાણી આપ્યું
                     </button>
                     <button
                       className="btn-scan"
                       onClick={() => openDoctorModal(plant)}
-                      title="Ask AI Plant Doctor advice for this plant"
+                      title="આ છોડ માટે AI ડોક્ટરની સલાહ લો"
                     >
-                      <MessageSquare size={14} /> Doctor
+                      <MessageSquare size={14} /> ડોક્ટર
                     </button>
                     <button
                       className="btn-mini-icon"
                       onClick={() => openDiagnosisModal(plant)}
-                      title="Scan leaf for diseases"
+                      title="રોગ માટે પાંદડું સ્કેન કરો"
                     >
                       <Sparkles size={14} />
                     </button>
                     <button
                       className="btn-mini-icon"
                       onClick={() => openHistoryModal(plant)}
-                      title="View diagnosis & care history"
+                      title="ઇતિહાસ જુઓ"
                     >
                       <History size={14} />
                     </button>
                     <button
                       className="btn-mini-icon danger"
                       onClick={() => handleDeletePlant(plant._id)}
-                      title="Remove plant"
+                      title="છોડ દૂર કરો"
                     >
                       <Trash2 size={14} />
                     </button>
@@ -1255,15 +1257,15 @@ export default function GardenPage() {
         <div className="nursery-section-head">
           <div>
             <p className="eyebrow">
-              <ShoppingBag size={14} /> Green Leaf Nursery Catalog
+              <ShoppingBag size={14} /> ગ્રીન લીફ નર્સરી કેટેલોગ
             </p>
-            <h2>Recommended Care Products & Plants (Category-Wise)</h2>
+            <h2>સૂચવેલ સંભાળ પ્રોડક્ટ્સ અને છોડ (કેટેગરી મુજબ)</h2>
             <p className="muted" style={{ margin: "2px 0 0", fontSize: "13px" }}>
-              Organic medicines, nutrient foods, breathable planters, and healthy plants directly from our nursery.
+              જૈવિક દવાઓ, પોષક ખોરાક, હવામાન-અનુકૂળ કુંડાં અને અમારી નર્સરીમાંથી સીધા જ તંદુરસ્ત છોડ.
             </p>
           </div>
           <Link to="/products" className="button button-outline button-small">
-            Browse Full Shop <ArrowRight size={14} />
+            સંપૂર્ણ સ્ટોર જુઓ <ArrowRight size={14} />
           </Link>
         </div>
 
@@ -1274,7 +1276,7 @@ export default function GardenPage() {
             className={`nursery-cat-btn ${selectedCategoryTab === "all" ? "active" : ""}`}
             onClick={() => setSelectedCategoryTab("all")}
           >
-            All Products ({nurseryProducts.length})
+            બધી પ્રોડક્ટ્સ ({nurseryProducts.length})
           </button>
           {categories.map((c) => (
             <button
@@ -1302,7 +1304,7 @@ export default function GardenPage() {
               </Link>
               <div className="nursery-prod-body">
                 <span className="nursery-prod-category">
-                  {product.category?.name || "Nursery Plant"}
+                  {product.category?.name || "નર્સરી છોડ"}
                 </span>
                 <Link to={`/products/${product._id}`} className="nursery-prod-title">
                   {product.name}
@@ -1318,7 +1320,7 @@ export default function GardenPage() {
                     className="nursery-prod-buy-btn"
                     onClick={() => handleAddProductToCart(product)}
                   >
-                    <Plus size={14} /> Add to Cart
+                    <Plus size={14} /> કાર્ટમાં ઉમેરો
                   </button>
                 </div>
               </div>
@@ -1337,9 +1339,9 @@ export default function GardenPage() {
               <X size={18} />
             </button>
             <p className="eyebrow">
-              <Plus size={14} /> My Garden
+              <Plus size={14} /> મારો બગીચો
             </p>
-            <h2 style={{ margin: "4px 0 14px" }}>Add Plant to Garden</h2>
+            <h2 style={{ margin: "4px 0 14px" }}>બગીચામાં છોડ ઉમેરો</h2>
 
             {/* Mode Switch Tabs */}
             <div className="ai-mode-tabs">
@@ -1348,21 +1350,21 @@ export default function GardenPage() {
                 className={`ai-mode-tab ${addMode === "ai" ? "active" : ""}`}
                 onClick={() => setAddMode("ai")}
               >
-                ✨ AI Auto-Setup (Photo + Nickname only)
+                ✨ AI ઓટો-સેટઅપ (માત્ર ફોટો અને નામ)
               </button>
               <button
                 type="button"
                 className={`ai-mode-tab ${addMode === "manual" ? "active" : ""}`}
                 onClick={() => { stopCamera(); setAddMode("manual"); }}
               >
-                📝 Manual Entry
+                📝 જાતે એન્ટ્રી કરો
               </button>
             </div>
 
             {addMode === "ai" ? (
               <div>
                 <p className="muted" style={{ fontSize: "13px", margin: "0 0 16px" }}>
-                  Upload a photo of your plant and enter a nickname. AI will identify the original plant name, create a step-by-step care plan (watering, sunlight, plant food), and set up notifications so you never forget!
+                  તમારા છોડનો ફોટો અપલોડ કરો અને હુલામણું નામ આપો. AI મૂળ છોડનું નામ ઓળખશે, પગલાંવાર સંભાળ યોજના બનાવશે (પાણી, સૂર્યપ્રકાશ, ખાતર) અને રીમાઇન્ડર્સ સેટ કરશે!
                 </p>
 
                 {/* Live Camera Viewfinder Box */}
@@ -1371,10 +1373,10 @@ export default function GardenPage() {
                     <video ref={videoRef} autoPlay playsInline className="camera-video" />
                     <div className="camera-actions-bar">
                       <button type="button" className="button button-small" onClick={capturePhoto}>
-                        <Camera size={15} /> Snap Photo Now
+                        <Camera size={15} /> હમણાં ફોટો પાડો
                       </button>
                       <button type="button" className="button button-outline button-small" onClick={stopCamera}>
-                        Cancel Camera
+                        કેમેરો બંધ કરો
                       </button>
                     </div>
                   </div>
@@ -1397,9 +1399,9 @@ export default function GardenPage() {
                         if (file) {
                           const v = validatePlantImageFile(file);
                           if (!v.valid) {
-                            const err = v.error || "Invalid image file";
+                            const err = v.error || "અમાન્ય ઇમેજ ફાઇલ";
                             setAiPhotoError(err);
-                            alert(`⚠️ File Error:\n\n${err}`);
+                            alert(`⚠️ ફાઇલ ભૂલ:\n\n${err}`);
                             notify(`⚠️ ${err}`, "error");
                           } else {
                             setAiPhotoError("");
@@ -1418,9 +1420,9 @@ export default function GardenPage() {
                           if (file) {
                             const v = validatePlantImageFile(file);
                             if (!v.valid) {
-                              const err = v.error || "Invalid image file";
+                              const err = v.error || "અમાન્ય ઇમેજ ફાઇલ";
                               setAiPhotoError(err);
-                              alert(`⚠️ File Error:\n\n${err}`);
+                              alert(`⚠️ ફાઇલ ભૂલ:\n\n${err}`);
                               notify(`⚠️ ${err}`, "error");
                             } else {
                               setAiPhotoError("");
@@ -1431,11 +1433,11 @@ export default function GardenPage() {
                       />
                       {aiPreview ? (
                         <div>
-                          <img src={aiPreview} alt="Selected plant" />
+                          <img src={aiPreview} alt="પસંદ કરેલ છોડ" />
                           <div style={{ display: "flex", justifyContent: "center", alignItems: "center", gap: "8px", marginTop: "8px" }}>
                             <span className="dropzone-file-pill">
                               <Leaf size={13} color="var(--green)" />
-                              {aiPhoto?.name ? aiPhoto.name.slice(0, 24) : "Photo ready"}
+                              {aiPhoto?.name ? aiPhoto.name.slice(0, 24) : "ફોટો તૈયાર છે"}
                               {aiPhoto?.size && ` (${(aiPhoto.size / 1024).toFixed(0)} KB)`}
                             </span>
                             <button
@@ -1447,23 +1449,23 @@ export default function GardenPage() {
                                 setAiPhoto(null);
                                 setAiPhotoError("");
                               }}
-                              title="Remove photo"
+                              title="ફોટો દૂર કરો"
                             >
                               <X size={12} />
                             </button>
                           </div>
                           <span style={{ fontSize: "11px", color: "var(--green)", marginTop: "4px", display: "block" }}>
-                            Click or drop another image to change
+                            બદલવા માટે બીજી ઇમેજ પર ક્લિક કરો અથવા ડ્રોપ કરો
                           </span>
                         </div>
                       ) : (
                         <>
                           <UploadCloud size={36} color={aiPhotoError ? "var(--rust)" : "var(--green)"} />
                           <strong style={{ fontSize: "13px", color: aiPhotoError ? "var(--rust)" : "var(--green-deep)" }}>
-                            Upload Plant Photo *
+                            છોડનો ફોટો અપલોડ કરો *
                           </strong>
                           <span className="muted" style={{ fontSize: "11px" }}>
-                            JPG, PNG, WebP · Drag & drop or click to browse
+                            JPG, PNG, WebP · ડ્રેગ અને ડ્રોપ કરો અથવા પસંદ કરવા ક્લિક કરો
                           </span>
                         </>
                       )}
@@ -1484,7 +1486,7 @@ export default function GardenPage() {
                           className="button button-outline button-small"
                           onClick={() => startCamera("ai")}
                         >
-                          <Camera size={15} /> Open Live Camera Scanner
+                          <Camera size={15} /> લાઈવ કેમેરા સ્કેનર ખોલો
                         </button>
                       </div>
                     )}
@@ -1492,9 +1494,9 @@ export default function GardenPage() {
 
                   <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "12px" }}>
                     <label>
-                      Plant Nickname *
+                      છોડનું હુલામણું નામ *
                       <input
-                        placeholder="e.g. Tommy, Greenie, Sunny Mint"
+                        placeholder="દા.ત. ટામેટી, હરિયાળો, ફુદીનો"
                         value={aiNickname}
                         onChange={(e) => {
                           setAiNickname(e.target.value);
@@ -1510,15 +1512,15 @@ export default function GardenPage() {
                     </label>
 
                     <label>
-                      Growing Location
+                      ઉગાડવાનું સ્થાન
                       <select
                         value={aiLocation}
                         onChange={(e) => setAiLocation(e.target.value)}
                       >
-                        <option value="balcony">Balcony Container</option>
-                        <option value="indoor">Indoor Windowsill</option>
-                        <option value="terrace">Terrace Garden</option>
-                        <option value="garden_bed">Outdoor Soil Bed</option>
+                        <option value="balcony">બાલ્કની કન્ટેનર</option>
+                        <option value="indoor">ઇન્ડોર બારી</option>
+                        <option value="terrace">ટેરેસ ગાર્ડન</option>
+                        <option value="garden_bed">જમીન / બગીચો</option>
                       </select>
                     </label>
                   </div>
@@ -1528,7 +1530,7 @@ export default function GardenPage() {
                     className="button full-button"
                     disabled={aiAddBusy}
                   >
-                    {aiAddBusy ? "AI Identifying Plant & Building Step-by-Step Guide…" : "✨ Identify Plant & Get Step-by-Step Care Guide"}
+                    {aiAddBusy ? "AI છોડની ઓળખ કરી રહ્યું છે અને માર્ગદર્શિકા બનાવી રહ્યું છે…" : "✨ છોડ ઓળખો અને સંભાળ ગાઇડ મેળવો"}
                     <Sparkles size={16} />
                   </button>
                 </form>
@@ -1537,17 +1539,17 @@ export default function GardenPage() {
               /* Manual Entry Form */
               <form onSubmit={handleCreatePlant} className="diagnosis-form">
                 <label>
-                  Plant Nickname or Name *
+                  છોડનું નામ અથવા હુલામણું નામ *
                   <input
                     required
-                    placeholder="e.g. Balcony Cherry Tomato"
+                    placeholder="દા.ત. બાલ્કની ટામેટી"
                     value={plantForm.name}
                     onChange={(e) => setPlantForm({ ...plantForm, name: e.target.value })}
                   />
                 </label>
 
                 <label>
-                  Plant Species / Type
+                  છોડનો પ્રકાર / પ્રજાતિ
                   <select
                     value={plantForm.species}
                     onChange={(e) => {
@@ -1570,34 +1572,34 @@ export default function GardenPage() {
 
                 <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "12px" }}>
                   <label>
-                    Location
+                    સ્થાન
                     <select
                       value={plantForm.location}
                       onChange={(e) => setPlantForm({ ...plantForm, location: e.target.value })}
                     >
-                      <option value="balcony">Balcony Container</option>
-                      <option value="indoor">Indoor Windowsill</option>
-                      <option value="terrace">Terrace Garden</option>
-                      <option value="garden_bed">Outdoor Soil Bed</option>
+                      <option value="balcony">બાલ્કની કન્ટેનર</option>
+                      <option value="indoor">ઇન્ડોર બારી</option>
+                      <option value="terrace">ટેરેસ ગાર્ડન</option>
+                      <option value="garden_bed">જમીન / બગીચો</option>
                     </select>
                   </label>
 
                   <label>
-                    Pot / Container Size
+                    કુંડાંનું માપ
                     <select
                       value={plantForm.potSize}
                       onChange={(e) => setPlantForm({ ...plantForm, potSize: e.target.value })}
                     >
-                      <option value="Small (4-6 inch)">Small (4–6 inch)</option>
-                      <option value="Medium (8-10 inch)">Medium (8–10 inch)</option>
-                      <option value="Large (12+ inch)">Large (12+ inch)</option>
-                      <option value="Raised Bed">Raised Bed / Ground</option>
+                      <option value="Small (4-6 inch)">નાનું (4–6 ઇંચ)</option>
+                      <option value="Medium (8-10 inch)">મધ્યમ (8–10 ઇંચ)</option>
+                      <option value="Large (12+ inch)">મોટું (12+ ઇંચ)</option>
+                      <option value="Raised Bed">જમીન / ક્યારી</option>
                     </select>
                   </label>
                 </div>
 
                 <label>
-                  Base Watering Interval (Days)
+                  પાણી આપવાનો દિવસોનો તફાવત
                   <input
                     type="number"
                     min="1"
@@ -1610,17 +1612,17 @@ export default function GardenPage() {
                 </label>
 
                 <label>
-                  Gardener Notes (Optional)
+                  માળીની નોંધો (વૈકલ્પિક)
                   <textarea
                     rows="2"
-                    placeholder="e.g. Sown from seed in March, loves afternoon sun."
+                    placeholder="દા.ત. માર્ચમાં બીજ વાવ્યા, બપોરનો તડકો પસંદ છે."
                     value={plantForm.notes}
                     onChange={(e) => setPlantForm({ ...plantForm, notes: e.target.value })}
                   />
                 </label>
 
                 <button type="submit" className="button full-button">
-                  Save Plant to Garden
+                  બગીચામાં છોડ સાચવો
                 </button>
               </form>
             )}
@@ -1639,9 +1641,9 @@ export default function GardenPage() {
             </button>
 
             <p className="eyebrow">
-              <Sparkles size={14} /> AI Botanical Assistant
+              <Sparkles size={14} /> AI વનસ્પતિ આસિસ્ટન્ટ
             </p>
-            <h2 style={{ margin: "4px 0 16px" }}>Step-by-Step Care Guide</h2>
+            <h2 style={{ margin: "4px 0 16px" }}>પગલાંવાર સંભાળ માર્ગદર્શિકા</h2>
 
             {/* Plant Identity Hero Banner */}
             <div className="stepwise-hero">
@@ -1654,19 +1656,19 @@ export default function GardenPage() {
               )}
               <div className="stepwise-hero-info">
                 <span className="muted" style={{ fontSize: "11px", fontWeight: "700", textTransform: "uppercase" }}>
-                  Nickname:
+                  હુલામણું નામ:
                 </span>
                 <h3>{stepCarePlant.name}</h3>
 
                 <div className="stepwise-hero-tags">
                   <span className="plant-card-original-badge">
-                    🌱 Original Plant: {stepCarePlant.originalName || stepCarePlant.species}
+                    🌱 મૂળ છોડ: {stepCarePlant.originalName || stepCarePlant.species}
                   </span>
                   <span className="health-pill healthy">
-                    ✓ {stepCareReport?.confidence || 96}% Match
+                    ✓ {stepCareReport?.confidence || 96}% મેળ
                   </span>
                   <span className="health-pill healthy">
-                    🟢 {stepCarePlant.healthStatus || "Healthy"}
+                    🟢 {stepCarePlant.healthStatus === "healthy" ? "તંદુરસ્ત" : stepCarePlant.healthStatus || "તંદુરસ્ત"}
                   </span>
                 </div>
               </div>
@@ -1699,17 +1701,17 @@ export default function GardenPage() {
             <div className="stepwise-nursery-strip">
               <div className="stepwise-nursery-head">
                 <ShoppingBag size={16} color="#8a6616" />
-                <span>Recommended Care Products from Nursery:</span>
+                <span>નર્સરીમાંથી સૂચવેલ સંભાળ પ્રોડક્ટ્સ:</span>
               </div>
               <div className="stepwise-products-pills">
                 <Link to="/products?q=neem" className="stepwise-prod-pill">
-                  🌿 Organic Cold-Pressed Neem Spray
+                  🌿 જૈવિક કોલ્ડ-પ્રેસ્ડ લીમડાનું તેલ સ્પ્રે
                 </Link>
                 <Link to="/products?q=fertilizer" className="stepwise-prod-pill">
-                  🧪 Seaweed & Vermicompost Plant Food
+                  🧪 સીવીડ અને વર્મીકમ્પોસ્ટ પ્લાન્ટ ફૂડ
                 </Link>
                 <Link to="/products?q=potting" className="stepwise-prod-pill">
-                  🪴 Aerated Organic Potting Mix
+                  🪴 હવાયુક્ત ઓર્ગેનિક પોટિંગ મિક્સ
                 </Link>
               </div>
             </div>
@@ -1721,14 +1723,14 @@ export default function GardenPage() {
                 className="button button-outline button-small"
                 onClick={() => openDoctorModal(stepCarePlant)}
               >
-                <MessageSquare size={15} /> Ask AI Plant Doctor a Question
+                <MessageSquare size={15} /> AI પ્લાન્ટ ડોક્ટરને પૂછો
               </button>
               <button
                 type="button"
                 className="button button-small"
                 onClick={() => setModalType(null)}
               >
-                <Check size={15} /> Done & View in Garden
+                <Check size={15} /> પૂર્ણ અને બગીચામાં જુઓ
               </button>
             </div>
           </div>
@@ -1745,14 +1747,14 @@ export default function GardenPage() {
               <X size={18} />
             </button>
             <p className="eyebrow">
-              <HeartPulse size={14} /> AI Plant Doctor Clinic
+              <HeartPulse size={14} /> AI પ્લાન્ટ ડોક્ટર ક્લિનિક
             </p>
             <h2 style={{ margin: "4px 0 6px" }}>
-              {doctorPlant ? `Consult Doctor: ${doctorPlant.name}` : "AI Plant Doctor & Climate Clinic"}
+              {doctorPlant ? `ડોક્ટરની સલાહ: ${doctorPlant.name}` : "AI પ્લાન્ટ ડોક્ટર અને ક્લાઇમેટ ક્લિનિક"}
             </h2>
             {doctorPlant && (
               <p className="muted" style={{ fontSize: "12px", margin: "0 0 14px" }}>
-                Original Plant: <strong>{doctorPlant.originalName || doctorPlant.species}</strong> • Health: {doctorPlant.healthStatus}
+                મૂળ છોડ: <strong>{doctorPlant.originalName || doctorPlant.species}</strong> • સ્વાસ્થ્ય: {doctorPlant.healthStatus}
               </p>
             )}
 
@@ -1762,7 +1764,7 @@ export default function GardenPage() {
                 <div className="doctor-weather-head">
                   <span className="doctor-weather-location">
                     <MapPin size={14} color="var(--green)" />
-                    {weather.city || (locationDetected ? "Auto-Detected via GPS" : "Auto-Detected Local Climate")}
+                    {weather.city || (locationDetected ? "GPS દ્વારા શોધાયેલ" : "ઓટો-ડિટેક્ટેડ વાતાવરણ")}
                   </span>
                   <button
                     type="button"
@@ -1770,34 +1772,34 @@ export default function GardenPage() {
                     style={{ padding: "3px 8px", fontSize: "11px" }}
                     onClick={detectLocationAndWeather}
                     disabled={locationDetecting}
-                    title="Refresh GPS location & live weather"
+                    title="GPS સ્થાન અને લાઈવ હવામાન રીફ્રેશ કરો"
                   >
                     <RefreshCw size={11} className={locationDetecting ? "spin" : ""} />
-                    {locationDetecting ? "Detecting…" : "Refresh GPS"}
+                    {locationDetecting ? "શોધાઈ રહ્યું છે…" : "GPS રીફ્રેશ કરો"}
                   </button>
                 </div>
 
                 <div className="doctor-weather-grid">
                   <div className="doctor-weather-metric">
-                    <span>Temp</span>
+                    <span>તાપમાન</span>
                     <strong>{weather.temperature}°C</strong>
                   </div>
                   <div className="doctor-weather-metric">
-                    <span>Humidity</span>
+                    <span>ભેજ</span>
                     <strong>{weather.humidity}%</strong>
                   </div>
                   <div className="doctor-weather-metric">
-                    <span>Condition</span>
+                    <span>સ્થિતિ</span>
                     <strong style={{ fontSize: "12px" }}>{weather.condition}</strong>
                   </div>
                   <div className="doctor-weather-metric">
-                    <span>Rainfall</span>
+                    <span>વરસાદ</span>
                     <strong>{weather.precipitation || 0}mm</strong>
                   </div>
                 </div>
 
                 <div className="doctor-weather-advisory">
-                  <strong>🩺 Microclimate Doctor Assessment: </strong>
+                  <strong>🩺 માઇક્રોક્લાઇમેટ ડોક્ટર સલાહ: </strong>
                   {weather.tip}
                 </div>
               </div>
@@ -1811,7 +1813,7 @@ export default function GardenPage() {
               ))}
               {doctorBusy && (
                 <div className="doctor-msg assistant">
-                  <em>AI Doctor is analyzing plant symptoms & local microclimate…</em>
+                  <em>AI ડોક્ટર છોડના લક્ષણો અને વાતાવરણનું વિશ્લેષણ કરી રહ્યા છે…</em>
                 </div>
               )}
             </div>
@@ -1819,12 +1821,12 @@ export default function GardenPage() {
             <form onSubmit={handleDoctorSubmit} className="doctor-input-row">
               <input
                 required
-                placeholder="e.g. Why are lower leaves turning yellow in this heat?"
+                placeholder="દા.ત. ગરમીમાં નીચેના પાંદડા પીળા કેમ પડી રહ્યા છે?"
                 value={doctorQuestion}
                 onChange={(e) => setDoctorQuestion(e.target.value)}
               />
               <button type="submit" className="button button-small" disabled={doctorBusy || !doctorQuestion.trim()}>
-                Ask Doctor
+                પ્રશ્ન પૂછો
               </button>
             </form>
           </div>
@@ -1841,10 +1843,10 @@ export default function GardenPage() {
               <X size={18} />
             </button>
             <p className="eyebrow">
-              <Sparkles size={14} /> AI Plant Pathologist
+              <Sparkles size={14} /> AI પ્લાન્ટ પેથોલોજિસ્ટ
             </p>
             <h2 style={{ margin: "4px 0 14px" }}>
-              {selectedPlant ? `Diagnose: ${selectedPlant.name} (${selectedPlant.originalName || selectedPlant.species})` : "Diagnose Plant Leaf"}
+              {selectedPlant ? `નિદાન: ${selectedPlant.name} (${selectedPlant.originalName || selectedPlant.species})` : "પાંદડાનું નિદાન કરો"}
             </h2>
 
             {/* Live Camera Viewfinder */}
@@ -1853,10 +1855,10 @@ export default function GardenPage() {
                 <video ref={videoRef} autoPlay playsInline className="camera-video" />
                 <div className="camera-actions-bar">
                   <button type="button" className="button button-small" onClick={capturePhoto}>
-                    <Camera size={15} /> Snap Leaf Photo
+                    <Camera size={15} /> પાંદડાનો ફોટો પાડો
                   </button>
                   <button type="button" className="button button-outline button-small" onClick={stopCamera}>
-                    Cancel Camera
+                    કેમેરો બંધ કરો
                   </button>
                 </div>
               </div>
@@ -1879,9 +1881,9 @@ export default function GardenPage() {
                     if (file) {
                       const v = validatePlantImageFile(file);
                       if (!v.valid) {
-                        const err = v.error || "Invalid image file";
+                        const err = v.error || "અમાન્ય ઇમેજ ફાઇલ";
                         setDiagFileError(err);
-                        alert(`⚠️ File Error:\n\n${err}`);
+                        alert(`⚠️ ફાઇલ ભૂલ:\n\n${err}`);
                         notify(`⚠️ ${err}`, "error");
                       } else {
                         setDiagFileError("");
@@ -1900,9 +1902,9 @@ export default function GardenPage() {
                       if (file) {
                         const v = validatePlantImageFile(file);
                         if (!v.valid) {
-                          const err = v.error || "Invalid image file";
+                          const err = v.error || "અમાન્ય ઇમેજ ફાઇલ";
                           setDiagFileError(err);
-                          alert(`⚠️ File Error:\n\n${err}`);
+                          alert(`⚠️ ફાઇલ ભૂલ:\n\n${err}`);
                           notify(`⚠️ ${err}`, "error");
                         } else {
                           setDiagFileError("");
@@ -1913,11 +1915,11 @@ export default function GardenPage() {
                   />
                   {diagPreview ? (
                     <div>
-                      <img src={diagPreview} alt="Leaf preview" />
+                      <img src={diagPreview} alt="પાંદડાનું પ્રિવ્યૂ" />
                       <div style={{ display: "flex", justifyContent: "center", alignItems: "center", gap: "8px", marginTop: "8px" }}>
                         <span className="dropzone-file-pill">
                           <Leaf size={13} color="var(--green)" />
-                          {diagFile?.name ? diagFile.name.slice(0, 24) : "Leaf photo ready"}
+                          {diagFile?.name ? diagFile.name.slice(0, 24) : "પાંદડાનો ફોટો તૈયાર છે"}
                           {diagFile?.size && ` (${(diagFile.size / 1024).toFixed(0)} KB)`}
                         </span>
                         <button
@@ -1929,23 +1931,23 @@ export default function GardenPage() {
                             setDiagFile(null);
                             setDiagFileError("");
                           }}
-                          title="Remove photo"
+                          title="ફોટો દૂર કરો"
                         >
                           <X size={12} />
                         </button>
                       </div>
                       <span style={{ fontSize: "11px", color: "var(--green)", marginTop: "4px", display: "block" }}>
-                        Click or drop another image to change
+                        બદલવા માટે બીજી ઇમેજ પર ક્લિક કરો અથવા ડ્રોપ કરો
                       </span>
                     </div>
                   ) : (
                     <>
                       <UploadCloud size={38} color={diagFileError ? "var(--rust)" : "var(--green)"} />
                       <strong style={{ fontSize: "13px", color: diagFileError ? "var(--rust)" : "var(--green-deep)" }}>
-                        Upload plant or leaf photo (JPG, PNG, WebP) *
+                        છોડ અથવા પાંદડાનો ફોટો અપલોડ કરો (JPG, PNG, WebP) *
                       </strong>
                       <span className="muted" style={{ fontSize: "11px" }}>
-                        Drag and drop or click to browse
+                        ડ્રેગ અને ડ્રોપ કરો અથવા પસંદ કરવા ક્લિક કરો
                       </span>
                     </>
                   )}
@@ -1966,7 +1968,7 @@ export default function GardenPage() {
                       className="button button-outline button-small"
                       onClick={() => startCamera("diag")}
                     >
-                      <Camera size={15} /> Use Live Camera to Snap Leaf
+                      <Camera size={15} /> લાઈવ કેમેરા વડે પાંદડાનો ફોટો પાડો
                     </button>
                   </div>
                 )}
@@ -1974,7 +1976,7 @@ export default function GardenPage() {
 
               <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "12px" }}>
                 <label>
-                  Plant Species / Type
+                  છોડનો પ્રકાર / પ્રજાતિ
                   <select
                     value={diagSpecies}
                     onChange={(e) => setDiagSpecies(e.target.value)}
@@ -1988,7 +1990,7 @@ export default function GardenPage() {
                 </label>
 
                 <label>
-                  Link to Garden Plant
+                  બગીચાના છોડ સાથે લિંક કરો
                   <select
                     value={diagPlantId}
                     onChange={(e) => {
@@ -1997,10 +1999,10 @@ export default function GardenPage() {
                       if (found) setSelectedPlant(found);
                     }}
                   >
-                    <option value="">-- Quick Scan (Not linked) --</option>
+                    <option value="">-- ઝડપી સ્કેન (લિંક વગર) --</option>
                     {plants.map((p) => (
                       <option key={p._id} value={p._id}>
-                        {p.name} (Original: {p.originalName || p.species})
+                        {p.name} (મૂળ: {p.originalName || p.species})
                       </option>
                     ))}
                   </select>
@@ -2012,7 +2014,7 @@ export default function GardenPage() {
                 className="button full-button"
                 disabled={diagBusy}
               >
-                {diagBusy ? "Analyzing Leaf Image with AI Pathologist…" : "Run AI Diagnosis"}
+                {diagBusy ? "AI પેથોલોજિસ્ટ વિશ્લેષણ કરી રહ્યા છે…" : "AI નિદાન ચલાવો"}
                 <ArrowRight size={16} />
               </button>
             </form>
@@ -2035,17 +2037,17 @@ export default function GardenPage() {
                         color: diagResult.isHealthy ? "#2b6d27" : "var(--rust)",
                       }}
                     >
-                      {diagResult.isHealthy ? "✓ Healthy Botanical Status" : "⚠️ Pathogen Identified"}
+                      {diagResult.isHealthy ? "✓ તંદુરસ્ત સ્થિતિ" : "⚠️ રોગચાળો મળ્યો"}
                     </span>
                     <h3>{diagResult.diseaseName}</h3>
                     <span style={{ fontSize: "12px", color: "#545e51" }}>
-                      Severity: <strong>{diagResult.severity || "Moderate"}</strong>
+                      ગંભીરતા: <strong>{diagResult.severity || "મધ્યમ"}</strong>
                     </span>
                   </div>
 
                   <div className="confidence-gauge">
                     <span style={{ fontSize: "10px", display: "block", color: "#646d60" }}>
-                      AI CONFIDENCE
+                      AI ચોકસાઈ
                     </span>
                     <strong>{diagResult.confidence || 93}%</strong>
                   </div>
@@ -2054,7 +2056,7 @@ export default function GardenPage() {
                 <div className="diagnosis-sections">
                   {/* Symptoms & Causes */}
                   <div className="diagnosis-sect-card">
-                    <h4>🔍 Visible Symptoms & Pathogen Triggers</h4>
+                    <h4>🔍 દૃશ્યમાન લક્ષણો અને કારણો</h4>
                     <ul>
                       {(diagResult.symptoms || []).map((s, idx) => (
                         <li key={idx}>{s}</li>
@@ -2062,7 +2064,7 @@ export default function GardenPage() {
                     </ul>
                     {diagResult.causes?.length > 0 && (
                       <p style={{ marginTop: "8px" }}>
-                        <strong>Causes: </strong>
+                        <strong>મુખ્ય કારણો: </strong>
                         {diagResult.causes.join(" • ")}
                       </p>
                     )}
@@ -2071,7 +2073,7 @@ export default function GardenPage() {
                   {/* Organic & Home Treatments */}
                   <div className="diagnosis-sect-card" style={{ background: "#f5f8f3" }}>
                     <h4 style={{ color: "var(--green-deep)" }}>
-                      🌿 Urban Gardener Organic & Home Remedies
+                      🌿 જૈવિક અને ઘરગથ્થુ ઉપચારો
                     </h4>
                     <ul>
                       {(diagResult.organicTreatment || []).map((t, idx) => (
@@ -2082,10 +2084,10 @@ export default function GardenPage() {
 
                   {/* Chemical Treatment & Prevention */}
                   <div className="diagnosis-sect-card">
-                    <h4>🧪 Nursery Treatment & Preventive Care</h4>
+                    <h4>🧪 નર્સરી સારવાર અને સંભાળ</h4>
                     {diagResult.chemicalTreatment?.length > 0 && (
                       <p style={{ marginBottom: "6px" }}>
-                        <strong>Protective Fungicides: </strong>
+                        <strong>રક્ષણાત્મક દ્રવ્યો: </strong>
                         {diagResult.chemicalTreatment.join(" • ")}
                       </p>
                     )}
@@ -2099,7 +2101,7 @@ export default function GardenPage() {
                   {/* Smart Watering Directive */}
                   {diagResult.wateringAdvice && (
                     <div className="diagnosis-sect-card" style={{ background: "#f2f7fc" }}>
-                      <h4 style={{ color: "#235496" }}>💧 Recommended Watering Routine</h4>
+                      <h4 style={{ color: "#235496" }}>💧 સૂચવેલ પાણી આપવાની દિનચર્યા</h4>
                       <p>{diagResult.wateringAdvice}</p>
                     </div>
                   )}
@@ -2108,17 +2110,17 @@ export default function GardenPage() {
                   <div className="stepwise-nursery-strip" style={{ margin: "10px 0 0" }}>
                     <div className="stepwise-nursery-head">
                       <ShoppingBag size={16} color="#8a6616" />
-                      <span>Recommended Treatment Products from Nursery:</span>
+                      <span>નર્સરીમાંથી સૂચવેલ ઇલાજ પ્રોડક્ટ્સ:</span>
                     </div>
                     <div className="stepwise-products-pills">
                       <Link to="/products?q=neem" className="stepwise-prod-pill">
-                        🌿 Organic Cold-Pressed Neem Spray
+                        🌿 જૈવિક લીમડાનું તેલ સ્પ્રે
                       </Link>
                       <Link to="/products?q=fungicide" className="stepwise-prod-pill">
-                        🛡️ Bio-Fungicide Powder
+                        🛡️ બાયો-ફંગસાઇડ પાવડર
                       </Link>
                       <Link to="/products?q=fertilizer" className="stepwise-prod-pill">
-                        🧪 Organic Plant Food & Vermicompost
+                        🧪 ઓર્ગેનિક પ્લાન્ટ ફૂડ અને વર્મીકમ્પોસ્ટ
                       </Link>
                     </div>
                   </div>
@@ -2139,15 +2141,15 @@ export default function GardenPage() {
               <X size={18} />
             </button>
             <p className="eyebrow">
-              <History size={14} /> Medical Log
+              <History size={14} /> તબીબી લોગ
             </p>
-            <h2 style={{ margin: "4px 0 16px" }}>Care History: {selectedPlant.name}</h2>
+            <h2 style={{ margin: "4px 0 16px" }}>સંભાળ ઇતિહાસ: {selectedPlant.name}</h2>
             <p className="muted" style={{ fontSize: "12px", margin: "-10px 0 14px" }}>
-              Original Species: <strong>{selectedPlant.originalName || selectedPlant.species}</strong>
+              મૂળ પ્રજાતિ: <strong>{selectedPlant.originalName || selectedPlant.species}</strong>
             </p>
 
             {plantHistory.length === 0 ? (
-              <p className="muted">No past diagnoses recorded for this plant yet.</p>
+              <p className="muted">આ છોડ માટે હજુ સુધી ભૂતકાળના કોઈ નિદાન નોંધાયેલ નથી.</p>
             ) : (
               <div style={{ display: "grid", gap: "12px" }}>
                 {plantHistory.map((item, idx) => (
@@ -2167,11 +2169,11 @@ export default function GardenPage() {
                       </span>
                     </div>
                     <span style={{ fontSize: "11px", color: "var(--muted)" }}>
-                      Confidence: {item.confidence}% • Severity: {item.severity}
+                      ચોકસાઈ: {item.confidence}% • ગંભીરતા: {item.severity}
                     </span>
                     {item.symptoms?.length > 0 && (
                       <p style={{ margin: "8px 0 0", fontSize: "12px", color: "#545d51" }}>
-                        Symptoms: {item.symptoms.join(", ")}
+                        લક્ષણો: {item.symptoms.join(", ")}
                       </p>
                     )}
                   </div>

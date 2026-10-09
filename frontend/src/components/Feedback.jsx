@@ -2,11 +2,11 @@ import { CircleAlert, Sprout } from "lucide-react";
 import { Link } from "react-router-dom";
 
 export function Loading() {
-  return <div className="loading-state"><span className="loader" /><span>Growing your page…</span></div>;
+  return <div className="loading-state"><span className="loader" /><span>તમારું પૃષ્ઠ લોડ થઈ રહ્યું છે...</span></div>;
 }
 
 export function Notice({ title, text }) {
-  return <section className="empty-state"><CircleAlert size={25} /><h2>{title}</h2><p>{text}</p><Link className="button button-outline" to="/">Back to store</Link></section>;
+  return <section className="empty-state"><CircleAlert size={25} /><h2>{title}</h2><p>{text}</p><Link className="button button-outline" to="/">સ્ટોર પર પાછા ફરો</Link></section>;
 }
 
 export function DataTable({ loading, empty, children }) {
@@ -22,5 +22,5 @@ export function DataTable({ loading, empty, children }) {
 }
 
 export function NotFound() {
-  return <main className="page"><section className="empty-state"><Sprout size={26} /><h1>This page took a different path.</h1><Link className="button" to="/">Return to the nursery</Link></section></main>;
+  return <main className="page"><section className="empty-state"><Sprout size={26} /><h1>આ પૃષ્ઠ ઉપલબ્ધ નથી.</h1><Link className="button" to="/">નર્સરી પર પાછા ફરો</Link></section></main>;
 }
