@@ -39,16 +39,16 @@ router.get("/demo-data", getDemoData);
 
 router.get("/plants", authenticate, listGardenPlants);
 router.post("/plants", authenticate, createGardenPlant);
-router.post("/identify-and-add", authenticate, plantPhotoUpload.single("plant_image"), identifyAndAddPlant);
+router.post("/identify-and-add", optionalAuthenticate, plantPhotoUpload.single("plant_image"), identifyAndAddPlant);
 router.patch("/plants/:id", authenticate, updateGardenPlant);
 router.delete("/plants/:id", authenticate, deleteGardenPlant);
 router.post("/plants/:id/water", authenticate, waterGardenPlant);
 router.post("/plants/:id/telemetry", updateTelemetry); // Accessible for IoT hardware/simulations
 router.get("/plants/:id/history", authenticate, getPlantHistory);
 
-// Plant leaf diagnosis & Ask Doctor route - requires authentication
-router.post("/diagnose", authenticate, plantPhotoUpload.single("plant_image"), diagnosePlant);
-router.post("/ask-doctor", authenticate, plantPhotoUpload.single("plant_image"), askPlantDoctor);
+// Plant leaf diagnosis & Ask Doctor route
+router.post("/diagnose", optionalAuthenticate, plantPhotoUpload.single("plant_image"), diagnosePlant);
+router.post("/ask-doctor", optionalAuthenticate, plantPhotoUpload.single("plant_image"), askPlantDoctor);
 router.post("/generate-companion", generateCompanionSynergy);
 router.post("/generate-plant-profile", generateSinglePlantProfile);
 router.post("/test-synergy", testTwoPlantSynergy);

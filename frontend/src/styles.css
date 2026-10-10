@@ -551,6 +551,8 @@ button:focus-visible, a:focus-visible, input:focus-visible, textarea:focus-visib
 .health-pill.diseased { background: #fbe6e3; color: #a43828; }
 .health-pill.needs_attention { background: #fff4d9; color: #8e6212; }
 .health-pill.recovering { background: #e2eafc; color: #235496; }
+.health-pill.underwatered { background: #fef3c7; color: #92400e; border: 1px solid #fde68a; }
+.health-pill.overwatered { background: #e0f2fe; color: #0369a1; border: 1px solid #bae6fd; }
 
 .disease-alert-tag { background: #faedea; border: 1px solid #f3cdc5; color: #a43828; padding: 6px 10px; border-radius: 4px; font-size: 11px; margin-bottom: 14px; display: flex; align-items: center; gap: 6px; font-weight: 600; }
 .watering-box { background: #f7f8f3; border: 1px solid #e5e8dc; border-radius: 6px; padding: 12px 14px; margin-bottom: 16px; }

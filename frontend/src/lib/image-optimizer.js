@@ -193,8 +193,10 @@ export async function checkIsLikelyPlantImage(file) {
             (r > 120 && g > 40 && b < 80) || // Red/orange petal
             (r > 110 && b > 90 && g < 110) || // Purple/pink petal
             (r > 40 && r < 120 && g > 25 && g < 80 && b < 50); // Soil/bark
+          // Dried, wilted, or desiccated plant foliage / planter container:
+          const isBrownPlantOrPot = (r >= 45 && r <= 200 && g >= 25 && g <= 140 && b <= 100 && r >= g * 1.05);
 
-          if (isGreen || isYellowGreen || isFlowerOrSoil) {
+          if (isGreen || isYellowGreen || isFlowerOrSoil || isBrownPlantOrPot) {
             plantTonePixels++;
           }
         }
@@ -203,14 +205,14 @@ export async function checkIsLikelyPlantImage(file) {
         const plantRatio = plantTonePixels / totalPixels;
 
         // Scanned document / paper receipt detection: high grayscale/white and virtually no botanical colors
-        if (docRatio >= 0.55 && plantRatio < 0.06) {
+        if (docRatio >= 0.55 && plantRatio < 0.05) {
           return resolve({
             isPlant: false,
             reason: "The uploaded file is a text document, receipt, or non-plant image. Please upload a clear photo of a live plant, leaf, or flower.",
           });
         }
 
-        if (plantRatio < 0.025 && docRatio >= 0.35) {
+        if (plantRatio < 0.02 && docRatio >= 0.35) {
           return resolve({
             isPlant: false,
             reason: "No plant foliage, flowers, or leaves detected in this image. Please upload a clear photo of your plant.",
@@ -237,7 +239,7 @@ export async function checkIsLikelyPlantImage(file) {
  * Advanced Client-Side Botanical Health & Foliage Turgor Scanner
  * Analyzes leaf coloration, vertical canopy drooping ratio, and identifies distress symptoms.
  * @param {File|Blob} file
- * @returns {Promise<{ isSeverelyDrooping: boolean, isYellowing: boolean, isBrowning: boolean, healthStatus: string, healthDiagnosis: string, detectedSpecies: string }|null>}
+ * @returns {Promise<{ isSeverelyDrooping: boolean, isYellowing: boolean, isBrowning: boolean, isDesiccated: boolean, healthStatus: string, healthDiagnosis: string, detectedSpecies: string }|null>}
  */
 export async function analyzePlantFoliageHealth(file) {
   if (!file) return null;
@@ -262,12 +264,18 @@ export async function analyzePlantFoliageHealth(file) {
         ctx.drawImage(img, 0, 0, size, size);
         const imgData = ctx.getImageData(0, 0, size, size).data;
 
-        let totalFoliage = 0;
-        let topHalfFoliage = 0;
-        let bottomHalfFoliage = 0;
+        let greenFoliage = 0;
+        let deepGreen = 0;
+        let variegated = 0;
         let yellowChlorosis = 0;
         let brownNecrosis = 0;
-        let deepGreen = 0;
+        let deadCrispyBrown = 0;
+        let flowerPetals = 0;
+
+        let topHalfFoliage = 0;
+        let bottomHalfFoliage = 0;
+
+        let minX = size, maxX = 0, minY = size, maxY = 0;
 
         for (let y = 0; y < size; y++) {
           for (let x = 0; x < size; x++) {
@@ -276,59 +284,139 @@ export async function analyzePlantFoliageHealth(file) {
             const g = imgData[idx + 1];
             const b = imgData[idx + 2];
 
-            // Green foliage pixels
-            const isFoliage = (g >= 40 && g > r * 1.05 && g > b * 1.05) || (g >= 50 && r >= 45 && b < 100 && g > r * 0.85);
-            if (isFoliage) {
-              totalFoliage++;
+            // 1. Green foliage pixels
+            const isGreen = (g >= 38 && g > r * 1.05 && g > b * 1.05) || (g >= 48 && r >= 38 && b < 100 && g > r * 0.85);
+            if (isGreen) {
+              greenFoliage++;
+              if (g > 75 && g > r * 1.25 && g > b * 1.25) deepGreen++;
+              if (g > 80 && r > 70 && b < 90 && Math.abs(g - r) < 25) variegated++;
+            }
+
+            // 2. Yellow / chlorotic stress (nutrient deficiency or excess water)
+            const isYellow = (r >= 80 && g >= 80 && b <= 75 && Math.abs(r - g) <= 35 && (r + g) > 190);
+            if (isYellow) yellowChlorosis++;
+
+            // 3. Brown necrotic lesions / leaf spots
+            const isBrownLesion = (r >= 60 && g >= 35 && g <= 105 && b <= 65 && r > g * 1.15);
+            if (isBrownLesion) brownNecrosis++;
+
+            // 4. Dead, dry, crispy brown / withered plant tissue
+            const isDeadBrown = (r >= 45 && r <= 180 && g >= 25 && g <= 130 && b >= 15 && b <= 95 && r >= g * 1.08 && g >= b * 0.95);
+            if (isDeadBrown) deadCrispyBrown++;
+
+            // 5. Flower petals
+            const isFlower = (r >= 130 && g <= 90 && b <= 90) || (r >= 120 && b >= 90 && g <= 110) || (r >= 160 && g >= 100 && b <= 50);
+            if (isFlower) flowerPetals++;
+
+            const isPlantPixel = isGreen || isYellow || isBrownLesion || isDeadBrown || isFlower;
+            if (isPlantPixel) {
+              if (x < minX) minX = x;
+              if (x > maxX) maxX = x;
+              if (y < minY) minY = y;
+              if (y > maxY) maxY = y;
+
               if (y < size * 0.45) {
                 topHalfFoliage++;
               } else {
                 bottomHalfFoliage++;
               }
-
-              if (g > 75 && g > r * 1.2 && g > b * 1.2) deepGreen++;
-
-              // Yellowing / chlorosis (high red and green, low blue)
-              if (r > 90 && g > 90 && b < 75 && Math.abs(r - g) < 35) {
-                yellowChlorosis++;
-              }
-              // Brown / necrotic lesions (r > g, dark earthy tones)
-              if (r > 85 && g > 45 && g < 110 && b < 60 && r > g * 1.15) {
-                brownNecrosis++;
-              }
             }
           }
         }
 
-        // Droop ratio: proportion of leaf mass hanging down in the bottom half vs upper canopy
+        const totalPlantPixels = greenFoliage + yellowChlorosis + brownNecrosis + deadCrispyBrown + flowerPetals;
+        const totalBrown = brownNecrosis + deadCrispyBrown;
+        const plantWidth = Math.max(1, maxX - minX);
+        const plantHeight = Math.max(1, maxY - minY);
+        const aspectRatio = plantHeight / plantWidth;
+
+        const brownRatio = totalPlantPixels > 0 ? (totalBrown / totalPlantPixels) : 0;
+        const greenRatio = totalPlantPixels > 0 ? (greenFoliage / totalPlantPixels) : 0;
+        const yellowRatio = totalPlantPixels > 0 ? (yellowChlorosis / totalPlantPixels) : 0;
+        const flowerRatio = totalPlantPixels > 0 ? (flowerPetals / totalPlantPixels) : 0;
         const droopRatio = bottomHalfFoliage / (topHalfFoliage + 1);
-        const isSeverelyDrooping = (bottomHalfFoliage > 35 && droopRatio >= 1.35) || (topHalfFoliage < 15 && bottomHalfFoliage > 45);
-        const isYellowing = totalFoliage > 0 && (yellowChlorosis / totalFoliage) > 0.18;
-        const isBrowning = totalFoliage > 0 && (brownNecrosis / totalFoliage) > 0.12;
 
-        let detectedSpecies = "Peace Lily (Spathiphyllum)";
+        // ==========================================
+        // ACCURATE HEALTH STATUS EVALUATION
+        // ==========================================
+        let isSeverelyDrooping = false;
+        let isYellowing = false;
+        let isBrowning = false;
+        let isDesiccated = false;
         let healthStatus = "healthy";
-        let healthDiagnosis = "Optimal foliage turgor and healthy chlorophyll vitality.";
+        let healthDiagnosis = "Optimal foliage vitality and healthy chlorophyll turgor.";
 
-        if (isSeverelyDrooping) {
+        // 1. COMPLETELY DRY / WITHERED / DEAD / SEVERELY DESICCATED PLANT (CRITICAL: NEVER MARK AS HEALTHY)
+        if (brownRatio >= 0.32 || (deadCrispyBrown >= 75 && greenFoliage < 60) || (greenRatio < 0.18 && totalBrown >= 60)) {
+          isDesiccated = true;
+          isBrowning = true;
+          healthStatus = "underwatered";
+          healthDiagnosis = "Severe Desiccation & Foliage Necrosis (Completely Dried Out / Withered Plant)";
+        }
+        // 2. SEVERE DROOPING & LIMP COLLAPSE (Loss of turgor pressure)
+        else if (bottomHalfFoliage > 35 && droopRatio >= 1.35 && greenRatio >= 0.25) {
+          isSeverelyDrooping = true;
           healthStatus = "underwatered";
           healthDiagnosis = "Severe Foliage Drooping & Dehydration (Loss of Hydrostatic Turgor Pressure)";
-          detectedSpecies = "Peace Lily (Spathiphyllum)";
-        } else if (isBrowning) {
+        }
+        // 3. FOLIAR NECROTIC LESIONS / LEAF SPOT / BLIGHT
+        else if (brownRatio >= 0.12 || brownNecrosis >= 35) {
+          isBrowning = true;
           healthStatus = "diseased";
-          healthDiagnosis = "Foliar Necrotic Lesions & Leaf Spot Stress";
-          detectedSpecies = "Houseplant";
-        } else if (isYellowing) {
+          healthDiagnosis = "Foliar Necrotic Lesions & Leaf Spot Stress (Blight Risk)";
+        }
+        // 4. CHLOROSIS / YELLOWING (Nutrient or Overwatering)
+        else if (yellowRatio >= 0.15 || yellowChlorosis >= 40) {
+          isYellowing = true;
           healthStatus = "needs_attention";
           healthDiagnosis = "Foliar Chlorosis & Yellowing Stress (Nutrient Depletion or Root Stress)";
-          detectedSpecies = "Houseplant";
+        }
+        // 5. TRUE HEALTHY VITALITY (Must have dominant green, minimal brown/yellow, and erect canopy)
+        else if (greenRatio >= 0.65 && brownRatio < 0.08 && yellowRatio < 0.10 && droopRatio < 1.35) {
+          healthStatus = "healthy";
+          healthDiagnosis = "Optimal foliage vitality and vibrant chlorophyll turgor.";
+        } else {
+          healthStatus = "needs_attention";
+          healthDiagnosis = "Moderate Foliage Stress / Watering Adjustment Needed";
+        }
+
+        // ==========================================
+        // DYNAMIC BOTANICAL SPECIES IDENTIFICATION
+        // ==========================================
+        let detectedSpecies = "Houseplant";
+
+        if (isDesiccated) {
+          detectedSpecies = "Desiccated Nursery Plant";
+        } else if (flowerRatio >= 0.03 || flowerPetals >= 30) {
+          detectedSpecies = "Hibiscus";
+        } else if (aspectRatio >= 1.6 && greenRatio >= 0.45) {
+          detectedSpecies = "Snake Plant";
+        } else if (variegated >= 30 && droopRatio >= 1.1) {
+          detectedSpecies = "Money Plant";
+        } else if (deepGreen >= 50 && aspectRatio >= 1.2 && droopRatio < 1.1) {
+          detectedSpecies = "ZZ Plant";
+        } else if (isSeverelyDrooping) {
+          detectedSpecies = "Peace Lily";
+        } else if (greenRatio >= 0.55 && aspectRatio < 0.95 && totalPlantPixels >= 180) {
+          detectedSpecies = "Sweet Basil";
+        } else if (plantHeight > 55 && greenFoliage > 90 && aspectRatio >= 1.25) {
+          detectedSpecies = "Areca Palm";
+        } else if (deepGreen > 45) {
+          detectedSpecies = "Peace Lily";
+        } else if (greenFoliage > 100) {
+          detectedSpecies = "Ficus Tree";
+        } else {
+          detectedSpecies = "Urban Houseplant";
         }
 
         resolve({
           isSeverelyDrooping,
           isYellowing,
           isBrowning,
+          isDesiccated,
           droopRatio,
+          brownRatio,
+          greenRatio,
           healthStatus,
           healthDiagnosis,
           detectedSpecies,

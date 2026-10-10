@@ -1,10 +1,20 @@
-import { GardenPlant, Notification, PlantDiagnosis, User, Product, Category } from "../models/index.js";
+import { GardenPlant, Notification, PlantDiagnosis, User, Product, Category, Setting } from "../models/index.js";
 import { asyncHandler } from "../middleware/async-handler.js";
 import { isValidPlantImage } from "../middleware/uploads.js";
 
 // Helper to execute Google Gemini API with fallback models
 export async function callGeminiAI({ prompt, imageBuffer, imageMimeType, maxTokens = 1200, responseJson = false }) {
-  const apiKey = process.env.GEMINI_API_KEY?.trim();
+  let apiKey = process.env.GEMINI_API_KEY?.trim();
+  if (!apiKey) {
+    try {
+      const dbKey = await Setting.findOne({ key: "gemini_api_key" }).lean();
+      if (dbKey?.value && String(dbKey.value).trim()) {
+        apiKey = String(dbKey.value).trim();
+      }
+    } catch {
+      // ignore db error
+    }
+  }
   if (!apiKey) return null;
 
   const models = ["gemini-2.5-flash", "gemini-2.0-flash", "gemini-1.5-flash", "gemini-1.5-pro"];
@@ -161,30 +171,40 @@ export async function findRelevantProducts(searchContext = "") {
 // Species baseline watering intervals (in days) under temperate conditions (~24°C, 50% humidity)
 export const SPECIES_WATERING_DEFAULTS = {
   tomato: { name: "Tomato", interval: 2, advice: "Tomatoes need deep, consistent watering at the root base. Avoid wetting leaves." },
-  basil: { name: "Basil", interval: 2, advice: "Keep soil consistently moist but never soggy. Pinch flower buds." },
-  mint: { name: "Mint", interval: 1, advice: "Mint loves moisture and filtered light. Check soil daily in warm weather." },
+  basil: { name: "Basil / Tulsi", interval: 2, advice: "Keep soil consistently moist but never soggy. Pinch flower buds." },
+  mint: { name: "Mint / Pudina", interval: 1, advice: "Mint loves moisture and filtered light. Check soil daily in warm weather." },
   rose: { name: "Rose", interval: 3, advice: "Water deeply around the root zone early in the morning to prevent black spot." },
   pepper: { name: "Chili / Pepper", interval: 3, advice: "Allow top inch of soil to dry slightly between waterings for spicier fruit." },
-  aloe: { name: "Aloe Vera / Succulent", interval: 12, advice: "Allow soil to completely dry out between waterings. Use gritty, fast-draining mix." },
+  aloe: { name: "Aloe Vera", interval: 12, advice: "Allow soil to completely dry out between waterings. Use gritty, fast-draining mix." },
   snake_plant: { name: "Snake Plant", interval: 14, advice: "Very drought tolerant. Water sparingly; root rot occurs easily in wet soil." },
   pothos: { name: "Money Plant / Pothos", interval: 6, advice: "Water when the top 50% of potting mix feels dry to touch." },
   peace_lily: { name: "Peace Lily", interval: 3, advice: "Prefers lightly moist soil. Leaves droop gracefully when it needs a drink." },
   hibiscus: { name: "Hibiscus", interval: 2, advice: "Heavy drinker when in active flowering cycle. Needs full sun and consistent water." },
+  zz_plant: { name: "ZZ Plant", interval: 14, advice: "Tolerates low light and drought. Water thoroughly only when potting mix is fully dry." },
+  areca_palm: { name: "Areca Palm", interval: 4, advice: "Prefers bright filtered sunlight and lightly moist, well-aerated potting mix." },
+  ficus: { name: "Ficus Tree", interval: 5, advice: "Moderate watering; allow top 2 inches to dry. Shield from sudden cold drafts." },
+  coriander: { name: "Coriander / Cilantro", interval: 2, advice: "Fast-draining moist soil in cool or partial sun conditions." },
+  desiccated: { name: "Desiccated Nursery Plant", interval: 2, advice: "Emergency 30-minute bottom soak required immediately. Prune dead crispy leaves." },
   other: { name: "Urban Houseplant", interval: 3, advice: "Check moisture 2 inches below surface before watering." },
 };
 
 function normalizeSpeciesKey(species = "") {
   const lower = String(species).toLowerCase().trim();
-  if (lower.includes("tomato")) return "tomato";
-  if (lower.includes("basil")) return "basil";
-  if (lower.includes("mint")) return "mint";
-  if (lower.includes("rose")) return "rose";
-  if (lower.includes("pepper") || lower.includes("chili") || lower.includes("chilli")) return "pepper";
-  if (lower.includes("aloe") || lower.includes("succulent") || lower.includes("cactus")) return "aloe";
+  if (lower.includes("desiccat") || lower.includes("wither") || lower.includes("dried")) return "desiccated";
+  if (lower.includes("tomato") || lower.includes("ટામેટા")) return "tomato";
+  if (lower.includes("basil") || lower.includes("tulsi") || lower.includes("તુલસી")) return "basil";
+  if (lower.includes("mint") || lower.includes("pudina") || lower.includes("ફુદીનો")) return "mint";
+  if (lower.includes("rose") || lower.includes("ગુલાબ")) return "rose";
+  if (lower.includes("pepper") || lower.includes("chili") || lower.includes("chilli") || lower.includes("મરચા")) return "pepper";
+  if (lower.includes("aloe") || lower.includes("succulent") || lower.includes("cactus") || lower.includes("કુંવારપાઠું")) return "aloe";
   if (lower.includes("snake") || lower.includes("sansevieria")) return "snake_plant";
-  if (lower.includes("pothos") || lower.includes("money plant")) return "pothos";
-  if (lower.includes("lily")) return "peace_lily";
-  if (lower.includes("hibiscus")) return "hibiscus";
+  if (lower.includes("pothos") || lower.includes("money plant") || lower.includes("મની પ્લાન્ટ")) return "pothos";
+  if (lower.includes("zz") || lower.includes("zamioculcas")) return "zz_plant";
+  if (lower.includes("palm") || lower.includes("areca")) return "areca_palm";
+  if (lower.includes("ficus") || lower.includes("fig")) return "ficus";
+  if (lower.includes("coriander") || lower.includes("cilantro") || lower.includes("કોથમીર")) return "coriander";
+  if (lower.includes("hibiscus") || lower.includes("જાસૂદ")) return "hibiscus";
+  if (lower.includes("peace lily") || lower.includes("spathiphyllum")) return "peace_lily";
   return "other";
 }
 
@@ -566,11 +586,15 @@ export const identifyAndAddPlant = asyncHandler(async (req, res) => {
 
   const prompt = `You are an expert botanical AI assistant and certified plant pathologist. Analyze the uploaded plant image with utmost accuracy.
 Growing Location: "${location}".
-${clientVisualScan?.isSeverelyDrooping ? "CRITICAL OBSERVATION: Foliage shows severe downward drooping and limp petioles (dehydration / loss of turgor pressure)." : ""}
+${req.body.species ? `User Declared Plant Species: "${req.body.species}".` : ""}
+${clientVisualScan?.isDesiccated ? "CRITICAL BOTANICAL OBSERVATION: Plant tissue is brown, dry, crispy, and severely desiccated / dehydrated (withered plant). Check for severe dehydration / drought stress." : ""}
+${clientVisualScan?.isSeverelyDrooping ? "CRITICAL BOTANICAL OBSERVATION: Foliage shows severe downward drooping and limp petioles (dehydration / loss of hydrostatic turgor pressure)." : ""}
+${clientVisualScan?.isYellowing ? "CRITICAL BOTANICAL OBSERVATION: Foliage shows noticeable yellowing (chlorosis / overwatering / nutrient depletion)." : ""}
+${clientVisualScan?.isBrowning ? "CRITICAL BOTANICAL OBSERVATION: Foliage displays brown necrotic spots, scorched margins, or fungal lesions." : ""}
 
 CRITICAL FIRST STEP - VERIFY PLANT:
-Determine whether the image is actually a living plant, leaf, flower, vegetable, herb, tree, succulent, houseplant, or crop seedling.
-- If the image is NOT a plant (for example: human, animal, car, electronics, building, furniture, screenshot, receipt, document):
+Determine whether the image contains a plant, leaf, stem, flower, vegetable, herb, tree, succulent, houseplant, seedling, nursery pot, or dry botanical specimen.
+- If the image is completely NOT a plant (for example: human face, car, electronics, building, furniture, screenshot, receipt, invoice):
   Respond with ONLY:
   {
     "isPlant": false,
@@ -578,8 +602,9 @@ Determine whether the image is actually a living plant, leaf, flower, vegetable,
   }
 
 CRITICAL SECOND STEP - ACCURATE HEALTH & SPECIES IDENTIFICATION:
-1. Identify the accurate botanical and common plant species name (e.g., 'Peace Lily (Spathiphyllum)', 'Tomato', 'Money Plant', 'Snake Plant', 'Monstera Deliciosa', 'Dieffenbachia', 'Sweet Basil', 'Aloe Vera', 'Hibiscus', etc.).
+1. Identify the accurate botanical and common plant species name (e.g. 'Tomato', 'Money Plant', 'Snake Plant', 'Monstera Deliciosa', 'Dieffenbachia', 'Sweet Basil', 'Aloe Vera', 'Hibiscus', 'ZZ Plant', 'Areca Palm', 'Peace Lily', etc.). If the plant is completely dried/dead nursery plant, specify the plant species or 'Dried Nursery Plant'.
 2. CAREFULLY EVALUATE THE HEALTH OF THE PLANT:
+   - Check if foliage/stems are dried, crispy, brown, desiccated, or dead. If the plant is dried out or brown, currentHealthStatus MUST be "underwatered" (or "diseased" if pathogen/rot) and healthDiagnosis MUST state "Severe Desiccation & Foliage Necrosis (Dried Out / Withered Plant)". NEVER classify a dead/dried/brown plant as healthy!
    - Check if leaves are drooping, limp, hanging down, or wilted (loss of hydrostatic turgor pressure). If leaves are drooping downward, currentHealthStatus MUST be "underwatered", and healthDiagnosis MUST state "Severe Foliage Drooping & Dehydration (Loss of Turgor Pressure)". NEVER mark a drooping plant as healthy!
    - Check if leaves are yellowing (chlorosis / overwatering / nutrient deficiency). If yellowing, set currentHealthStatus to "needs_attention" or "overwatered".
    - Check if brown necrotic spots, leaf blight, or pests are visible. If so, set currentHealthStatus to "diseased".
@@ -594,13 +619,13 @@ Respond with ONLY a valid, raw JSON object (NO markdown backticks, NO \`\`\`json
   "originalName": "Accurate Common Plant Name",
   "confidence": 95,
   "currentHealthStatus": "healthy" | "underwatered" | "overwatered" | "needs_attention" | "diseased",
-  "healthDiagnosis": "Clear diagnosis of current condition (e.g. 'Severe Foliage Drooping & Dehydration (Underwatered)' or 'Optimal Healthy Turgor')",
+  "healthDiagnosis": "Clear diagnosis of current condition",
   "careSummary": "2-sentence practical care summary for ${location}",
-  "waterQuantity": "Exact volume in ml and method (e.g. '400ml - 500ml deep soak at root base')",
-  "wateringSchedule": "When to water (e.g. 'Water deeply right now! Then every 2-3 days early morning')",
+  "waterQuantity": "Exact volume in ml and method",
+  "wateringSchedule": "When to water",
   "wateringIntervalDays": 2,
-  "sunlightAdvice": "Sunlight requirements (e.g. 'Bright indirect sunlight; shield from hot dry drafts')",
-  "nutrientAdvice": "Plant food / fertilizer / nutrition routine",
+  "sunlightAdvice": "Sunlight requirements",
+  "nutrientAdvice": "Plant food / fertilizer routine",
   "fertilizingIntervalDays": 14,
   "protectionAdvice": "Pest & health protection/revival tips"
 }`;
@@ -635,47 +660,110 @@ Respond with ONLY a valid, raw JSON object (NO markdown backticks, NO \`\`\`json
 
   // Fallback botanical vision analysis if API key not available or request timed out
   if (!aiData) {
+    const isDesiccated = Boolean(clientVisualScan?.isDesiccated);
     const isDrooping = Boolean(clientVisualScan?.isSeverelyDrooping);
     const isYellow = Boolean(clientVisualScan?.isYellowing);
     const isBrown = Boolean(clientVisualScan?.isBrowning);
 
-    if (isDrooping) {
+    const userSpecifiedSpecies = String(req.body.species || req.body.name || "").trim();
+    const detectedVisualSpecies = String(clientVisualScan?.detectedSpecies || "").trim();
+    const candidateSpecies = userSpecifiedSpecies || (detectedVisualSpecies && detectedVisualSpecies !== "Houseplant" ? detectedVisualSpecies : "");
+
+    let resolvedSpeciesName = candidateSpecies || (isDesiccated ? "Desiccated Nursery Plant" : "Urban Houseplant");
+    const key = normalizeSpeciesKey(resolvedSpeciesName);
+    const defaults = SPECIES_WATERING_DEFAULTS[key] || SPECIES_WATERING_DEFAULTS.other;
+
+    if (!candidateSpecies) {
+      resolvedSpeciesName = defaults.name.split("/")[0].trim();
+    }
+
+    if (isDesiccated) {
       aiData = {
         isPlant: true,
-        identifiedSpecies: "Peace Lily (Spathiphyllum)",
-        originalName: "Peace Lily (Spathiphyllum)",
-        confidence: 96,
+        identifiedSpecies: resolvedSpeciesName,
+        originalName: resolvedSpeciesName,
+        confidence: 94,
+        currentHealthStatus: "underwatered",
+        healthDiagnosis: clientVisualScan?.healthDiagnosis || "Severe Desiccation & Foliage Necrosis (Completely Dried Out / Withered Plant)",
+        careSummary: `This ${resolvedSpeciesName} is severely dried out, brittle, and dehydrated from prolonged lack of water. Perform an emergency bottom-soak rehydration, prune dead crispy foliage, and place in bright sheltered shade to stimulate root revival.`,
+        waterQuantity: "500ml bottom-soak / deep slow drench",
+        wateringSchedule: "Water deeply immediately right now! Soak root ball for 30 minutes, then check soil every 2 days.",
+        wateringIntervalDays: 2,
+        sunlightAdvice: "Place in bright indirect shade away from scorching direct afternoon sun or drying hot drafts.",
+        nutrientAdvice: "Do NOT fertilize while dehydrated or withered. Only resume mild organic compost after fresh new growth appears.",
+        fertilizingIntervalDays: 14,
+        protectionAdvice: "Prune off completely dried brown, dead foliage with clean shears. Scratch stem lightly: if green beneath, the plant will rebound!",
+      };
+    } else if (isDrooping) {
+      aiData = {
+        isPlant: true,
+        identifiedSpecies: resolvedSpeciesName,
+        originalName: resolvedSpeciesName,
+        confidence: 94,
         currentHealthStatus: "underwatered",
         healthDiagnosis: "Severe Foliage Drooping & Dehydration (Loss of Hydrostatic Turgor Pressure)",
-        careSummary: "Your Peace Lily is severely dehydrated and drooping limp from dry potting soil. Water thoroughly with 400ml–500ml water immediately; its foliage will regain turgor pressure and stand upright within 2–4 hours.",
+        careSummary: `Your ${resolvedSpeciesName} is dehydrated with limp, drooping foliage from dry potting mix. Water thoroughly with 400ml–500ml water immediately; its foliage will regain hydrostatic turgor pressure within 2–4 hours.`,
         waterQuantity: "400ml - 500ml deep soak at root base",
-        wateringSchedule: "Water deeply right now! Then every 2 days early morning.",
-        wateringIntervalDays: 2,
+        wateringSchedule: "Water deeply right now! Then every 2-3 days early morning.",
+        wateringIntervalDays: Math.min(defaults.interval, 3),
         sunlightAdvice: "Place in bright indirect or filtered morning sunlight; keep away from hot dry winds.",
         nutrientAdvice: "Pause fertilizer while wilting. Once upright and recovered, apply 1 tbsp organic vermicompost every 14 days.",
         fertilizingIntervalDays: 14,
-        protectionAdvice: "Peace Lilies famously 'faint' when dry. Keep soil consistently lightly moist so leaf tips remain lush.",
+        protectionAdvice: "Foliage wilts when root moisture depletes. Water directly into soil until water trickles from drainage holes.",
+      };
+    } else if (isBrown) {
+      aiData = {
+        isPlant: true,
+        identifiedSpecies: resolvedSpeciesName,
+        originalName: resolvedSpeciesName,
+        confidence: 92,
+        currentHealthStatus: "diseased",
+        healthDiagnosis: clientVisualScan?.healthDiagnosis || "Foliar Necrotic Lesions & Leaf Spot Stress",
+        careSummary: `${resolvedSpeciesName} foliage shows necrotic spots or fungal leaf lesions. Prune diseased leaves, ensure proper ventilation, and apply organic neem spray.`,
+        waterQuantity: "250ml - 350ml at soil level (avoid wetting leaves)",
+        wateringSchedule: `Every ${defaults.interval} days early morning`,
+        wateringIntervalDays: defaults.interval,
+        sunlightAdvice: "Bright filtered sunlight with good ambient air circulation.",
+        nutrientAdvice: "Apply 1-2 tbsp organic compost around root base to build systemic immunity.",
+        fertilizingIntervalDays: 14,
+        protectionAdvice: "Spray cold-pressed organic Neem oil solution (5ml/L) once a week at sunset. Discard fallen infected leaves.",
+      };
+    } else if (isYellow) {
+      aiData = {
+        isPlant: true,
+        identifiedSpecies: resolvedSpeciesName,
+        originalName: resolvedSpeciesName,
+        confidence: 92,
+        currentHealthStatus: "needs_attention",
+        healthDiagnosis: clientVisualScan?.healthDiagnosis || "Foliar Chlorosis & Yellowing Stress (Nutrient or Drainage Issue)",
+        careSummary: `${resolvedSpeciesName} is displaying chlorotic yellowing foliage. Inspect drainage holes for standing water and nourish with micronutrients.`,
+        waterQuantity: "250ml - 350ml only when top inch of soil is dry",
+        wateringSchedule: `Every ${defaults.interval} days early morning`,
+        wateringIntervalDays: defaults.interval,
+        sunlightAdvice: "Bright indirect light or gentle morning sun; avoid soggy dark corners.",
+        nutrientAdvice: "Feed with balanced seaweed liquid tonic or vermicompost to restore rich green chlorophyll.",
+        fertilizingIntervalDays: 14,
+        protectionAdvice: "Check soil moisture before each watering. Ensure bottom drainage holes flow freely.",
       };
     } else {
-      const rawSpeciesName = String(req.body.name || req.body.species || clientVisualScan?.detectedSpecies || "Houseplant").trim();
-      const key = normalizeSpeciesKey(rawSpeciesName);
-      const defaults = SPECIES_WATERING_DEFAULTS[key] || SPECIES_WATERING_DEFAULTS.other;
-      const speciesName = defaults.name.split("/")[0].trim();
-      const healthStatus = clientVisualScan?.healthStatus || (isBrown ? "diseased" : isYellow ? "needs_attention" : "healthy");
-      const diagnosisDesc = clientVisualScan?.healthDiagnosis || (healthStatus === "healthy" ? "Optimal botanical vitality and healthy leaf turgor." : "Foliage showing distress symptoms.");
+      const isActuallyHealthy = clientVisualScan?.healthStatus === "healthy";
+      const healthStatus = isActuallyHealthy ? "healthy" : "needs_attention";
+      const diagnosisDesc = isActuallyHealthy
+        ? (clientVisualScan?.healthDiagnosis || "Optimal foliage vitality and healthy chlorophyll turgor.")
+        : (clientVisualScan?.healthDiagnosis || "Moderate foliage stress — monitor soil moisture and light levels.");
 
       aiData = {
         isPlant: true,
-        identifiedSpecies: speciesName,
-        originalName: speciesName,
+        identifiedSpecies: resolvedSpeciesName,
+        originalName: resolvedSpeciesName,
         confidence: 94,
         currentHealthStatus: healthStatus,
         healthDiagnosis: diagnosisDesc,
-        careSummary: `Vibrant ${speciesName} thriving in ${location} conditions with balanced watering and sunlight.`,
-        waterQuantity: key === "aloe" || key === "snake_plant" ? "150ml - 200ml" : "300ml - 400ml at root base",
+        careSummary: `Vibrant ${resolvedSpeciesName} thriving in ${location} conditions with balanced watering and sunlight.`,
+        waterQuantity: key === "aloe" || key === "snake_plant" || key === "zz_plant" ? "150ml - 200ml" : "300ml - 400ml at root base",
         wateringSchedule: `Every ${defaults.interval} days early morning`,
         wateringIntervalDays: defaults.interval,
-        sunlightAdvice: key === "snake_plant" || key === "pothos" ? "Bright indirect sunlight or partial shade" : "4–6 hours direct morning sun",
+        sunlightAdvice: key === "snake_plant" || key === "pothos" || key === "zz_plant" ? "Bright indirect sunlight or partial shade" : "4–6 hours direct morning sun",
         nutrientAdvice: "Apply 1-2 tbsp organic compost or seaweed liquid fertilizer every 14 days.",
         fertilizingIntervalDays: 14,
         protectionAdvice: "Inspect leaves weekly; spray organic neem oil solution if pests appear.",
@@ -689,54 +777,103 @@ Respond with ONLY a valid, raw JSON object (NO markdown backticks, NO \`\`\`json
   const nextFeed = new Date(Date.now() + (aiData.fertilizingIntervalDays || 14) * 86400000);
 
   const isUnderwatered = aiData.currentHealthStatus === "underwatered";
+  const isDesiccatedPlant = Boolean(
+    clientVisualScan?.isDesiccated ||
+    aiData.healthDiagnosis?.toLowerCase().includes("desiccation") ||
+    aiData.healthDiagnosis?.toLowerCase().includes("dried") ||
+    aiData.healthDiagnosis?.toLowerCase().includes("wither")
+  );
 
   // Step-by-step suggestions list
-  const stepWiseCare = [
-    {
-      stepNumber: 1,
-      title: isUnderwatered ? "Emergency Hydration (Revival Step)" : "Watering Routine (How Much & When)",
-      icon: "droplet",
-      headline: aiData.waterQuantity || (isUnderwatered ? "450ml deep soak" : "300ml - 400ml"),
-      schedule: isUnderwatered ? "Water immediately right now!" : (aiData.wateringSchedule || `Every ${interval} days`),
-      detail: isUnderwatered
-        ? `Give ${aiData.waterQuantity || "450ml"}. Pour directly into the soil at the base until moisture drains from bottom holes. The limp drooping foliage will absorb water and perk upright within 2 to 4 hours!`
-        : `Give ${aiData.waterQuantity || "300ml - 400ml"}. ${aiData.wateringSchedule || `Water every ${interval} days early in the morning`}. Water directly into the soil at the base without soaking leaves.`,
-    },
-    {
-      stepNumber: 2,
-      title: "Sunlight & Placement",
-      icon: "sun",
-      headline: isUnderwatered ? "Gentle Filtered Light" : "Optimal Lighting",
-      schedule: location === "balcony" ? "Balcony container" : location === "indoor" ? "Indoor windowsill" : "Terrace garden",
-      detail: aiData.sunlightAdvice || "Provide 4–6 hours of bright morning sunlight or filtered light away from hot drafts.",
-    },
-    {
-      stepNumber: 3,
-      title: "Soil Nutrition & Food (\"Protein\")",
-      icon: "sprout",
-      headline: isUnderwatered ? "Hold Feed Until Recovered" : "Fertilizer Schedule",
-      schedule: `Every ${aiData.fertilizingIntervalDays || 14} days`,
-      detail: isUnderwatered
-        ? "Do not apply chemical fertilizer while leaves are limp. Once your plant stands upright and recovers, feed with 1-2 tbsp organic vermicompost every 14 days."
-        : (aiData.nutrientAdvice || "Feed with balanced organic compost, vermicompost, or seaweed plant food every 14 days."),
-    },
-    {
-      stepNumber: 4,
-      title: isUnderwatered ? "Foliage Turgor & Humidity Support" : "Health Protection & Disease Prevention",
-      icon: "shield",
-      headline: isUnderwatered ? "Humidity Boost" : "Preventive Care",
-      schedule: isUnderwatered ? "Gentle leaf misting" : "Weekly inspection",
-      detail: aiData.protectionAdvice || "Inspect undersides of leaves weekly. Lightly mist foliage to maintain ambient humidity and prevent dry brown tips.",
-    },
-    {
-      stepNumber: 5,
-      title: "Automated In-App Reminders",
-      icon: "bell",
-      headline: "Active Reminders",
-      schedule: "Scheduled in Garden",
-      detail: `In-app watering notifications have been set for ${plantNameFetched} so you will never forget a watering cycle!`,
-    },
-  ];
+  const stepWiseCare = isDesiccatedPlant
+    ? [
+        {
+          stepNumber: 1,
+          title: "Emergency Rehydration (30-Minute Bottom Soak)",
+          icon: "droplet",
+          headline: aiData.waterQuantity || "500ml bottom-soak drench",
+          schedule: "Perform immediately right now!",
+          detail: `Place the pot in a shallow tub or tray filled with 500ml lukewarm water for 25–30 minutes. The hydrophobic dry root ball will re-absorb moisture from the base up without suffocating surviving root hairs.`,
+        },
+        {
+          stepNumber: 2,
+          title: "Pruning Dead Crispy Foliage",
+          icon: "shield",
+          headline: "Cut completely brown leaves",
+          schedule: "Do this today",
+          detail: "Using clean, sterilized scissors, cut away all completely dried, crispy brown leaves down at their stems. This halts pointless moisture evaporation and lets the plant channel all energy to surviving nodes.",
+        },
+        {
+          stepNumber: 3,
+          title: "Sheltered Indirect Lighting",
+          icon: "sun",
+          headline: "Shield from Harsh Afternoon Sun",
+          schedule: "Temporary recovery location",
+          detail: "Keep away from blazing direct sun, AC vents, or hot drying winds. Place in bright indirect or gentle morning light while roots re-establish water uptake.",
+        },
+        {
+          stepNumber: 4,
+          title: "Pause Fertilizers (Strictly No Plant Food)",
+          icon: "sprout",
+          headline: "Hold Plant Food",
+          schedule: "Wait until new shoots appear",
+          detail: "Do NOT feed chemical or heavy fertilizer to a dehydrated or withered plant. Fertilizer salts burn fragile recovering roots. Wait until you see fresh green shoots before giving gentle vermicompost.",
+        },
+        {
+          stepNumber: 5,
+          title: "Automated Revival Reminders",
+          icon: "bell",
+          headline: "Active Revival Schedule",
+          schedule: "Scheduled in Garden",
+          detail: `Revival tracking and in-app watering notifications have been set for ${plantNameFetched}. Check soil moisture every 2 days to sustain recovery.`,
+        },
+      ]
+    : [
+        {
+          stepNumber: 1,
+          title: isUnderwatered ? "Emergency Hydration (Revival Step)" : "Watering Routine (How Much & When)",
+          icon: "droplet",
+          headline: aiData.waterQuantity || (isUnderwatered ? "450ml deep soak" : "300ml - 400ml"),
+          schedule: isUnderwatered ? "Water immediately right now!" : (aiData.wateringSchedule || `Every ${interval} days`),
+          detail: isUnderwatered
+            ? `Give ${aiData.waterQuantity || "450ml"}. Pour directly into the soil at the base until moisture drains from bottom holes. The limp drooping foliage will absorb water and perk upright within 2 to 4 hours!`
+            : `Give ${aiData.waterQuantity || "300ml - 400ml"}. ${aiData.wateringSchedule || `Water every ${interval} days early in the morning`}. Water directly into the soil at the base without soaking leaves.`,
+        },
+        {
+          stepNumber: 2,
+          title: "Sunlight & Placement",
+          icon: "sun",
+          headline: isUnderwatered ? "Gentle Filtered Light" : "Optimal Lighting",
+          schedule: location === "balcony" ? "Balcony container" : location === "indoor" ? "Indoor windowsill" : "Terrace garden",
+          detail: aiData.sunlightAdvice || "Provide 4–6 hours of bright morning sunlight or filtered light away from hot drafts.",
+        },
+        {
+          stepNumber: 3,
+          title: "Soil Nutrition & Food (\"Protein\")",
+          icon: "sprout",
+          headline: isUnderwatered ? "Hold Feed Until Recovered" : "Fertilizer Schedule",
+          schedule: `Every ${aiData.fertilizingIntervalDays || 14} days`,
+          detail: isUnderwatered
+            ? "Do not apply chemical fertilizer while leaves are limp. Once your plant stands upright and recovers, feed with 1-2 tbsp organic vermicompost every 14 days."
+            : (aiData.nutrientAdvice || "Feed with balanced organic compost, vermicompost, or seaweed plant food every 14 days."),
+        },
+        {
+          stepNumber: 4,
+          title: isUnderwatered ? "Foliage Turgor & Humidity Support" : "Health Protection & Disease Prevention",
+          icon: "shield",
+          headline: isUnderwatered ? "Humidity Boost" : "Preventive Care",
+          schedule: isUnderwatered ? "Gentle leaf misting" : "Weekly inspection",
+          detail: aiData.protectionAdvice || "Inspect undersides of leaves weekly. Lightly mist foliage to maintain ambient humidity and prevent dry brown tips.",
+        },
+        {
+          stepNumber: 5,
+          title: "Automated In-App Reminders",
+          icon: "bell",
+          headline: "Active Reminders",
+          schedule: "Scheduled in Garden",
+          detail: `In-app watering notifications have been set for ${plantNameFetched} so you will never forget a watering cycle!`,
+        },
+      ];
 
   // Create the plant record
   let plant = null;
@@ -759,10 +896,11 @@ Respond with ONLY a valid, raw JSON object (NO markdown backticks, NO \`\`\`json
       nextWateringDue: nextWater,
       nextFertilizingDue: nextFeed,
       healthStatus: sanitizeHealthStatus(aiData.currentHealthStatus || "healthy"),
+      currentDisease: aiData.healthDiagnosis || "",
       notes: aiData.careSummary,
       image: imageBase64,
       telemetry: {
-        soilMoisturePercent: 55,
+        soilMoisturePercent: isDesiccatedPlant ? 12 : isUnderwatered ? 25 : 55,
         ambientTemperatureC: 28,
         ambientHumidityPercent: 60,
         lastReadingAt: new Date(),
@@ -806,10 +944,11 @@ Respond with ONLY a valid, raw JSON object (NO markdown backticks, NO \`\`\`json
       nextWateringDue: nextWater.toISOString(),
       nextFertilizingDue: nextFeed.toISOString(),
       healthStatus: sanitizeHealthStatus(aiData.currentHealthStatus || "healthy"),
+      currentDisease: aiData.healthDiagnosis || "",
       notes: aiData.careSummary,
       image: imageBase64,
       telemetry: {
-        soilMoisturePercent: 55,
+        soilMoisturePercent: isDesiccatedPlant ? 12 : isUnderwatered ? 25 : 55,
         ambientTemperatureC: 28,
         ambientHumidityPercent: 60,
       },
@@ -1019,7 +1158,15 @@ export const diagnosePlant = asyncHandler(async (req, res) => {
   const plantId = req.body.plant_id;
   const location = req.body.location || "balcony";
   const plantNameFromReq = req.body.plant_name || "";
-  const apiKey = process.env.GEMINI_API_KEY?.trim();
+
+  let clientVisualScan = null;
+  if (req.body.visual_analysis) {
+    try {
+      clientVisualScan = typeof req.body.visual_analysis === "string" ? JSON.parse(req.body.visual_analysis) : req.body.visual_analysis;
+    } catch {
+      clientVisualScan = null;
+    }
+  }
 
   let diagnosisResult = null;
   let isNotPlantDiag = false;
@@ -1027,10 +1174,14 @@ export const diagnosePlant = asyncHandler(async (req, res) => {
   // Attempt multimodal diagnosis via Gemini
   const prompt = `You are a world-class plant pathologist and urban gardening AI assistant. Analyze this scanned plant/leaf image.
 Growing Location: "${location}".
-${plantNameFromReq ? `User Garden Plant Reference: "${plantNameFromReq}"` : ""}
+${plantNameFromReq ? `User Garden Plant Reference: "${plantNameFromReq}".` : ""}
+${clientVisualScan?.isDesiccated ? "CRITICAL BOTANICAL OBSERVATION: Plant tissue is brown, dry, crispy, and severely desiccated / dehydrated (withered plant). Check for severe dehydration / drought stress." : ""}
+${clientVisualScan?.isSeverelyDrooping ? "CRITICAL BOTANICAL OBSERVATION: Foliage shows severe downward drooping and limp petioles (dehydration / loss of hydrostatic turgor pressure)." : ""}
+${clientVisualScan?.isYellowing ? "CRITICAL BOTANICAL OBSERVATION: Foliage shows noticeable yellowing (chlorosis / overwatering / nutrient depletion)." : ""}
+${clientVisualScan?.isBrowning ? "CRITICAL BOTANICAL OBSERVATION: Foliage displays brown necrotic spots, scorched margins, or fungal lesions." : ""}
 
 CRITICAL FIRST STEP:
-Check if this image depicts a plant leaf, plant stem, flower, or live botanical foliage.
+Check if this image depicts a plant leaf, plant stem, flower, or live/dry botanical foliage.
 If the image is NOT a plant or leaf (e.g. human face, car, animal, furniture, screen, document, receipt, random non-plant object):
 Respond with ONLY:
 {
@@ -1039,22 +1190,22 @@ Respond with ONLY:
 }
 
 If the image IS a plant or leaf:
-1. Identify the accurate botanical and common plant species name from the photo (e.g. 'Tomato', 'Money Plant', 'Sweet Basil', 'Rose', 'Monstera Deliciosa', 'Hibiscus', 'Peace Lily', 'Spearmint', etc.).
-2. Detect any disease or health condition (e.g. Early Blight, Late Blight, Leaf Mold, Powdery Mildew, Spider Mites, Bacterial Spot, or Healthy Leaf).
+1. Identify the accurate botanical and common plant species name from the photo (e.g. 'Tomato', 'Money Plant', 'Sweet Basil', 'Rose', 'Monstera Deliciosa', 'Hibiscus', 'ZZ Plant', 'Snake Plant', etc.). If completely dry/dead nursery plant, specify the plant species or 'Dried Nursery Plant'.
+2. Detect the exact condition (e.g. 'Severe Desiccation / Drought Necrosis', 'Loss of Turgor / Acute Wilting', 'Early Blight', 'Powdery Mildew', 'Leaf Spot', 'Foliar Chlorosis', or 'Healthy Leaf'). If dry/brown/withered, NEVER report Healthy!
 3. Tailor watering and care advice specifically for "${location}" growing conditions.
 
 Respond with ONLY a valid, raw JSON object (NO markdown backticks, NO \`\`\`json wrappers, NO conversational text):
 {
   "isPlant": true,
   "identifiedPlant": "Accurate common plant name identified from image",
-  "diseaseName": "Clear common disease name (e.g. 'Early Blight', 'Powdery Mildew', 'Leaf Spot') or 'Healthy Leaf'",
+  "diseaseName": "Clear condition name (e.g. 'Severe Desiccation & Wither', 'Early Blight', 'Leaf Spot') or 'Healthy Leaf'",
   "isHealthy": false,
   "confidence": 94,
   "severity": "Mild" | "Moderate" | "Severe" | "None",
   "symptoms": ["Specific visible symptom 1", "Symptom 2", "Symptom 3"],
-  "causes": ["Pathogen cause 1", "Environmental trigger 2"],
+  "causes": ["Pathogen or environmental cause 1", "Trigger 2"],
   "organicTreatment": ["Actionable urban organic remedy 1", "Remedy 2", "Remedy 3"],
-  "chemicalTreatment": ["Safe fungicide or chemical treatment option"],
+  "chemicalTreatment": ["Safe fungicide, nutrient spray, or none needed"],
   "preventiveCare": ["Cultural practice 1", "Pruning/watering practice 2"],
   "wateringAdvice": "Specific watering frequency and method recommendation tailored to ${location}",
   "smartFarmingInsight": "Microclimate placement advice for ${location}"
@@ -1088,34 +1239,162 @@ Respond with ONLY a valid, raw JSON object (NO markdown backticks, NO \`\`\`json
 
   // If Gemini was unavailable, API key missing, or JSON parse failed, use botanical heuristic engine
   if (!diagnosisResult) {
-    diagnosisResult = {
-      identifiedPlant: plantNameFromReq || "Urban Houseplant",
-      diseaseName: "Foliar Stress & Leaf Spot",
-      isHealthy: false,
-      confidence: 91,
-      severity: "Moderate",
-      symptoms: [
-        "Necrotic lesions with chlorotic halos on foliage",
-        "Reduced photosynthetic efficiency and leaf stress",
-        "Foliage showing signs of excess humidity or water stress",
-      ],
-      causes: [
-        "Fungal spore germination favored by stagnant air and wet foliage",
-        `Overhead irrigation or poor drainage in ${location} container`,
-      ],
-      organicTreatment: [
-        "Prune damaged leaves and dispose away from the garden.",
-        "Spray cold-pressed organic Neem oil solution (5ml/L) once a week at sunset.",
-        "Dust soil surface with organic compost or wood ash for root vitality.",
-      ],
-      chemicalTreatment: ["Apply broad-spectrum copper fungicide if lesions multiply."],
-      preventiveCare: [
-        "Water early in the morning strictly at soil level.",
-        `Ensure 4-6 hours of bright filtered sunlight in your ${location}.`,
-      ],
-      wateringAdvice: `Allow top inch of potting soil in your ${location} to dry between waterings. Never wet leaves during evening.`,
-      smartFarmingInsight: `Sensor recommendation: Maintain soil moisture between 35%–55% and ensure good ventilation in ${location}.`,
-    };
+    const isDesiccated = Boolean(clientVisualScan?.isDesiccated);
+    const isDrooping = Boolean(clientVisualScan?.isSeverelyDrooping);
+    const isYellow = Boolean(clientVisualScan?.isYellowing);
+    const isBrown = Boolean(clientVisualScan?.isBrowning);
+    const isHealthy = Boolean(clientVisualScan?.healthStatus === "healthy");
+    const detectedSpecies = clientVisualScan?.detectedSpecies || plantNameFromReq || "Urban Houseplant";
+
+    if (isDesiccated) {
+      diagnosisResult = {
+        identifiedPlant: detectedSpecies,
+        diseaseName: "Severe Foliage Desiccation & Drought Necrosis",
+        isHealthy: false,
+        confidence: 95,
+        severity: "Severe",
+        symptoms: [
+          "Foliage is completely crispy, dry, brittle, and brown",
+          "Loss of moisture throughout petiole and leaf tissues",
+          "Potting soil compacted and severely dehydrated",
+        ],
+        causes: [
+          "Prolonged absence of irrigation or intense ambient heat",
+          "Dry air currents and hydrophobic desiccated potting substrate",
+        ],
+        organicTreatment: [
+          "Perform a deep 30-minute bottom-soaking bath to fully hydrate root ball.",
+          "Prune off fully dead, brittle foliage using clean sterile shears to reduce transpiration.",
+          "Relocate pot to sheltered, bright filtered shade away from hot drafts and scorching midday sun.",
+        ],
+        chemicalTreatment: ["Do not apply chemical fertilizers while roots are desiccated. Hold until active recovery."],
+        preventiveCare: [
+          "Establish a consistent automated watering schedule in your garden app.",
+          "Add a top layer of organic mulch or coco-chips to retain soil moisture.",
+        ],
+        wateringAdvice: `Immediate emergency bottom soak (500ml). After revival, water every 2 days early morning in your ${location}.`,
+        smartFarmingInsight: `Critical alert: Soil moisture is below 15%. Target recovery range is 45%–60% moisture.`,
+      };
+    } else if (isDrooping) {
+      diagnosisResult = {
+        identifiedPlant: detectedSpecies,
+        diseaseName: "Acute Foliage Wilting & Dehydration (Loss of Turgor)",
+        isHealthy: false,
+        confidence: 94,
+        severity: "Moderate",
+        symptoms: [
+          "Downward limp drooping of stems and leaves",
+          "Loss of cell hydrostatic pressure (flaccid leaf structure)",
+          "Dry topsoil layer",
+        ],
+        causes: [
+          "Depleted moisture in root zone",
+          "High evapotranspiration rate in current environment",
+        ],
+        organicTreatment: [
+          "Deeply drench soil with 400ml–500ml water at root level immediately.",
+          "Lightly mist foliage to reduce transpiration rate while roots uptake water.",
+        ],
+        chemicalTreatment: ["None required — hydration is the immediate cure."],
+        preventiveCare: [
+          "Check soil moisture daily; water before foliage begins to flag or droop.",
+          "Shield from dry hot winds.",
+        ],
+        wateringAdvice: `Water deeply right now! Leaves will regain upright turgor within 2–4 hours. Water every 2 days in ${location}.`,
+        smartFarmingInsight: `Sensor insight: Keep soil moisture above 35% to prevent stress-induced turgor collapse.`,
+      };
+    } else if (isYellow) {
+      diagnosisResult = {
+        identifiedPlant: detectedSpecies,
+        diseaseName: "Foliar Chlorosis (Nitrogen / Micronutrient Deficiency)",
+        isHealthy: false,
+        confidence: 92,
+        severity: "Mild",
+        symptoms: [
+          "Pale or yellowing leaf lamina with prominent or faded veins",
+          "Reduced chlorophyll concentration and slower growth",
+        ],
+        causes: [
+          "Nutrient deficiency (nitrogen, iron, or magnesium) or poor container drainage",
+          "Frequent shallow watering causing root suffocation",
+        ],
+        organicTreatment: [
+          "Top-dress with 2 tablespoons of organic vermicompost or apply liquid seaweed extract.",
+          "Verify container drainage holes are clear of root plugs.",
+        ],
+        chemicalTreatment: ["Chelated micronutrient foliar spray (0.5g/L) if yellowing persists."],
+        preventiveCare: [
+          "Water only when top 1 inch of soil is dry.",
+          "Ensure potting mix contains perlite or sand for aeration.",
+        ],
+        wateringAdvice: `Allow soil to dry slightly before watering. Water every 3 days in ${location}.`,
+        smartFarmingInsight: `Nutrient alert: Boost organic bio-fertilizer and maintain soil aeration in ${location}.`,
+      };
+    } else if (isBrown) {
+      diagnosisResult = {
+        identifiedPlant: detectedSpecies,
+        diseaseName: "Foliar Necrotic Lesions & Leaf Spot (Fungal Blight Risk)",
+        isHealthy: false,
+        confidence: 92,
+        severity: "Moderate",
+        symptoms: [
+          "Brown necrotic spots with chlorotic yellow halos on foliage",
+          "Crispy leaf tips or localized edge browning",
+        ],
+        causes: [
+          "Fungal pathogens favored by stagnant air and water drops left on leaves",
+          "Overhead evening watering or low ambient ventilation",
+        ],
+        organicTreatment: [
+          "Prune heavily infected leaves and dispose of them outside the garden.",
+          "Spray cold-pressed organic Neem oil solution (5ml/L with mild soap) weekly at sunset.",
+        ],
+        chemicalTreatment: ["Apply broad-spectrum copper fungicide if lesions expand rapidly."],
+        preventiveCare: [
+          "Water early morning directly at soil level; never wet leaves in evening.",
+          `Ensure good air circulation and 4-6 hours filtered sun in ${location}.`,
+        ],
+        wateringAdvice: `Water strictly at soil base every 3 days. Keep foliage dry.`,
+        smartFarmingInsight: `Fungus prevention: Maintain humidity below 75% and ensure cross-ventilation in ${location}.`,
+      };
+    } else if (isHealthy) {
+      diagnosisResult = {
+        identifiedPlant: detectedSpecies,
+        diseaseName: "Healthy Foliage (No Disease Detected)",
+        isHealthy: true,
+        confidence: 96,
+        severity: "None",
+        symptoms: [
+          "Vibrant deep green chlorophyll coloration",
+          "Erect, firm leaf turgor and healthy cuticle",
+          "Zero signs of fungal lesions, chlorosis, or pest infestation",
+        ],
+        causes: ["Optimal urban gardening care, balanced sunlight, and ideal moisture"],
+        organicTreatment: ["No treatment needed! Maintain current excellent routine."],
+        chemicalTreatment: ["None needed."],
+        preventiveCare: [
+          "Continue regular watering schedule tailored to your container.",
+          "Provide monthly organic vermicompost for sustained vigor.",
+        ],
+        wateringAdvice: `Maintain regular watering routine every 2-3 days in ${location}.`,
+        smartFarmingInsight: `Baseline optimal: Plant health index is 96%. Continue current cultivation regime.`,
+      };
+    } else {
+      diagnosisResult = {
+        identifiedPlant: detectedSpecies,
+        diseaseName: "Mild Environmental Stress",
+        isHealthy: false,
+        confidence: 88,
+        severity: "Mild",
+        symptoms: ["Minor foliage irregularities or slight edge discoloration"],
+        causes: ["Irregular watering or sudden microclimate fluctuations"],
+        organicTreatment: ["Trim dry edges and apply light organic vermicompost."],
+        chemicalTreatment: ["None needed."],
+        preventiveCare: ["Maintain consistent watering and bright indirect lighting."],
+        wateringAdvice: `Water consistently every 2–3 days early in the morning in ${location}.`,
+        smartFarmingInsight: `Microclimate advice: Stabilize watering intervals for optimal growth.`,
+      };
+    }
   }
 
   const finalPlantName = diagnosisResult.identifiedPlant || plantNameFromReq || "Urban Garden Plant";
@@ -1146,7 +1425,11 @@ Respond with ONLY a valid, raw JSON object (NO markdown backticks, NO \`\`\`json
     if (plantId) {
       const plant = await GardenPlant.findOne({ _id: plantId, user: req.auth.id });
       if (plant) {
-        plant.healthStatus = diagnosisResult.isHealthy ? "healthy" : "diseased";
+        plant.healthStatus = diagnosisResult.isHealthy
+          ? "healthy"
+          : (diagnosisResult.diseaseName.includes("Desiccation") || diagnosisResult.diseaseName.includes("Wilting") || diagnosisResult.diseaseName.includes("Dehydration"))
+            ? "underwatered"
+            : "diseased";
         plant.currentDisease = diagnosisResult.diseaseName;
         await plant.save();
       }

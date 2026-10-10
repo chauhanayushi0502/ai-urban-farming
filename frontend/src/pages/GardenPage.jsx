@@ -124,6 +124,8 @@ export default function GardenPage({ initialTab }) {
   const [aiAddBusy, setAiAddBusy] = useState(false);
   const [aiPhotoError, setAiPhotoError] = useState("");
   const [isDraggingAi, setIsDraggingAi] = useState(false);
+  const [aiScanPreview, setAiScanPreview] = useState(null);
+  const [userSpeciesChoice, setUserSpeciesChoice] = useState("");
 
   // Diagnosis Modal State
   const [diagFile, setDiagFile] = useState(null);
@@ -152,11 +154,24 @@ export default function GardenPage({ initialTab }) {
   useEffect(() => {
     if (!aiPhoto) {
       setAiPreview("");
+      setAiScanPreview(null);
       return;
     }
     const url = URL.createObjectURL(aiPhoto);
     setAiPreview(url);
-    return () => URL.revokeObjectURL(url);
+    let isCurrent = true;
+    analyzePlantFoliageHealth(aiPhoto)
+      .then((scan) => {
+        if (isCurrent && scan) {
+          setAiScanPreview(scan);
+        }
+      })
+      .catch(() => {});
+
+    return () => {
+      isCurrent = false;
+      URL.revokeObjectURL(url);
+    };
   }, [aiPhoto]);
 
   useEffect(() => {
@@ -436,11 +451,14 @@ export default function GardenPage({ initialTab }) {
       const optimizedPhoto = await compressAndOptimizeImage(aiPhoto, 1200, 0.85);
 
       // 3. Client-side foliage turgor and health analysis
-      const visualAnalysis = await analyzePlantFoliageHealth(aiPhoto);
+      const visualAnalysis = aiScanPreview || (await analyzePlantFoliageHealth(aiPhoto));
 
       const form = new FormData();
       form.append("plant_image", optimizedPhoto);
       form.append("location", aiLocation);
+      if (userSpeciesChoice && userSpeciesChoice.trim()) {
+        form.append("species", userSpeciesChoice.trim());
+      }
       if (visualAnalysis) {
         form.append("visual_analysis", JSON.stringify(visualAnalysis));
       }
@@ -463,6 +481,8 @@ export default function GardenPage({ initialTab }) {
       setAiPhoto(null);
       setAiPreview("");
       setAiPhotoError("");
+      setAiScanPreview(null);
+      setUserSpeciesChoice("");
 
       // Open the Step-by-Step Suggestion Pop-up immediately with the identified plant name!
       setStepCarePlant(res.plant);
@@ -1310,6 +1330,8 @@ export default function GardenPage({ initialTab }) {
                         </div>
                         <span className={`health-pill ${statusClass}`}>
                           {statusClass === "healthy" && "🟢 Healthy"}
+                          {statusClass === "underwatered" && "⚠️ Dehydrated"}
+                          {statusClass === "overwatered" && "💧 Overwatered"}
                           {statusClass === "diseased" && "🔴 Diseased"}
                           {statusClass === "needs_attention" && "🟡 Needs Care"}
                           {statusClass === "recovering" && "🔵 Recovering"}
@@ -1708,6 +1730,85 @@ export default function GardenPage({ initialTab }) {
                     </label>
                   </div>
 
+                  <div>
+                    <label>
+                      Plant Species / Name (Optional — Auto-detected from photo if empty)
+                      <div style={{ display: "flex", gap: "8px", marginTop: "4px" }}>
+                        <input
+                          type="text"
+                          placeholder="e.g. Tomato, Money Plant, Snake Plant, Rose, Basil... (or leave empty)"
+                          value={userSpeciesChoice}
+                          onChange={(e) => setUserSpeciesChoice(e.target.value)}
+                          style={{ flex: 1 }}
+                        />
+                        <select
+                          value=""
+                          onChange={(e) => {
+                            if (e.target.value) setUserSpeciesChoice(e.target.value);
+                          }}
+                          style={{ width: "160px" }}
+                        >
+                          <option value="">Quick Pick...</option>
+                          <option value="Tomato">Tomato (ટામેટા)</option>
+                          <option value="Money Plant">Money Plant</option>
+                          <option value="Snake Plant">Snake Plant</option>
+                          <option value="Sweet Basil">Basil / Tulsi (તુલસી)</option>
+                          <option value="Aloe Vera">Aloe Vera (કુંવારપાઠું)</option>
+                          <option value="Rose">Rose (ગુલાબ)</option>
+                          <option value="Hibiscus">Hibiscus (જાસૂદ)</option>
+                          <option value="Mint">Mint / Pudina (ફુદીનો)</option>
+                          <option value="Chili / Pepper">Chili / Pepper (મરચાં)</option>
+                          <option value="ZZ Plant">ZZ Plant</option>
+                          <option value="Peace Lily">Peace Lily</option>
+                          <option value="Areca Palm">Areca Palm</option>
+                          <option value="Ficus Tree">Ficus Tree</option>
+                        </select>
+                      </div>
+                    </label>
+                  </div>
+
+                  {aiScanPreview && aiPreview && (
+                    <div
+                      style={{
+                        background:
+                          aiScanPreview.healthStatus === "underwatered"
+                            ? "#fffbeb"
+                            : aiScanPreview.healthStatus === "diseased"
+                            ? "#fef2f2"
+                            : "#f0fdf4",
+                        border: `1px solid ${
+                          aiScanPreview.healthStatus === "underwatered"
+                            ? "#fde68a"
+                            : aiScanPreview.healthStatus === "diseased"
+                            ? "#fecaca"
+                            : "#bbf7d0"
+                        }`,
+                        borderRadius: "8px",
+                        padding: "10px 14px",
+                        fontSize: "12px",
+                      }}
+                    >
+                      <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "4px" }}>
+                        <strong style={{ color: "#1e293b", display: "flex", alignItems: "center", gap: "6px" }}>
+                          🔍 Live Vision Scan:
+                        </strong>
+                        <span className={`health-pill ${aiScanPreview.healthStatus}`}>
+                          {aiScanPreview.healthStatus === "underwatered"
+                            ? (aiScanPreview.isDesiccated ? "⚠️ Dried / Desiccated" : "⚠️ Dehydrated / Drooping")
+                            : aiScanPreview.healthStatus === "diseased"
+                            ? "🔴 Diseased"
+                            : aiScanPreview.healthStatus === "needs_attention"
+                            ? "🟡 Needs Care"
+                            : "🟢 Healthy Vitality"}
+                        </span>
+                      </div>
+                      <div style={{ color: "#475569", lineHeight: "1.4" }}>
+                        <strong>Detected:</strong> {aiScanPreview.detectedSpecies || "Plant"} ·{" "}
+                        <em>{aiScanPreview.healthDiagnosis}</em>
+                      </div>
+                    </div>
+                  )}
+
                   <button
                     type="submit"
                     className="button full-button"
@@ -1852,7 +1953,13 @@ export default function GardenPage({ initialTab }) {
                   </span>
                   <span className={`health-pill ${stepCarePlant.healthStatus || "healthy"}`}>
                     {stepCarePlant.healthStatus === "underwatered"
-                      ? "⚠️ Dehydrated / Drooping Limp"
+                      ? (stepCareReport?.healthDiagnosis?.toLowerCase().includes("desiccat") ||
+                         stepCareReport?.healthDiagnosis?.toLowerCase().includes("dried") ||
+                         stepCarePlant.currentDisease?.toLowerCase().includes("desiccat")
+                          ? "⚠️ Completely Dried / Desiccated"
+                          : "⚠️ Dehydrated / Drooping Limp")
+                      : stepCarePlant.healthStatus === "overwatered"
+                      ? "💧 Overwatered"
                       : stepCarePlant.healthStatus === "diseased"
                       ? "🔴 Diseased / Attention Needed"
                       : stepCarePlant.healthStatus === "needs_attention"
@@ -1881,11 +1988,15 @@ export default function GardenPage({ initialTab }) {
                 <div>
                   <strong style={{ color: stepCarePlant.healthStatus === "underwatered" ? "#92400e" : "#991b1b", fontSize: "13px" }}>
                     {stepCarePlant.healthStatus === "underwatered"
-                      ? "⚠️ Plant Health Alert: Severe Foliage Drooping & Dehydration Detected"
+                      ? (stepCareReport?.healthDiagnosis?.toLowerCase().includes("desiccat") ||
+                         stepCareReport?.healthDiagnosis?.toLowerCase().includes("dried") ||
+                         stepCarePlant.currentDisease?.toLowerCase().includes("desiccat")
+                          ? "⚠️ Plant Health Emergency: Severe Desiccation & Dried Foliage Detected"
+                          : "⚠️ Plant Health Alert: Severe Foliage Drooping & Dehydration Detected")
                       : "⚠️ Plant Health Alert: Foliage Stress / Disease Symptoms Detected"}
                   </strong>
                   <p style={{ margin: "4px 0 0", fontSize: "12px", color: "#475569", lineHeight: "1.5" }}>
-                    {stepCareReport?.healthDiagnosis || stepCarePlant.healthDiagnosis || (
+                    {stepCareReport?.healthDiagnosis || stepCarePlant.currentDisease || stepCarePlant.healthDiagnosis || (
                       stepCarePlant.healthStatus === "underwatered"
                         ? "Loss of hydrostatic turgor pressure caused foliage to collapse limp. Follow Step 1 immediately to rehydrate and perk the leaves back upright!"
                         : "Follow the tailored care steps below to restore your plant to optimal health."
@@ -2509,7 +2620,11 @@ export default function GardenPage({ initialTab }) {
                         color: diagResult.isHealthy ? "#2b6d27" : "var(--rust)",
                       }}
                     >
-                      {diagResult.isHealthy ? "✓ Healthy Botanical Status" : "⚠️ Pathogen Identified"}
+                      {diagResult.isHealthy
+                        ? "✓ Healthy Botanical Status"
+                        : (diagResult.diseaseName?.includes("Desiccation") || diagResult.diseaseName?.includes("Wilting") || diagResult.diseaseName?.includes("Dehydration"))
+                        ? "⚠️ Critical Dehydration Detected"
+                        : "⚠️ Plant Health Issue Identified"}
                     </span>
                     <h3>{diagResult.diseaseName}</h3>
                     <div style={{ display: "flex", flexWrap: "wrap", gap: "12px", marginTop: "4px", fontSize: "12px", color: "#545e51" }}>

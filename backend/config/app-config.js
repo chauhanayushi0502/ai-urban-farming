@@ -26,4 +26,5 @@ export const settingsDefaults = {
   currency: "₹",
   shipping_charge: "50",
   tax_rate: "5",
+  gemini_api_key: process.env.GEMINI_API_KEY || "",
 };
