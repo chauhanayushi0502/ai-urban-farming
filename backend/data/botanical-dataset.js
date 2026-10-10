@@ -639,7 +639,13 @@ export function matchDatasetDisease({ cropName, visualScan, queryText }) {
     return BOTANICAL_DISEASE_DATASET.find((d) => d.id === "severe_desiccation_wither");
   }
   if (visualScan?.isSeverelyDrooping) {
-    return BOTANICAL_DISEASE_DATASET.find((d) => d.id === "peace_lily_dehydration");
+    const lily = BOTANICAL_DISEASE_DATASET.find((d) => d.id === "peace_lily_dehydration");
+    if (normCrop && (normCrop.includes("lily") || normCrop.includes("spathiphyllum"))) return lily;
+    return {
+      ...lily,
+      crop: "Urban Houseplant",
+      condition: "Severe Foliage Drooping & Dehydration (Loss of Turgor)",
+    };
   }
   if (visualScan?.isYellowing) {
     return BOTANICAL_DISEASE_DATASET.find((d) => d.id === "hibiscus_chlorosis");

@@ -392,36 +392,8 @@ export async function analyzePlantFoliageHealth(file) {
         }
 
         // ==========================================
-        // DYNAMIC BOTANICAL SPECIES IDENTIFICATION
-        // ==========================================
-        let detectedSpecies = "Houseplant";
-
-        if (isDesiccated) {
-          detectedSpecies = "Desiccated Nursery Plant";
-        } else if (pinkFoliage >= 10 || pinkRatio >= 0.08) {
-          detectedSpecies = "Polka Dot Plant (Hypoestes)";
-        } else if (isSeverelyDrooping) {
-          // Peace Lily / Spathiphyllum is famous for dramatical petiole collapse when dry
-          detectedSpecies = "Peace Lily";
-        } else if (flowerRatio >= 0.08 && flowerPetals >= 45) {
-          detectedSpecies = "Hibiscus";
-        } else if (aspectRatio >= 1.6 && greenRatio >= 0.45) {
-          detectedSpecies = "Snake Plant";
-        } else if (variegated >= 30 && droopRatio >= 1.1) {
-          detectedSpecies = "Money Plant";
-        } else if (deepGreen >= 50 && aspectRatio >= 1.2 && droopRatio < 1.1) {
-          detectedSpecies = "ZZ Plant";
-        } else if (greenRatio >= 0.55 && aspectRatio < 0.95 && totalPlantPixels >= 180) {
-          detectedSpecies = "Sweet Basil";
-        } else if (plantHeight > 55 && greenFoliage > 90 && aspectRatio >= 1.25) {
-          detectedSpecies = "Areca Palm";
-        } else if (deepGreen > 45) {
-          detectedSpecies = "Peace Lily";
-        } else if (greenFoliage > 100) {
-          detectedSpecies = "Ficus Tree";
-        } else {
-          detectedSpecies = "Urban Houseplant";
-        }
+        // Botanical species identification is accurately performed by Gemini Vision AI
+        let detectedSpecies = isDesiccated ? "Desiccated Nursery Plant" : "";
 
         resolve({
           isSeverelyDrooping,

@@ -18,7 +18,13 @@ export async function callGeminiAI({ prompt, imageBuffer, imageMimeType, maxToke
   }
   if (!apiKey) return null;
 
-  const models = ["gemini-2.0-flash", "gemini-1.5-flash"];
+  const models = [
+    "gemini-3.1-flash-lite",
+    "gemini-flash-lite-latest",
+    "gemini-3.5-flash-lite",
+    "gemini-3.5-flash",
+    "gemini-3.7-flash",
+  ];
 
   // 1. Try standard generateContent endpoint
   for (const model of models) {
@@ -49,7 +55,7 @@ export async function callGeminiAI({ prompt, imageBuffer, imageMimeType, maxToke
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(bodyPayload),
-        signal: AbortSignal.timeout(2200),
+        signal: AbortSignal.timeout(8000),
       });
 
       if (res.ok) {
@@ -80,12 +86,12 @@ export async function callGeminiAI({ prompt, imageBuffer, imageMimeType, maxToke
       method: "POST",
       headers: { "Content-Type": "application/json", "x-goog-api-key": apiKey },
       body: JSON.stringify({
-        model: "gemini-2.0-flash",
+        model: "gemini-3.1-flash-lite",
         input,
         generation_config: { thinking_level: "low", max_output_tokens: maxTokens },
         store: false,
       }),
-      signal: AbortSignal.timeout(2500),
+      signal: AbortSignal.timeout(8000),
     });
     if (res.ok) {
       const result = await res.json();
@@ -664,8 +670,7 @@ Respond with ONLY a valid, raw JSON object (NO markdown backticks, NO \`\`\`json
   // Fallback botanical dataset matching if API key exhausted or request timed out
   if (!aiData) {
     const userSpecifiedSpecies = String(req.body.species || req.body.name || "").trim();
-    const detectedVisualSpecies = String(clientVisualScan?.detectedSpecies || "").trim();
-    const candidateSpecies = userSpecifiedSpecies || (detectedVisualSpecies && detectedVisualSpecies !== "Houseplant" ? detectedVisualSpecies : "");
+    const candidateSpecies = userSpecifiedSpecies;
 
     const matched = matchDatasetDisease({
       cropName: candidateSpecies,
@@ -673,7 +678,7 @@ Respond with ONLY a valid, raw JSON object (NO markdown backticks, NO \`\`\`json
     });
 
     const isDesiccated = Boolean(clientVisualScan?.isDesiccated);
-    const resolvedSpeciesName = candidateSpecies || matched.crop || "Urban Houseplant";
+    const resolvedSpeciesName = candidateSpecies || (matched.crop && !["Peace Lily", "Tomato", "Hibiscus"].includes(matched.crop) ? matched.crop : "Urban Houseplant");
     const key = normalizeSpeciesKey(resolvedSpeciesName);
     const defaults = SPECIES_WATERING_DEFAULTS[key] || SPECIES_WATERING_DEFAULTS.other;
 
@@ -1477,33 +1482,29 @@ export const askPlantDoctor = asyncHandler(async (req, res) => {
     ? `Local Climate (Auto-Detected): ${parsedWeather.temperature || 28}°C, ${parsedWeather.humidity || 55}% humidity, ${parsedWeather.condition || "Pleasant"}, ${parsedWeather.precipitation ? `${parsedWeather.precipitation}mm rain` : "no rain"}.`
     : "";
 
-  let isGenericPlant = !plantName && !originalName && !plantSpecies;
+  let isGenericPlant = !plantName || plantName === "Garden Houseplant" || plantName === "Urban Plant";
   let hasPhoto = Boolean(req.file && isValidPlantImage(req.file.buffer));
 
   let prompt = "";
-  if (hasPhoto && isGenericPlant) {
-    prompt = `You are a certified Botanical Doctor and master horticulturist.
+  if (hasPhoto) {
+    prompt = `You are a certified Botanical Doctor, plant pathologist, and master horticulturist named GreenBot AI Doctor.
 The user uploaded a plant photo and asked: "${String(question).trim()}".
 ${weatherContext}
 
 CRITICAL INSTRUCTIONS:
-1. First, accurately identify the exact common and botanical species of the plant in the photo (e.g. "🌱 Identified: Peace Lily (Spathiphyllum)" or "🌱 Identified: Tomato (Solanum lycopersicum)").
-2. Assess its visual health: state whether it is healthy, dehydrated, overwatered, or affected by any visible pests, nutritional deficiencies, or fungal spots.
-3. Provide concise, highly actionable care instructions: exact watering frequency, light needs, and organic remedies (such as neem oil spray, organic compost, or well-draining soil mix).
-4. Keep the entire response focused, practical, and under 3 to 4 sentences. Do not use markdown backticks.`;
+1. First, accurately identify the exact common and botanical species of the plant shown in the photo (e.g. "🌱 Identified: [Plant Name] ([Botanical Name])"). For example, if it is sweet basil, identify it as Sweet Basil (Ocimum basilicum). If tomato, identify as Tomato (Solanum lycopersicum). Do NOT guess Peace Lily unless the photo is truly a Spathiphyllum peace lily.
+2. Assess its visual health: state whether it is healthy, dehydrated/drooping, overwatered, suffering from nutrient deficiency, or affected by any visible pests or fungal spots.
+3. Provide concise, highly actionable care instructions: exact watering frequency, light needs, and organic remedies (such as cold-pressed neem oil spray, vermicompost, seaweed tonic, or well-draining soil mix).
+4. Keep the response direct, helpful, and under 3 to 4 sentences. Do not use markdown backticks.`;
   } else {
-    prompt = `You are a certified Botanical Doctor and master horticulturist.
-Plant: ${plantTitle} (Species: ${species}).
-Current Health Status: ${healthStatus || "healthy"}${currentDisease ? `, Condition: ${currentDisease}` : ""}.
+    prompt = `You are a certified Botanical Doctor and master horticulturist named GreenBot AI Doctor.
+User Question: "${String(question).trim()}".
+${!isGenericPlant ? `Plant Context: ${plantTitle} (Species: ${species}).` : "Note: If the user's question names a specific plant (e.g., Basil, Tomato, Aloe, Snake Plant, Money Plant, Rose), tailor all advice to that specific plant."}
+${healthStatus && healthStatus !== "healthy" ? `Current Health: ${healthStatus}${currentDisease ? `, Condition: ${currentDisease}` : ""}.` : ""}
 ${weatherContext}
-User Question: "${String(question).trim()}".`;
 
-    if (hasPhoto) {
-      prompt += `\nThe user also attached a photo of their plant/leaf. Inspect the image closely, confirm the plant species, diagnose any visible leaf issues, and address them directly.`;
-    }
-
-    prompt += `\nTASK:
-Provide a clear, reassuring, and practical diagnostic answer in 2 to 4 sentences. Explicitly mention organic remedies (e.g. Organic Neem Oil spray, Vermicompost / compost feeding, Seaweed tonic, balanced watering, or well-drained pot) where applicable. Do not use markdown backticks or bullet points.`;
+TASK:
+Provide an accurate, reassuring, and practical diagnostic answer directly addressing the user's question in 2 to 4 sentences. Explicitly mention organic remedies (e.g. Organic Neem Oil spray, Vermicompost / compost feeding, Seaweed tonic, balanced watering, or well-drained pot) where applicable. Do not use markdown backticks or bullet points.`;
   }
 
   let targetLang = req.body.language || "gu";
@@ -1513,24 +1514,22 @@ Provide a clear, reassuring, and practical diagnostic answer in 2 to 4 sentences
   } else if (targetLang === "hi") {
     langInstruction = "IMPORTANT: Write your response entirely in natural Hindi (हिन्दी) language so an Indian home gardener can understand easily.";
   } else {
-    langInstruction = "Write your response in English.";
+    langInstruction = "Write your response in clear, friendly English.";
   }
 
   prompt += `\n${langInstruction}`;
 
-  // Ultra-fast Gemini call with 2200ms timeout race to guarantee < 1s response
+  // Call Gemini AI
   let answer = null;
   try {
-    const geminiPromise = callGeminiAI({
+    answer = await callGeminiAI({
       prompt,
       imageBuffer: req.file ? req.file.buffer : null,
       imageMimeType: req.file ? req.file.mimetype : null,
-      maxTokens: 350,
+      maxTokens: 400,
     });
-    const timeoutPromise = new Promise((resolve) => setTimeout(() => resolve(null), 2200));
-    answer = await Promise.race([geminiPromise, timeoutPromise]);
   } catch (err) {
-    console.warn("Gemini race error:", err.message);
+    console.warn("Gemini call error in askPlantDoctor:", err.message);
     answer = null;
   }
 
