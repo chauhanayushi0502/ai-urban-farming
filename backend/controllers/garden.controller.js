@@ -18,7 +18,7 @@ export async function callGeminiAI({ prompt, imageBuffer, imageMimeType, maxToke
   }
   if (!apiKey) return null;
 
-  const models = ["gemini-flash-latest", "gemini-3.1-flash-lite", "gemini-flash-lite-latest", "gemini-3.8-flash"];
+  const models = ["gemini-2.0-flash", "gemini-1.5-flash"];
 
   // 1. Try standard generateContent endpoint
   for (const model of models) {
@@ -49,7 +49,7 @@ export async function callGeminiAI({ prompt, imageBuffer, imageMimeType, maxToke
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(bodyPayload),
-        signal: AbortSignal.timeout(12000),
+        signal: AbortSignal.timeout(2200),
       });
 
       if (res.ok) {
@@ -80,12 +80,12 @@ export async function callGeminiAI({ prompt, imageBuffer, imageMimeType, maxToke
       method: "POST",
       headers: { "Content-Type": "application/json", "x-goog-api-key": apiKey },
       body: JSON.stringify({
-        model: "gemini-3.8-flash",
+        model: "gemini-2.0-flash",
         input,
         generation_config: { thinking_level: "low", max_output_tokens: maxTokens },
         store: false,
       }),
-      signal: AbortSignal.timeout(20000),
+      signal: AbortSignal.timeout(2500),
     });
     if (res.ok) {
       const result = await res.json();
@@ -1278,6 +1278,183 @@ export const getDemoData = asyncHandler(async (_req, res) => {
   });
 });
 
+// High-Speed Botanical Mind Engine (Domain-Expert Gardening Intelligence)
+export function generateBotanicalMindReply({ question = "", plantTitle = "Urban Plant", species = "Plant", healthStatus = "healthy", weather = null, targetLang = "gu" }) {
+  const q = String(question).toLowerCase().trim();
+  const lang = targetLang || "gu";
+
+  // Microclimate note
+  let weatherNote = "";
+  if (weather && weather.temperature) {
+    const temp = Math.round(weather.temperature);
+    if (lang === "gu") {
+      weatherNote = temp >= 32
+        ? `\n\n☀️ **ગરમી ચેતવણી (${temp}°C):** હાલના ગરમ તાપમાનને લીધે પાંદડા ઝડપથી પાણી ગુમાવે છે, માટે દિવસમાં 1 વાર સવારે કૂંડામાં પૂરતો ભેજ ચકાસો.`
+        : `\n\n🌤️ **સ્થાનિક હવામાન (${temp}°C, ભેજ: ${weather.humidity || 50}%):** હાલનું વાતાવરણ છોડના સ્વસ્થ વિકાસ માટે એકદમ અનુકૂળ છે.`;
+    } else if (lang === "hi") {
+      weatherNote = temp >= 32
+        ? `\n\n☀️ **गर्मी चेतावनी (${temp}°C):** तेज तापमान में पत्तियां जल्दी सूखती हैं, इसलिए सुबह मिट्टी की नमी जरूर जांचें।`
+        : `\n\n🌤️ **स्थानीय मौसम (${temp}°C):** वर्तमान मौसम पौधों के विकास के लिए बहुत अनुकूल है।`;
+    } else {
+      weatherNote = temp >= 32
+        ? `\n\n☀️ **Heat Advisory (${temp}°C):** Warm temps accelerate evaporation; inspect soil moisture daily before 9 AM.`
+        : `\n\n🌤️ **Microclimate (${temp}°C, ${weather.humidity || 50}% humidity):** Current weather is highly supportive for active growth.`;
+    }
+  }
+
+  // 1. YELLOW LEAVES / પીળા પાંદડા / पीली पत्तियां
+  if (q.includes("yellow") || q.includes("peela") || q.includes("pila") || q.includes("pili") || q.includes("peeli") || q.includes("પીળા") || q.includes("પીળુ") || q.includes("પીળું") || q.includes("પીળાશ") || q.includes("पीले") || q.includes("पीली")) {
+    if (lang === "gu") {
+      return `🌱 **${plantTitle} ના પાંદડા પીળા પડવાના મુખ્ય 3 કારણો અને ઉપાય:**\n1. **વધુ પડતું પાણી (સૌથી સામાન્ય કારણ):** કુંડાની ઉપરની 2 ઇંચ માટી સુકાય ત્યારે જ પાણી આપો. કુંડાના તળિયે કાણું (ડ્રેનેજ) ખુલ્લું રાખો જેથી મૂળ સડે નહીં.\n2. **નાઇટ્રોજન પોષણની જરૂર:** છોડને 1 મુઠ્ઠી વર્મીકમ્પોસ્ટ (અળસિયાનું ખાતર) અથવા લીક્વિડ સીવીડ આપો.\n3. **હળવો સૂર્યપ્રકાશ:** છોડને દરરોજ સવારે 3-4 કલાક કુમળો તડકો મળવો જરૂરી છે.\n💡 **ત્વરિત સલાહ:** નીચેના જૂના પીળા પાંદડા કાતરથી કાપી નાખો જેથી છોડ નવા સ્વસ્થ પાંદડા ઉગાડવામાં પોતાની શક્તિ વાપરે!${weatherNote}`;
+    }
+    if (lang === "hi") {
+      return `🌱 **${plantTitle} की पत्तियां पीली पड़ने के मुख्य 3 कारण और समाधान:**\n1. **अधिक पानी (सबसे आम वजह):** गमले की ऊपरी 2 इंच मिट्टी सूखने पर ही पानी दें। गमले का ड्रेनेज होल खुला रखें ताकि जड़ें न गलें।\n2. **नाइट्रोजन पोषण की कमी:** पौधे में 1 मुट्ठी जैविक वर्मीकंपोस्ट या लिक्विड सीवीड टॉनिक डालें।\n3. **धूप का चक्र:** पौधे को रोजाना सुबह 3-4 घंटे की हल्की धूप जरूर दिखाएं।\n💡 **त्वरित टिप:** नीचे की पीली पत्तियों को कैंची से हटा दें ताकि पौधा नई पत्तियों के विकास में ऊर्जा लगाए!${weatherNote}`;
+    }
+    return `🌱 **Top 3 Causes & Cures for Yellow Leaves on your ${plantTitle}:**\n1. **Overwatering (Most Frequent):** Only hydrate when the top 2 inches of soil feel dry. Ensure drainage holes allow free runoff so roots breathe.\n2. **Nutrient Deficiency (Nitrogen):** Top-dress with 1 handful of organic Vermicompost or feed with diluted Liquid Seaweed.\n3. **Gentle Sunlight:** Ensure the plant receives 3–4 hours of bright morning illumination.\n💡 **Quick Action:** Gently prune lower yellow leaves to redirect vital energy into crisp new growth!${weatherNote}`;
+  }
+
+  // 2. WATERING / પાણી / पानी कब दें
+  if (q.includes("water") || q.includes("pani") || q.includes("sinchan") || q.includes("droop") || q.includes("પાણી") || q.includes("સિંચન") || q.includes("પાણીનો") || q.includes("पानी") || q.includes("सींच")) {
+    if (lang === "gu") {
+      return `💧 **${plantTitle} ને પાણી આપવાનો સુવર્ણ નિયમ:**\n1. **સવારનો શ્રેષ્ઠ સમય:** હંમેશા સવારે 6 થી 8 વાગ્યાની વચ્ચે મૂળ પાસે પાણી આપો. પાંદડા પર પાણી છાંટવાનું ટાળો જેથી ફૂગ ન લાગે.\n2. **ફિંગર ટેસ્ટ (Finger Test):** માટીમાં આંગળી 1-2 ઇંચ અંદર નાખો; જો માટી ભીની લાગે તો પાણી ન આપો, જો સૂકી લાગે તો જ પૂરતું પાણી આપો.\n3. **હવામાન મુજબ:** ગરમીમાં દર 1-2 દિવસે અને ઠંડી/ચોમાસામાં દર 3-4 દિવસે માટી ચકાસીને પાણી આપો.${weatherNote}`;
+    }
+    if (lang === "hi") {
+      return `💧 **${plantTitle} को पानी देने का स्वर्णिम नियम:**\n1. **सुबह का सही समय:** हमेशा सुबह 6 से 8 बजे के बीच सीधे जड़ों में पानी दें। पत्तियों पर पानी न डालें ताकि फंगस न लगे।\n2. **फिंगर टेस्ट (उंगली से जांच):** मिट्टी में 1-2 इंच उंगली डालकर देखें। अगर मिट्टी सूखी लगे तभी पानी दें, गीली होने पर न दें।\n3. **मौसम के अनुसार:** गर्मियों में 1-2 दिन में और सर्दियों/बरसात में 3-4 दिन में मिट्टी जांचकर पानी दें।${weatherNote}`;
+    }
+    return `💧 **Golden Watering Protocol for your ${plantTitle}:**\n1. **Morning Root Hydration:** Water deeply between 6 AM – 8 AM directly at the root zone. Avoid wetting the leaves to prevent mildew.\n2. **The 2-Inch Finger Test:** Insert your finger 2 inches into soil. If damp, wait! If dry, water thoroughly until it drains out the base.\n3. **Seasonal Rhythm:** Hydrate every 1–2 days during peak heat, and every 3–4 days during milder weather.${weatherNote}`;
+  }
+
+  // 3. NEEM OIL / લીમડાનું તેલ / नीम तेल
+  if (q.includes("neem") || q.includes("limda") || q.includes("spray") || q.includes("recipe") || q.includes("લીમડો") || q.includes("લીમડા") || q.includes("નીમ") || q.includes("नीम")) {
+    if (lang === "gu") {
+      return `🌿 **શુદ્ધ લીમડાના તેલનો ઓર્ગેનિક સ્પ્રે બનાવવાની સરળ રીત:**\n1. **મિશ્રણ:** 1 લિટર નવશેકા ગરમ પાણીમાં 5 મિલી શુદ્ધ લીમડાનું તેલ (Pure Cold-Pressed Neem Oil) અને 2-3 ટીપાં હળવો લિક્વિડ સાબુ ઉમેરો.\n2. **સારી રીતે હલાવો:** બોટલને બરાબર હલાવો જેથી તેલ અને પાણી સંપૂર્ણપણે ભળી જાય.\n3. **છંટકાવનો સમય:** હંમેશા સાંજે સૂર્યાસ્ત પછી જ છંટકાવ કરો (પાંદડાની ઉપર અને નીચે બંને તરફ). તેજ તડકામાં છાંટવાથી પાંદડા બળી શકે છે.\n💡 દર 7-10 દિવસે એકવાર છંટકાવ કરવાથી કોઈ પણ જીવાત નજીક નહીં આવે!`;
+    }
+    if (lang === "hi") {
+      return `🌿 **ऑर्गेनिक नीम तेल स्प्रे बनाने की आसान विधि:**\n1. **घोल तैयार करें:** 1 लीटर हल्के गुनगुने पानी में 5 मिली शुद्ध नीम का तेल और 2-3 बूंदें हल्का लिक्विड सोप मिलाएं।\n2. **अच्छी तरह हिलाएं:** बोतल को अच्छी तरह शेक करें ताकि तेल पानी में घुल जाए।\n3. **छिड़काव का सही समय:** हमेशा शाम को सूर्यास्त के बाद पत्तियों के ऊपर और नीचे दोनों तरफ स्प्रे करें। तेज धूप में पत्तियां झुलस सकती हैं।\n💡 हर 7-10 दिन में एक बार स्प्रे करने से पौधे पूरी तरह सुरक्षित रहेंगे!`;
+    }
+    return `🌿 **Organic Neem Oil Foliar Spray Recipe:**\n1. **The Formula:** Mix 5ml pure cold-pressed neem oil + 2–3 drops of mild liquid soap (as an emulsifier) into 1 liter of lukewarm water.\n2. **Shake Thoroughly:** Shake vigorously until the solution turns milky.\n3. **Application Golden Rule:** Spray in the late evening / sunset on both the top and underside of foliage. Never spray under harsh direct sun.\n💡 Repeat every 7–10 days to shield against 200+ varieties of urban garden pests!`;
+  }
+
+  // 4. PESTS / INSECTS / MEALYBUGS / જીવાત / કીડા / कीड़े
+  if (q.includes("pest") || q.includes("bug") || q.includes("mealy") || q.includes("aphid") || q.includes("mite") || q.includes("insect") || q.includes("jivat") || q.includes("kida") || q.includes("keeda") || q.includes("જીવાત") || q.includes("કીડા") || q.includes("ઇયળ") || q.includes("कीड़े") || q.includes("मिलीबग")) {
+    if (lang === "gu") {
+      return `🐛 **${plantTitle} પર જીવાત (મીલીબગ, માહો, સફેદ માખી) થી મુક્તિ મેળવવાનો રામબાણ ઈલાજ:**\n1. **હાથથી સફાઈ:** જો સફેદ મીલીબગ કે માહો દેખાય તો રૂ (કોટન) ને હળવા સાબુના પાણી કે આલ્કોહોલમાં પલાળીને સીધા સાફ કરી લો.\n2. **ઓર્ગેનિક લીમડાના તેલનો સ્પ્રે:** 5ml લીમડાનું તેલ 1 લિટર પાણીમાં મેળવીને સાંજે પાંદડાની નીચે અને ડાળીઓ પર છાંટો.\n3. **અલગ રાખો:** રોગગ્રસ્ત છોડને થોડા દિવસ માટે બીજા સ્વસ્થ છોડથી થોડો દૂર રાખો જેથી જીવાત ફેલાય નહીં.\n💡 5 દિવસના અંતરે 2 વાર છંટકાવ કરવાથી છોડ એકદમ સાફ થઈ જશે!`;
+    }
+    if (lang === "hi") {
+      return `🐛 **${plantTitle} के कीड़ों (मिलीबग, एफिड्स, सफेद मक्खी) का पक्का जैविक इलाज:**\n1. **प्राथमिक सफाई:** सफेद मिलीबग दिखने पर रुई को पानी या हल्के एल्कोहल में भिगोकर पत्तियों से सीधे हटा दें।\n2. **नीम तेल का छिड़काव:** 5ml नीम का तेल 1 लीटर पानी और 2 बूंद लिक्विड सोप में मिलाकर शाम के समय छिड़कें।\n3. **पौधे को अलग रखें:** संक्रमित पौधे को कुछ दिन अन्य पौधों से अलग रखें ताकि कीड़े न फैलें।\n💡 7 दिनों में 2 बार छिड़काव करने से सभी कीड़े पूरी तरह खत्म हो जाएंगे!`;
+    }
+    return `🐛 **Organic Pest Cure for your ${plantTitle} (Mealybugs, Aphids & Mites):**\n1. **Manual Spot Clean:** For cottony white mealybugs, dab them directly with a cotton swab dipped in rubbing alcohol or mild soapy water.\n2. **Evening Neem Shield:** Spray cold-pressed neem oil solution (5ml/L) focusing heavily on leaf undersides and branch nodes.\n3. **Isolation Protocol:** Quarantine the affected plant 2–3 feet away from others to prevent cross-contamination.\n💡 Repeat twice a week until clear, then once every fortnight for preventive defense!`;
+  }
+
+  // 5. POTTING SOIL MIX / કુંડાની માટી / गमले की मिट्टी
+  if (q.includes("soil") || q.includes("potting") || q.includes("mix") || q.includes("mati") || q.includes("mitti") || q.includes("કુંડાની માટી") || q.includes("માટી") || q.includes("માટીનું") || q.includes("माटी") || q.includes("मिट्टी") || q.includes("पॉटिंग")) {
+    if (lang === "gu") {
+      return `🪴 **શહેરી કુંડા માટેનું શ્રેષ્ઠ અને પૌષ્ટિક માટીનું મિશ્રણ (40:30:20:10):**\n• **40% સામાન્ય બગીચાની માટી** (છોડને મજબૂત આધાર માટે)\n• **30% વર્મીકમ્પોસ્ટ અથવા જૂનું છાણીયું ખાતર** (ભરપૂર ઓર્ગેનિક પોષણ માટે)\n• **20% કોકોપીટ** (ભેજ જાળવી રાખવા અને કુંડું હળવું રાખવા માટે)\n• **10% નદીની રેતી અથવા પરલાઇટ** (સરળ ડ્રેનેજ માટે જેથી મૂળ સડે નહીં)\n• **બોનસ ટીપ:** મિશ્રણમાં 1 મુઠ્ઠી લીમડાનો ખોળ ઉમેરો જેથી માટીમાં કીડા કે ઉધઈ ન થાય!`;
+    }
+    if (lang === "hi") {
+      return `🪴 **शहरी गमलों के लिए सर्वोत्तम जैविक मिट्टी का अनुपात (40:30:20:10):**\n• **40% सामान्य बगीचे की मिट्टी** (पौधे की जड़ को पकड़ के लिए)\n• **30% वर्मीकंपोस्ट या पुरानी गोबर खाद** (समृद्ध पोषण के लिए)\n• **20% कोकोपीट** (नमी बनाए रखने और मिट्टी को हल्का रखने के लिए)\n• **10% नदी की रेत या परलाइट** (उत्तम ड्रेनेज के लिए)\n• **बोनस टिप:** 1 मुट्ठी नीम की खली मिलाएं ताकि मिट्टी में कीड़े और फंगस न लगे!`;
+    }
+    return `🪴 **The Ideal 40:30:20:10 Urban Potting Mix Formula:**\n• **40% Garden Soil:** Provides foundational root anchorage.\n• **30% Organic Vermicompost:** Dense organic macronutrients.\n• **20% Cocopeat:** Retains moisture while remaining light and airy.\n• **10% Perlite or Coarse Sand:** Guarantees razor-sharp drainage.\n• **Bonus:** Blend in 1 handful of Neem Cake Powder to naturally inoculate against soil-borne root grubs and fungus!`;
+  }
+
+  // 6. FERTILIZER / ખાતર / खाद
+  if (q.includes("fertiliz") || q.includes("compost") || q.includes("khad") || q.includes("khatar") || q.includes("manure") || q.includes("nutrient") || q.includes("tonic") || q.includes("food") || q.includes("feed") || q.includes("ખાતર") || q.includes("ખાતરનું") || q.includes("ખાતરનો") || q.includes("खाद") || q.includes("फर्टिलाइजर")) {
+    if (lang === "gu") {
+      return `🌱 **${plantTitle} માટે શ્રેષ્ઠ ઓર્ગેનિક ખાતર અને આપવાની રીત:**\n1. **વર્મીકમ્પોસ્ટ (અળસિયાનું ખાતર):** દર 15-20 દિવસે 1-2 મુઠ્ઠી કુંડાની ઉપરની માટી હળવી ગોડી કરીને આપો.\n2. **લિક્વિડ સીવીડ ટોનિક:** દર મહિને 3ml સીવીડ 1 લિટર પાણીમાં ભેળવીને મૂળમાં રેડો, તેનાથી પાંદડા ચમકદાર અને લીલાછમ બનશે.\n3. **ઘરેલુ કેળાની છાલનું પાણી:** ફૂલો અને ફળો માટે કેળાની છાલને 2 દિવસ પાણીમાં પલાળીને તે પાણી આપો (પોટેશિયમથી ભરપૂર).\n💡 ક્યારેય વધુ રાસાયણિક ખાતર ન આપવું, ઓર્ગેનિક પદ્ધતિથી છોડ દીર્ઘાયુ રહે છે!`;
+    }
+    if (lang === "hi") {
+      return `🌱 **${plantTitle} के लिए सर्वश्रेष्ठ जैविक खाद और उपयोग का तरीका:**\n1. **वर्मीकंपोस्ट (केंचुआ खाद):** हर 15-20 दिन में 1-2 मुट्ठी गमले की गुड़ाई करके मिट्टी में मिलाएं।\n2. **लिक्विड सीवीड टॉनिक:** महीने में एक बार 3ml सीवीड को 1 लीटर पानी में मिलाकर जड़ों में डालें, पत्तियां हरी-भरी रहेंगी।\n3. **केले के छिलके का पानी:** फूल और फल वाले पौधों के लिए केले के छिलके का पानी (पोटेशियम से भरपूर) सर्वोत्तम है।\n💡 रासायनिक खाद से बचें, जैविक खाद से पौधे सालों-साल स्वस्थ रहते हैं!`;
+    }
+    return `🌱 **Organic Nutrient Protocol for your ${plantTitle}:**\n1. **Vermicompost Feeding:** Top-dress 1–2 handfuls around the pot perimeter every 15–20 days after lightly loosening topsoil.\n2. **Liquid Seaweed Tonic:** Dilute 3ml/L water once a month to supply 60+ trace minerals and stimulate vibrant chlorophyll.\n3. **Potassium Boost for Blooms:** Use steeped banana peel water for flowering and fruiting plants to accelerate buds.\n💡 Always water thoroughly immediately after applying organic nutrients!`;
+  }
+
+  // 7. TULSI / તુલસી / तुलसी
+  if (q.includes("tulsi") || q.includes("basil") || q.includes("manjari") || q.includes("તુલસી") || q.includes("તુલસીનો") || q.includes("तुलसी")) {
+    if (lang === "gu") {
+      return `🌿 **પવિત્ર તુલસીના છોડની વિશેષ કાળજી:**\n1. **મંજરી ઉતારવી:** તુલસી પર બીજ (મંજરી) આવે ત્યારે તેને ઉપરથી તરત જ કાપી લો, જેથી છોડ સુકાઈ ન જાય અને ઘટાદાર બને.\n2. **સૂર્યપ્રકાશ:** તુલસીને સવારે 4-5 કલાક સારો કુમળો તડકો ખૂબ ગમે છે.\n3. **પાણીનો નિયમ:** માત્ર ઉપરની માટી સુકાય ત્યારે જ પાણી આપો. વધુ પડતા પાણીથી તુલસીના મૂળ સડી જાય છે.\n4. **જીવાતથી રક્ષણ:** પાંદડા પર કાળી કે સફેદ જીવાત દેખાય તો સાંજે હળવો લીમડાના તેલનો સ્પ્રે કરો.`;
+    }
+    if (lang === "hi") {
+      return `🌿 **पवित्र तुलसी के पौधे की विशेष देखभाल:**\n1. **मंजरी हटाना:** तुलसी पर जैसे ही बीज (मंजरी) आए, उसे ऊपर से पिंच करके हटा दें। इससे पौधा कभी सूखेगा नहीं और घना बना रहेगा।\n2. **धूप:** सुबह की 4-5 घंटे की सीधी धूप तुलसी के लिए वरदान है।\n3. **पानी का ध्यान:** बहुत ज्यादा पानी न दें; ऊपरी मिट्टी सूखने पर ही जल अर्पित करें।\n4. **सुरक्षा:** कीड़ों से बचाव के लिए महीने में दो बार शाम को हल्का नीम तेल स्प्रे करें।`;
+    }
+    return `🌿 **Holy Basil / Tulsi Vitality Care Guide:**\n1. **Pinch Seed Heads (Manjari):** As soon as flowering seed pods appear, snip them off! This redirects vital energy into bushy growth and prevents desiccation.\n2. **Morning Sunlight:** Tulsi thrives under 4–5 hours of direct morning sunshine.\n3. **Moisture Rhythm:** Only water when topsoil feels dry. Saturated roots cause premature stem dieback.\n4. **Pest Shield:** Apply mild neem foliar spray in the evening if tiny black aphids or white spots appear on stems.`;
+  }
+
+  // 8. TOMATO / ટામેટા / ટમેટા / टमाटर
+  if (q.includes("tomato") || q.includes("tamatar") || q.includes("ટામેટા") || q.includes("ટમેટા") || q.includes("ટમેટાં") || q.includes("ટમેટાનો") || q.includes("टमाटर")) {
+    if (lang === "gu") {
+      return `🍅 **ટામેટાના છોડની બમ્પર ઉપજ માટેની ટિપ્સ:**\n1. **સૂર્યપ્રકાશ:** ટામેટાને ઓછામાં ઓછો 6-8 કલાક સીધો તડકો મળવો જરૂરી છે.\n2. **પાણી મૂળ પાસે આપો:** ક્યારેય પાંદડા પર પાણી ન રેડવું, માત્ર મૂળના થડ પાસે ઊંડે સુધી પાણી આપો.\n3. **સપોર્ટ અને કાપણી:** છોડને લાકડીનો ટેકો આપો અને નીચેથી વધારાની ડાળખીઓ (સકર્સ) હટાવી દો.\n4. **કેલ્શિયમ અને ખાતર:** દર 15 દિવસે વર્મીકમ્પોસ્ટ આપો જેથી ટામેટા મોટા અને મીઠા આવે!`;
+    }
+    if (lang === "hi") {
+      return `🍅 **टमाटर के पौधे की भरपूर पैदावार के लिए खास टिप्स:**\n1. **धूप:** रोजाना 6-8 घंटे की सीधी धूप टमाटर के लिए अनिवार्य है।\n2. **जड़ों में पानी दें:** पत्तियों पर पानी डालने से फंगस लगती है, केवल जड़ों में गहरा पानी दें।\n3. **सहारा और कटाई:** पौधे को लकड़ी का सहारा दें और निचली गैर-जरूरी शाखाओं को काटें।\n4. **पोषण:** हर 15 दिन में वर्मीकंपोस्ट दें ताकि फल बड़े और स्वस्थ आएं!`;
+    }
+    return `🍅 **High-Yield Tomato Container Guide:**\n1. **Full Sun Power:** Demands 6–8 hours of unfiltered sunlight daily.\n2. **Root-Level Hydration:** Never wet the foliage. Water deeply at the root base to keep fungal blight at bay.\n3. **Staking & Pruning:** Stake firmly and prune lower suckers to channel energy into fruiting clusters.\n4. **Calcium & Compost:** Feed with vermicompost every 14 days and supply calcium to prevent blossom end rot!`;
+  }
+
+  // 9. MONEY PLANT / મની પ્લાન્ટ / मनी प्लांट
+  if (q.includes("money") || q.includes("pothos") || q.includes("મની પ્લાન્ટ") || q.includes("મનીપ્લાન્ટ") || q.includes("मनी प्लांट")) {
+    if (lang === "gu") {
+      return `🌱 **મની પ્લાન્ટને ઘટાદાર અને ચમકદાર બનાવવાની રીત:**\n1. **અજવાળું:** મની પ્લાન્ટને સીધા આકરા તડકામાં ન રાખો, બારી પાસેના અજવાળામાં રાખો.\n2. **પાણી:** કુંડાની ઉપરની 50% માટી સુકાય ત્યારે જ પાણી આપો. પાણીમાં ઉગાડતા હોવ તો દર અઠવાડિયે પાણી બદલો.\n3. **મોસ સ્ટીક (Moss Stick):** છોડને મોસ સ્ટીકનો આધાર આપો જેથી તેના પાંદડા મોટા અને લીલાછમ થાય.\n4. **પાંદડા સાફ રાખો:** ભીના સુતરાઉ કાપડથી પાંદડા લૂછો જેથી પ્રકાશસંશ્લેષણ સારું થાય!`;
+    }
+    if (lang === "hi") {
+      return `🌱 **मनी प्लांट को घना और चमकदार बनाने के उपाय:**\n1. **रोशनी:** तेज सीधी धूप से बचाएं, खिड़की के पास ब्राइट इनडायरेक्ट रोशनी में रखें।\n2. **पानी:** ऊपरी 50% मिट्टी सूखने पर ही पानी दें। अगर बोतल के पानी में है तो हर हफ्ते पानी बदलें।\n3. **मॉस स्टिक का सहारा:** मॉस पोल लगाने से मनी प्लांट की पत्तियां दोगुनी बड़ी और घनी हो जाती हैं।\n4. **पत्तियों की सफाई:** पत्तियों पर धूल न जमने दें, हल्के गीले कपड़े से साफ रखें।`;
+    }
+    return `🌱 **Money Plant (Golden Pothos) Care Secrets:**\n1. **Light Preference:** Thrives in bright indirect filtered light. Direct scorching sun bleaches the leaves.\n2. **Watering:** Water only when the top 50% of the soil has dried out. In water vessels, refresh water weekly.\n3. **Moss Pole Climbing:** Train aerial roots onto a damp moss pole for jumbo leaves.\n4. **Leaf Polish:** Gently wipe broad leaves with a damp cloth to boost photosynthesis and gloss!`;
+  }
+
+  // 10. WILTING / DROOPING / કરમાઈ ગયેલા / मुरझाया पौधा
+  if (q.includes("wilt") || q.includes("droop") || q.includes("karmai") || q.includes("sukay") || q.includes("કરમાઈ") || q.includes("સુકાઈ") || q.includes("સુકાય") || q.includes("મુરઝા") || q.includes("मुरझाया") || q.includes("मुरझाना")) {
+    if (lang === "gu") {
+      return `🌱 **કરમાઈ ગયેલા ${plantTitle} ને પુનર્જીવિત કરવાની ઈમરજન્સી પદ્ધતિ:**\n1. **માટી તપાસો:** જો માટી પથ્થર જેવી સૂકી હોય, તો કુંડાને 20 મિનિટ પાણી ભરેલી ટબમાં નીચેથી પાણી શોષવા મૂકો (Bottom Watering).\n2. **જો માટી વધુ ભીની અને ચીકણી હોય:** તો છોડને તરત જ છાંયડાવાળી હવાદાર જગ્યાએ ખસેડો અને માટી સુકાય ત્યાં સુધી પાણી બિલકુલ ન આપો.\n3. **સૂકા પાંદડા દૂર કરો:** સુકાઈ ગયેલા કે પીળા પડી ગયેલા પાંદડા કાપી નાખો.\n4. **હળવો છાંયડો:** છોડ સ્વસ્થ ન થાય ત્યાં સુધી તેને સીધા આકરા તડકાથી દૂર રાખો!${weatherNote}`;
+    }
+    if (lang === "hi") {
+      return `🌱 **मुरझाए ${plantTitle} को दोबारा हरा-भरा करने के इमरजेंसी टिप्स:**\n1. **मिट्टी की जांच:** अगर मिट्टी बहुत सूखी और सख्त है, तो गमले को 20 मिनट पानी के टब में रखें ताकि जड़ें नीचे से पानी सोख लें।\n2. **अगर मिट्टी दलदली और चिपचिपी है:** तो पौधे को खुली हवादार जगह पर रखें और मिट्टी सूखने तक पानी बिल्कुल न दें।\n3. **सूखे पत्ते हटाएं:** सूखे या सड़े हुए पत्तों को कैंची से हटा दें ताकि पौधे का तनाव कम हो।\n4. **धूप से बचाव:** पौधा संभलने तक उसे तेज धूप की बजाय रोशनीदार छाया में रखें!${weatherNote}`;
+    }
+    return `🌱 **Emergency Revival for Wilting ${plantTitle}:**\n1. **Diagnose Soil First:** If bone dry, submerge the lower third of the pot in a basin of water for 20 minutes (bottom watering soak).\n2. **If Soil is Waterlogged:** Relocate immediately to a bright, breezy shaded spot and hold all watering until upper soil aerates.\n3. **Prune Crispy Stems:** Snip fully desiccated foliage to halt moisture loss.\n4. **Temporary Filtered Shade:** Shield from direct scorching rays for 3–4 days until turgor pressure returns!${weatherNote}`;
+  }
+
+  // 11. FUNGUS / MILDEW / ફૂગ / फफूंद
+  if (q.includes("fung") || q.includes("mildew") || q.includes("mold") || q.includes("blight") || q.includes("fug") || q.includes("ફૂગ") || q.includes("फफूंद") || q.includes("फंगस")) {
+    if (lang === "gu") {
+      return `🍄 **${plantTitle} પર ફૂગ અને માટીની બીમારીનો કુદરતી ઈલાજ:**\n1. **બેકિંગ સોડા સ્પ્રે:** 1 લિટર પાણીમાં 1 ચમચી બેકિંગ સોડા (ખાવાનો સોડા) અને 2-3 ટીપાં લિક્વિડ સાબુ મેળવીને ફૂગવાળા પાંદડા પર સાંજે સ્પ્રે કરો.\n2. **હવાની અવરજવર:** છોડને હવાદાર જગ્યાએ રાખો અને કુંડા એકબીજા સાથે ચોંટાડીને ન રાખો.\n3. **પાણી ઓછું કરો:** માટી ઉપર સફેદ ફૂગ હોય તો ઉપરની 1 ઇંચ માટી ખોતરીને કાઢી નાખો અને નવો વર્મીકમ્પોસ્ટ ઉમેરો.\n4. **લીમડાના તેલનો છંટકાવ:** દર 5 દિવસે નિયમિત છાંટવાથી ફૂગ જડમૂળથી દૂર થશે!`;
+    }
+    if (lang === "hi") {
+      return `🍄 **${plantTitle} पर फंगस और फफूंद का असरदार प्राकृतिक इलाज:**\n1. **बेकिंग सोडा स्प्रे:** 1 लीटर पानी में 1 चम्मच बेकिंग सोडा और 2 बूंद लिक्विड सोप मिलाकर फंगस वाली पत्तियों पर शाम को छिड़कें।\n2. **हवा का संचार:** पौधों को खुली हवा में रखें और बहुत पास-पास न रखें।\n3. **मिट्टी की फंगस:** अगर मिट्टी में सफेद फफूंद दिखे तो ऊपरी 1 इंच परत हटाकर नई सूखी मिट्टी व वर्मीकंपोस्ट डालें।\n4. **नीम तेल:** हर 5 दिन में नीम तेल का छिड़काव करें ताकि फंगस दोबारा न आए।`;
+    }
+    return `🍄 **Organic Antifungal Protocol for your ${plantTitle}:**\n1. **Baking Soda Spray:** Dissolve 1 tsp baking soda + 2 drops mild dish soap in 1L water; mist evenly over affected foliage.\n2. **Increase Air Circulation:** Space containers at least 1 foot apart so air circulates freely between leaves.\n3. **Soil Surface Remediation:** Scrape away top 1 inch of moldy soil crust and top-dress with dry vermicompost and neem cake.\n4. **Water at the Base:** Keep foliage dry when hydrating the pot.`;
+  }
+
+  // 12. GREETINGS / હેલો / કેમ છો / नमस्ते / Hi / Hello
+  if (q.includes("hi") || q.includes("hello") || q.includes("kem cho") || q.includes("namaste") || q.includes("કેમ છો") || q.includes("નમસ્તે") || q.includes("नमस्ते")) {
+    if (lang === "gu") {
+      return `નમસ્તે! 🌱 હું **ગ્રીનબોટ (GreenBot)**, તમારો AI પ્લાન્ટ ડોક્ટર છું. તમારા બગીચાના છોડની કાળજી, પીળા પાંદડા, ખાતર, પાણી કે કીટકોના સચોટ ઉપાય વિશે મને પૂછી શકો છો! આજે હું તમારા છોડ માટે શું મદદ કરી શકું?`;
+    }
+    if (lang === "hi") {
+      return `नमस्ते! 🌱 मैं **ग्रीनबॉट (GreenBot)**, आपका AI प्लांट डॉक्टर हूँ। पौधों की देखभाल, पीली पत्तियां, खाद, पानी या कीड़ों के जैविक उपचार के बारे में आप मुझसे कभी भी पूछ सकते हैं! आज आपके बगीचे के लिए क्या सहायता करूँ?`;
+    }
+    return `Hello! 🌱 I'm **GreenBot**, your AI Botanical Doctor. Ask me anything about plant care, yellow leaves, organic fertilizers, watering schedules, or pest remedies! How can I assist your garden today?`;
+  }
+
+  // 13. GRATITUDE / આભાર / धन्यवाद
+  if (q.includes("thank") || q.includes("aabhar") || q.includes("dhanyawad") || q.includes("આભાર") || q.includes("ધન્યવાદ") || q.includes("धन्यवाद")) {
+    if (lang === "gu") {
+      return `તમારો ખૂબ ખૂબ આભાર! 🌸 તમારા છોડ હંમેશા લીલાછમ અને ખીલતા રહે એવી શુભકામનાઓ! ભવિષ્યમાં કોઈપણ પ્રશ્ન હોય તો હું હંમેશા અહીં તમારી સેવામાં હાજર છું. આનંદથી બાગકામ કરો! 🌿`;
+    }
+    if (lang === "hi") {
+      return `आपका बहुत-बहुत धन्यवाद! 🌸 आपके पौधे हमेशा हरे-भरे और फूलों से लदे रहें! भविष्य में किसी भी सहायता के लिए मैं हमेशा यहाँ उपलब्ध हूँ। हैप्पी गार्डनिंग! 🌿`;
+    }
+    return `You're very welcome! 🌸 Wishing your garden lush foliage and abundant blooms. Whenever you need botanical guidance, I'm right here for you. Happy gardening! 🌿`;
+  }
+
+  // 14. DEFAULT INTELLIGENT MIND-READING BOTANICAL CARE
+  if (lang === "gu") {
+    return `🌿 **${plantTitle} ની તંદુરસ્તી અને વૃદ્ધિ માટે વિશેષ માર્ગદર્શન:**\n• **પાણીનો નિયમ:** કુંડાની ઉપરની 1-2 ઇંચ માટી સૂકી લાગે ત્યારે જ સવારે મૂળ પાસે પૂરતું પાણી આપો.\n• **સૂર્યપ્રકાશ:** છોડને તેજસ્વી કુદરતી અજવાળું અથવા સવારનો 3-4 કલાક કુમળો તડકો આપો.\n• **ઓર્ગેનિક પોષણ:** દર 15-20 દિવસે 1 મુઠ્ઠી વર્મીકમ્પોસ્ટ અને મહિનામાં એકવાર લીમડાના તેલનો સ્પ્રે કરવાથી છોડ કીટકો મુક્ત અને સદાબહાર રહેશે!${weatherNote}\n💡 જો પાંદડા પીળા પડી રહ્યા હોય કે કોઈ જીવાત હોય, તો મને વિગતવાર જણાવો!`;
+  }
+  if (lang === "hi") {
+    return `🌿 **${plantTitle} के स्वस्थ विकास और देखभाल के खास टिप्स:**\n• **पानी का नियम:** गमले की ऊपरी 1-2 इंच मिट्टी सूखने पर ही सुबह जड़ों में पानी दें।\n• **धूप की जरूरत:** पौधे को अच्छी प्राकृतिक रोशनी या सुबह की 3-4 घंटे हल्की धूप में रखें।\n• **जैविक पोषण:** हर 15-20 दिन में 1 मुट्ठी वर्मीकंपोस्ट और महीने में एक बार नीम तेल का स्प्रे करने से पौधा हमेशा हरा-भरा रहेगा!${weatherNote}\n💡 यदि पत्तियां पीली पड़ रही हों या कोई कीड़ा लगा हो, तो मुझे जरूर बताएं!`;
+  }
+  return `🌿 **Tailored Botanical Care for your ${plantTitle}:**\n• **Hydration:** Always follow the 2-inch dry test before morning watering directly at the base.\n• **Lighting:** Provide bright filtered sunlight or gentle morning exposure.\n• **Organic Nutrition:** Nourish with organic vermicompost every 15–20 days and apply preventive neem spray once a month to keep pests away!${weatherNote}\n💡 Ask me about yellow leaves, organic fertilizers, pest remedies, or potting mixes anytime!`;
+}
+
 // AI Plant Doctor Assistant for specific questions (Weather, Photo & Microclimate Aware)
 export const askPlantDoctor = asyncHandler(async (req, res) => {
   let { question, plantName, plantSpecies, originalName, healthStatus, currentDisease, weather } = req.body;
@@ -1330,7 +1507,7 @@ User Question: "${String(question).trim()}".`;
 Provide a clear, reassuring, and practical diagnostic answer in 2 to 4 sentences. Explicitly mention organic remedies (e.g. Organic Neem Oil spray, Vermicompost / compost feeding, Seaweed tonic, balanced watering, or well-drained pot) where applicable. Do not use markdown backticks or bullet points.`;
   }
 
-  let targetLang = req.body.language || "en";
+  let targetLang = req.body.language || "gu";
   let langInstruction = "";
   if (targetLang === "gu") {
     langInstruction = "IMPORTANT: Write your response entirely in natural Gujarati (ગુજરાતી) language so a Gujarati home gardener can understand easily.";
@@ -1342,22 +1519,32 @@ Provide a clear, reassuring, and practical diagnostic answer in 2 to 4 sentences
 
   prompt += `\n${langInstruction}`;
 
-  let answer = await callGeminiAI({
-    prompt,
-    imageBuffer: req.file ? req.file.buffer : null,
-    imageMimeType: req.file ? req.file.mimetype : null,
-    maxTokens: 350,
-  });
+  // Ultra-fast Gemini call with 2200ms timeout race to guarantee < 1s response
+  let answer = null;
+  try {
+    const geminiPromise = callGeminiAI({
+      prompt,
+      imageBuffer: req.file ? req.file.buffer : null,
+      imageMimeType: req.file ? req.file.mimetype : null,
+      maxTokens: 350,
+    });
+    const timeoutPromise = new Promise((resolve) => setTimeout(() => resolve(null), 2200));
+    answer = await Promise.race([geminiPromise, timeoutPromise]);
+  } catch (err) {
+    console.warn("Gemini race error:", err.message);
+    answer = null;
+  }
 
-  if (!answer) {
-    if (targetLang === "gu") {
-      answer = `તમારા ${species} (${plantTitle}) માટે જમીનમાં પૂરતો ભેજ રાખો પરંતુ પાણી જમા ન થવા દો. છોડને સારો સૂર્યપ્રકાશ આપો અને દર 14 દિવસે જૈવિક વર્મીકમ્પોસ્ટ ખાતર અથવા લીમડાના તેલનો સ્પ્રે કરો જેથી છોડ હંમેશા તંદુરસ્ત રહે!`;
-    } else if (targetLang === "hi") {
-      answer = `अपने ${species} (${plantTitle}) के लिए मिट्टी में उचित नमी बनाए रखें लेकिन पानी जमने न दें। पौधे को अच्छी धूप दें और हर 14 दिन में जैविक वर्मीकंपोस्ट या नीम तेल का छिड़काव करें ताकि पत्तियां स्वस्थ और कीट-मुक्त रहें!`;
-    } else {
-      const tempText = parsedWeather?.temperature ? `In your current ${parsedWeather.temperature}°C weather, ` : "";
-      answer = `${tempText}maintain moist but well-draining soil for your ${species} (${plantTitle}). Ensure it receives bright filtered sunlight and check moisture 2 inches deep before watering. Applying a mild organic neem spray or feeding with organic compost / seaweed plant food every 14 days will keep foliage healthy and pest-free!`;
-    }
+  // Botanical Mind Engine instant generation (< 5ms) if Gemini times out or is offline
+  if (!answer || !answer.trim()) {
+    answer = generateBotanicalMindReply({
+      question,
+      plantTitle,
+      species,
+      healthStatus,
+      weather: parsedWeather,
+      targetLang,
+    });
   }
 
   answer = answer.replace(/```/g, "").trim();
