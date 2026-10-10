@@ -1,4 +1,5 @@
 import { useState, useRef, useEffect } from "react";
+import { useNavigate } from "react-router-dom";
 import {
   MessageSquare,
   X,
@@ -78,6 +79,7 @@ function FormattedChatText({ text }) {
 export default function AIAssistantChatbot() {
   const { user, settings, syncCart, notify } = useApp();
   const { t, language } = useLanguage();
+  const navigate = useNavigate();
   const [isOpen, setIsOpen] = useState(false);
   const [isExpanded, setIsExpanded] = useState(false);
   const [input, setInput] = useState("");
@@ -230,6 +232,8 @@ export default function AIAssistantChatbot() {
           ? `${formatNameByLanguage(product.name, language)} कार्ट में जोड़ दिया गया!`
           : `${product.name} added to cart!`
       );
+      setIsOpen(false);
+      navigate("/cart");
     } catch (err) {
       notify(err.message || "Failed to add to cart", "error");
     }

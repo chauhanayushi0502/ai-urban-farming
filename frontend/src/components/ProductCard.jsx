@@ -1,4 +1,4 @@
-import { Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 import { Heart, Plus, Sprout } from "lucide-react";
 import { useApp, useToast } from "../context/AppContext.jsx";
 import { useLanguage } from "../i18n/LanguageContext.jsx";
@@ -29,6 +29,7 @@ export default function ProductCard({ product }) {
   const { user, settings, syncCart, refreshUser } = useApp();
   const { t, language } = useLanguage();
   const notify = useToast();
+  const navigate = useNavigate();
   const saved = user?.wishlist?.some((id) => String(id) === product._id);
 
   const formattedCat = product.category
@@ -37,11 +38,16 @@ export default function ProductCard({ product }) {
   const formattedName = formatNameByLanguage(product, language);
 
   async function addToCart() {
-    if (!user) return notify(t("signed_in_cart_err", "Sign in to add items to your cart."), "error");
+    if (!user) {
+      notify(t("signed_in_cart_err", "Sign in to add items to your cart."), "error");
+      navigate(`/login?redirect=${encodeURIComponent("/cart")}`);
+      return;
+    }
     try {
       await api("/cart/items", { method: "POST", body: { productId: product._id, quantity: 1 } });
       await syncCart();
       notify(`${formattedName} ${t("added_to_cart_msg", "added to your cart.")}`);
+      navigate("/cart");
     } catch (error) { 
       notify(error.message, "error"); 
     }

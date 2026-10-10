@@ -15,7 +15,7 @@ import {
   X,
   ShieldCheck,
 } from "lucide-react";
-import { Link, useParams } from "react-router-dom";
+import { Link, useParams, useNavigate } from "react-router-dom";
 import { Loading, Notice } from "../components/Feedback.jsx";
 import { useApp, useToast } from "../context/AppContext.jsx";
 import { useLanguage } from "../i18n/LanguageContext.jsx";
@@ -30,6 +30,7 @@ export default function ProductPage() {
   const { t, language } = useLanguage();
   const { data: product, loading, error, reload } = useLoad(`/products/${id}`, null);
   const notify = useToast();
+  const navigate = useNavigate();
   const [quantity, setQuantity] = useState(1);
   const [rating, setRating] = useState(5);
   const [comment, setComment] = useState("");
@@ -50,11 +51,16 @@ export default function ProductPage() {
   }
 
   async function add() {
-    if (!user) return notify(t("signed_in_cart_err", "Sign in to add items to your cart."), "error");
+    if (!user) {
+      notify(t("signed_in_cart_err", "Sign in to add items to your cart."), "error");
+      navigate(`/login?redirect=${encodeURIComponent("/cart")}`);
+      return;
+    }
     try {
       await api("/cart/items", { method: "POST", body: { productId: id, quantity } });
       await syncCart();
       notify(t("added_to_cart_msg", "Added to your cart."), "success");
+      navigate("/cart");
     } catch (reason) {
       notify(reason.message, "error");
     }

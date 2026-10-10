@@ -255,6 +255,7 @@ export default function CropPlanner() {
       }
       await syncCart();
       notify(t("plan_supplies_added_toast", "All recommended seeds, potting mix & fertilizers added to your cart!"), "success");
+      navigate("/cart");
     } catch (err) {
       notify(err.message, "error");
     } finally {

@@ -1,5 +1,5 @@
 import { useEffect, useState, useRef } from "react";
-import { Link, useSearchParams } from "react-router-dom";
+import { Link, useSearchParams, useNavigate } from "react-router-dom";
 import {
   Sprout,
   Droplets,
@@ -62,6 +62,7 @@ export default function GardenPage({ initialTab }) {
   const { t, language } = useLanguage();
   const notify = useToast();
   const [searchParams] = useSearchParams();
+  const navigate = useNavigate();
 
   const [plants, setPlants] = useState([]);
   const [stats, setStats] = useState({ total: 0, needsWater: 0, diseased: 0, healthy: 0 });
@@ -411,6 +412,7 @@ export default function GardenPage({ initialTab }) {
       });
       await syncCart();
       notify(`Added "${product.name}" to your cart!`, "success");
+      navigate("/cart");
     } catch (err) {
       notify(err.message, "error");
     }
