@@ -23,6 +23,66 @@ import {
 } from "lucide-react";
 import { useApp, useToast } from "../context/AppContext.jsx";
 import { api } from "../lib/api.js";
+import { useLanguage } from "../i18n/LanguageContext.jsx";
+import { formatNameByLanguage } from "../lib/format.js";
+
+const COMPANION_LOCALIZATION = {
+  tomato: {
+    badge: { gu: "🍅 ઓર્ગેનિક જીવાત નિયંત્રણ", hi: "🍅 जैविक कीट नियंत्रण", en: "🍅 Organic Pest Deterrence" },
+    whyItWorks: {
+      gu: "તુલસી તેની કુદરતી સુગંધથી ટામેટાંના કીડા અને સફેદ માખીઓને દૂર રાખે છે, જ્યારે ગલગોટાના મૂળ જમીનના નેમાટોડ્સને અટકાવે છે.",
+      hi: "तुलसी अपने प्राकृतिक सुगंधित तेलों से टमाटर के कीड़ों और सफेद मक्खियों को दूर रखती है, जबकि गेंदे की जड़ें नेमाटोड को रोकती हैं।",
+      en: "Sweet Basil deters tomato hornworms and whiteflies with natural aromatic essential oils, while Marigold root exudates suppress nematodes."
+    },
+    potRec: {
+      gu: "૧૨-૧૪ ઇંચ ઊંડું કુંડું (૧૫-૨૦ લિટર)",
+      hi: "12-14 इंच गहरा गमला (15-20 लीटर)",
+      en: "12-14 inch deep aeration pot (15-20 Liters)"
+    }
+  },
+  basil: {
+    badge: { gu: "🌿 સુગંધિત ટેર્પેનોઇડ સુરક્ષા કવચ", hi: "🌿 सुगंधित सुरक्षा कवच", en: "🌿 Aromatic Terpenoid Shield" },
+    whyItWorks: {
+      gu: "બેસિલ/તુલસી સુગંધિત અર્ક છોડે છે જે થ્રિપ્સ અને એફિડ્સને ભગાડી પડોશી છોડનું રક્ષણ કરે છે.",
+      hi: "तुलसी सुगंधित तेल छोड़ती है जो थ्रिप्स, माहू और मक्खियों को भगाकर पड़ोसी पौधों की रक्षा करती है।",
+      en: "Basil releases fragrant essential oils that repel thrips, aphids, and flies, protecting neighboring nightshades."
+    },
+    potRec: {
+      gu: "૬-૮ ઇંચનું ડ્રેનેજવાળું કુંડું",
+      hi: "6-8 इंच का ड्रेनेज युक्त गमला",
+      en: "6-8 inch pot with bottom drainage"
+    }
+  },
+  chili: {
+    badge: { gu: "🌶️ માટીના જીવાત સામે રક્ષણ", hi: "🌶️ मिट्टी के कीटों से बचाव", en: "🌶️ Soil Grub Defense" },
+    whyItWorks: {
+      gu: "મરચાંના મૂળમાં રહેલું કેપ્સેસિન જમીનના નુકસાનકારક કીડાઓને દૂર રાખે છે. તે તુલસી જેવા ઔષધીય છોડ સાથે સમાન હવામાન પસંદ કરે છે.",
+      hi: "मिर्च की जड़ों में मौजूद कैप्साइसिन मिट्टी के हानिकारक कीड़ों को दूर रखता है। यह जड़ी-बूटियों के साथ समान प्रकाश और जल निकासी साझा करता है।",
+      en: "Capsaicin roots deter harmful soil grubs and pests. Shares identical light and drainage preferences with herbs."
+    },
+    potRec: {
+      gu: "૧૦-૧૨ ઇંચનું ટેરાકોટા કુંડું",
+      hi: "10-12 इंच का मिट्टी का गमला",
+      en: "10-12 inch terracotta container"
+    }
+  }
+};
+
+function formatPairingTitle(title, language) {
+  if (!title) return "";
+  if (language === "gu") {
+    if (title.includes("Highly Synergistic")) return "🌟 શ્રેષ્ઠ સિનર્જિસ્ટિક સાથીદાર!";
+    if (title.includes("Incompatible") || title.includes("Antagonistic")) return "⚠️ અસંગત અથવા નુકસાનકારક જોડી!";
+    if (title.includes("Neutral")) return "🌱 સામાન્ય બગીચાના પડોશી";
+  }
+  if (language === "hi") {
+    if (title.includes("Highly Synergistic")) return "🌟 अत्यधिक लाभकारी साथी पौधे!";
+    if (title.includes("Incompatible") || title.includes("Antagonistic")) return "⚠️ असंगत या हानिकारक जोड़ी!";
+    if (title.includes("Neutral")) return "🌱 सामान्य बगीचे के पड़ोसी";
+  }
+  return title;
+}
+
 
 // Comprehensive Botanical Name Auto-Correction & Normalization Dictionary
 export function autoCorrectPlantName(inputName = "") {
@@ -240,6 +300,7 @@ export const DEFAULT_COMPANION_MATRIX = [
 export default function GardenSynergyWidget({ weather, plantCount = 0 }) {
   const { user } = useApp();
   const notify = useToast();
+  const { language, t } = useLanguage();
 
   // Custom plants loaded from localStorage
   const [customPlants, setCustomPlants] = useState(() => {
@@ -565,10 +626,10 @@ export default function GardenSynergyWidget({ weather, plantCount = 0 }) {
         marginBottom: "20px"
       }}>
         <div>
-          <p className="eyebrow"><Sparkles size={15} color="var(--green)" /> Urban Garden Ecology & AI Engine</p>
-          <h2 style={{ fontSize: "22px", margin: "4px 0" }}>Plant Companion Synergy & Eco-Water Calculator</h2>
+          <p className="eyebrow"><Sparkles size={15} color="var(--green)" /> {t("synergy_eyebrow")}</p>
+          <h2 style={{ fontSize: "22px", margin: "4px 0" }}>{t("synergy_title")}</h2>
           <p className="muted" style={{ fontSize: "14px", margin: "0" }}>
-            Pair plants for natural pest protection, generate custom companion synergies with AI, and calculate container water budgets.
+            {t("synergy_desc")}
           </p>
         </div>
 
@@ -581,7 +642,7 @@ export default function GardenSynergyWidget({ weather, plantCount = 0 }) {
           }}
           style={{ display: "inline-flex", alignItems: "center", gap: "6px" }}
         >
-          <Plus size={15} /> + Add Plant to Matcher (AI)
+          <Plus size={15} /> {t("synergy_add_btn")}
         </button>
       </div>
 
@@ -593,17 +654,17 @@ export default function GardenSynergyWidget({ weather, plantCount = 0 }) {
           <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: "12px" }}>
             <div style={{ display: "flex", alignItems: "center", gap: "8px" }}>
               <Leaf size={18} color="var(--green-deep)" />
-              <h3 style={{ fontSize: "16px", margin: 0 }}>Companion Planting Matcher</h3>
+              <h3 style={{ fontSize: "16px", margin: 0 }}>{t("synergy_matcher_title")}</h3>
             </div>
             {currentPlant.isCustom && (
               <span style={{ fontSize: "11px", background: "#e0f2fe", color: "#0369a1", padding: "2px 8px", borderRadius: "10px", fontWeight: "700" }}>
-                ✨ AI Generated Plant
+                ✨ {language === "gu" ? "AI નિર્મિત છોડ" : language === "hi" ? "AI निर्मित पौधा" : "AI Generated Plant"}
               </span>
             )}
           </div>
 
           <label style={{ display: "block", fontSize: "13px", fontWeight: "600", marginBottom: "6px" }}>
-            Select Main Plant:
+            {t("synergy_select_main")}
           </label>
           <div style={{ display: "flex", gap: "8px", marginBottom: "16px" }}>
             <select
@@ -618,18 +679,18 @@ export default function GardenSynergyWidget({ weather, plantCount = 0 }) {
                 background: "white"
               }}
             >
-              <optgroup label="🌱 Standard Urban Crops">
+              <optgroup label={t("synergy_std_crops")}>
                 {DEFAULT_COMPANION_MATRIX.map((p) => (
                   <option key={p.id} value={p.id}>
-                    {p.name} ({p.species})
+                    {formatNameByLanguage(p.name, language)} ({p.species})
                   </option>
                 ))}
               </optgroup>
               {customPlants.length > 0 && (
-                <optgroup label="⭐ AI Custom Companion Plants">
+                <optgroup label={t("synergy_ai_crops")}>
                   {customPlants.map((p) => (
                     <option key={p.id} value={p.id}>
-                      {p.name} ({p.species})
+                      {formatNameByLanguage(p.name, language)} ({p.species})
                     </option>
                   ))}
                 </optgroup>
@@ -673,7 +734,7 @@ export default function GardenSynergyWidget({ weather, plantCount = 0 }) {
                 <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", gap: "6px" }}>
                   <div>
                     <strong style={{ fontSize: "16px", color: "var(--foreground)", display: "block" }}>
-                      {currentPlant.name}
+                      {formatNameByLanguage(currentPlant.name, language)}
                     </strong>
                     <span className="muted" style={{ fontSize: "12px", fontStyle: "italic" }}>{currentPlant.species}</span>
                   </div>
@@ -686,12 +747,12 @@ export default function GardenSynergyWidget({ weather, plantCount = 0 }) {
                     fontWeight: "700",
                     flexShrink: 0
                   }}>
-                    ⭐ {currentPlant.synergyScore}% Synergy
+                    ⭐ {currentPlant.synergyScore}% {t("synergy_compatibility")}
                   </span>
                 </div>
-                {currentPlant.synergyBadge && (
+                {(COMPANION_LOCALIZATION[currentPlant.id]?.badge?.[language] || currentPlant.synergyBadge) && (
                   <span style={{ fontSize: "11px", color: "var(--green-deep)", fontWeight: "600", marginTop: "2px", display: "block" }}>
-                    {currentPlant.synergyBadge}
+                    {COMPANION_LOCALIZATION[currentPlant.id]?.badge?.[language] || currentPlant.synergyBadge}
                   </span>
                 )}
                 {currentPlant.autoCorrectInfo && (
@@ -705,7 +766,7 @@ export default function GardenSynergyWidget({ weather, plantCount = 0 }) {
                     marginTop: "4px",
                     display: "inline-block",
                   }}>
-                    ✨ Auto-corrected spelling: "{currentPlant.autoCorrectInfo.originalA}" → "{currentPlant.name}"
+                    ✨ Auto-corrected spelling: "{currentPlant.autoCorrectInfo.originalA}" → "{formatNameByLanguage(currentPlant.name, language)}"
                   </span>
                 )}
               </div>
@@ -713,12 +774,12 @@ export default function GardenSynergyWidget({ weather, plantCount = 0 }) {
 
             <div style={{ marginBottom: "12px" }}>
               <span style={{ fontSize: "12px", fontWeight: "700", color: "#2e7d32", display: "flex", alignItems: "center", gap: "4px" }}>
-                <CheckCircle2 size={13} /> Thrives Together With (Good Companions):
+                <CheckCircle2 size={13} /> {t("synergy_good_neighbors")}
               </span>
               <div style={{ display: "flex", flexWrap: "wrap", gap: "6px", marginTop: "6px" }}>
                 {(currentPlant.goodNeighbors || []).map((n) => (
                   <span key={n} style={{ background: "#f0f8f1", border: "1px solid #d4ecd6", padding: "3px 8px", borderRadius: "4px", fontSize: "12px", color: "#166534" }}>
-                    🌿 {n}
+                    🌿 {formatNameByLanguage(n, language)}
                   </span>
                 ))}
               </div>
@@ -726,19 +787,19 @@ export default function GardenSynergyWidget({ weather, plantCount = 0 }) {
 
             <div style={{ marginBottom: "12px" }}>
               <span style={{ fontSize: "12px", fontWeight: "700", color: "var(--rust)", display: "flex", alignItems: "center", gap: "4px" }}>
-                <AlertCircle size={13} /> Avoid Planting Near (Incompatible):
+                <AlertCircle size={13} /> {t("synergy_bad_neighbors")}
               </span>
               <div style={{ display: "flex", flexWrap: "wrap", gap: "6px", marginTop: "6px" }}>
                 {(currentPlant.badNeighbors || []).map((n) => (
                   <span key={n} style={{ background: "#fff5f5", border: "1px solid #fed7d7", padding: "3px 8px", borderRadius: "4px", fontSize: "12px", color: "#c53030" }}>
-                    ⚠️ {n}
+                    ⚠️ {formatNameByLanguage(n, language)}
                   </span>
                 ))}
               </div>
             </div>
 
             <p style={{ fontSize: "12px", color: "#475569", lineHeight: "1.5", margin: "10px 0 0", padding: "10px", background: "#f8fafc", borderRadius: "6px", border: "1px solid #e2e8f0" }}>
-              <strong>💡 Ecological Synergy: </strong>{currentPlant.whyItWorks}
+              <strong>💡 {t("synergy_eco_lbl")} </strong>{COMPANION_LOCALIZATION[currentPlant.id]?.whyItWorks?.[language] || currentPlant.whyItWorks}
             </p>
           </div>
         </div>
@@ -747,21 +808,21 @@ export default function GardenSynergyWidget({ weather, plantCount = 0 }) {
         <div style={{ background: "#fbfcf9", padding: "20px", borderRadius: "8px", border: "1px solid #e7ede2" }}>
           <div style={{ display: "flex", alignItems: "center", gap: "8px", marginBottom: "14px" }}>
             <CloudRain size={18} color="#0284c7" />
-            <h3 style={{ fontSize: "16px", margin: 0 }}>Interactive Eco-Water & Pot Calculator</h3>
+            <h3 style={{ fontSize: "16px", margin: 0 }}>{t("synergy_eco_water_h3")}</h3>
           </div>
 
           {/* Pot Recommendation Card */}
           <div style={{ background: "white", padding: "14px 16px", borderRadius: "8px", border: "1px solid var(--line)", marginBottom: "14px" }}>
             <div style={{ display: "flex", alignItems: "center", gap: "8px", marginBottom: "4px" }}>
               <Maximize2 size={14} color="#0891b2" />
-              <strong style={{ fontSize: "13px" }}>Container & Repotting Cycle:</strong>
+              <strong style={{ fontSize: "13px" }}>{t("synergy_container_repot")}</strong>
             </div>
             <p style={{ fontSize: "13px", color: "var(--foreground)", margin: "4px 0 8px", fontWeight: "600" }}>
-              {currentPlant.potRecommendation}
+              {COMPANION_LOCALIZATION[currentPlant.id]?.potRec?.[language] || currentPlant.potRecommendation}
             </p>
             <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", borderTop: "1px solid #f0f0f0", paddingTop: "6px", fontSize: "12px" }}>
-              <span className="muted">Repotting Frequency:</span>
-              <strong>Every {currentPlant.repottingIntervalMonths} Months</strong>
+              <span className="muted">{t("synergy_repot_freq")}</span>
+              <strong>{t("synergy_every")} {currentPlant.repottingIntervalMonths} {t("synergy_months")}</strong>
             </div>
           </div>
 
@@ -769,9 +830,9 @@ export default function GardenSynergyWidget({ weather, plantCount = 0 }) {
           <div style={{ background: "white", padding: "14px 16px", borderRadius: "8px", border: "1px solid var(--line)", marginBottom: "14px" }}>
             <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "6px" }}>
               <label style={{ fontSize: "12px", fontWeight: "600", color: "#475569" }}>
-                Balcony / Terrace Area:
+                {t("synergy_balcony_area")}
               </label>
-              <strong style={{ fontSize: "13px", color: "#0284c7" }}>{balconyAreaSqFt} sq. ft.</strong>
+              <strong style={{ fontSize: "13px", color: "#0284c7" }}>{balconyAreaSqFt} {t("synergy_sqft_unit")}</strong>
             </div>
             <input
               type="range"
@@ -786,7 +847,7 @@ export default function GardenSynergyWidget({ weather, plantCount = 0 }) {
             {/* Plant Count Mode Switch */}
             <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginTop: "12px" }}>
               <label style={{ fontSize: "12px", fontWeight: "600", color: "#475569" }}>
-                Target Plant Count:
+                {t("synergy_target_count")}
               </label>
               <div style={{ display: "flex", alignItems: "center", gap: "8px" }}>
                 <input
@@ -800,14 +861,14 @@ export default function GardenSynergyWidget({ weather, plantCount = 0 }) {
                   }}
                   style={{ width: "65px", padding: "4px 6px", fontSize: "12px", borderRadius: "4px", border: "1px solid var(--line)", textAlign: "center" }}
                 />
-                <span className="muted" style={{ fontSize: "11px" }}>plants</span>
+                <span className="muted" style={{ fontSize: "11px" }}>{t("synergy_plants_unit")}</span>
               </div>
             </div>
 
             {/* Rainfall Simulation Input */}
             <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginTop: "12px" }}>
               <label style={{ fontSize: "12px", fontWeight: "600", color: "#475569" }}>
-                Simulate Rainfall (mm/week):
+                {t("synergy_sim_rain")}
               </label>
               <div style={{ display: "flex", alignItems: "center", gap: "6px" }}>
                 <input
@@ -836,22 +897,22 @@ export default function GardenSynergyWidget({ weather, plantCount = 0 }) {
           }}>
             <div>
               <span style={{ fontSize: "11px", color: "#166534", fontWeight: "700", textTransform: "uppercase" }}>
-                Weekly Garden Need
+                {t("synergy_weekly_need")}
               </span>
               <p style={{ margin: "2px 0 0", fontSize: "18px", fontWeight: "800", color: "#15803d" }}>
-                {estimatedGardenWeeklyWaterLiters} Liters
+                {estimatedGardenWeeklyWaterLiters} {language === "gu" ? "લિટર" : language === "hi" ? "लीटर" : "Liters"}
               </p>
-              <span className="muted" style={{ fontSize: "11px" }}>({currentPlant.waterNeedPerWeekLiters} L / plant)</span>
+              <span className="muted" style={{ fontSize: "11px" }}>({currentPlant.waterNeedPerWeekLiters} L {t("synergy_per_plant")})</span>
             </div>
 
             <div>
               <span style={{ fontSize: "11px", color: "#1e40af", fontWeight: "700", textTransform: "uppercase" }}>
-                Rainwater Offset
+                {t("synergy_rain_offset")}
               </span>
               <p style={{ margin: "2px 0 0", fontSize: "18px", fontWeight: "800", color: "#1d4ed8" }}>
                 {netSavedLiters} L ({waterSavingPercent}%)
               </p>
-              <span className="muted" style={{ fontSize: "11px" }}>Conserves municipal tap water</span>
+              <span className="muted" style={{ fontSize: "11px" }}>{t("synergy_conserves_tap")}</span>
             </div>
           </div>
         </div>
@@ -868,7 +929,7 @@ export default function GardenSynergyWidget({ weather, plantCount = 0 }) {
         <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", flexWrap: "wrap", gap: "10px", marginBottom: "14px" }}>
           <div style={{ display: "flex", alignItems: "center", gap: "8px" }}>
             <Zap size={16} color="#d97706" />
-            <strong style={{ fontSize: "14px", color: "#0f172a" }}>2-Plant Synergy Tester</strong>
+            <strong style={{ fontSize: "14px", color: "#0f172a" }}>{t("synergy_tester_title")}</strong>
             {testingAi && (
               <span style={{ fontSize: "12px", color: "var(--green-deep)", display: "inline-flex", alignItems: "center", gap: "4px" }}>
                 <Sparkles size={13} className="spin" /> Analyzing with Gemini AI...
@@ -893,7 +954,7 @@ export default function GardenSynergyWidget({ weather, plantCount = 0 }) {
                 boxShadow: testerMode === "dropdown" ? "0 1px 3px rgba(0,0,0,0.1)" : "none",
               }}
             >
-              📋 Select from List
+              {t("synergy_sel_list")}
             </button>
             <button
               type="button"
@@ -910,7 +971,7 @@ export default function GardenSynergyWidget({ weather, plantCount = 0 }) {
                 boxShadow: testerMode === "manual" ? "0 1px 3px rgba(0,0,0,0.1)" : "none",
               }}
             >
-              ✍️ Type Plant Names Manually
+              {t("synergy_type_manual")}
             </button>
           </div>
         </div>
@@ -945,7 +1006,7 @@ export default function GardenSynergyWidget({ weather, plantCount = 0 }) {
             >
               {allPlants.map((p) => (
                 <option key={p.id} value={p.id}>
-                  {p.name}
+                  {formatNameByLanguage(p.name, language)}
                 </option>
               ))}
             </select>
@@ -959,7 +1020,7 @@ export default function GardenSynergyWidget({ weather, plantCount = 0 }) {
             >
               {allPlants.map((p) => (
                 <option key={p.id} value={p.id}>
-                  {p.name}
+                  {formatNameByLanguage(p.name, language)}
                 </option>
               ))}
             </select>
@@ -1004,7 +1065,7 @@ export default function GardenSynergyWidget({ weather, plantCount = 0 }) {
 
             {/* Quick Presets for Manual Entry */}
             <div style={{ display: "flex", flexWrap: "wrap", alignItems: "center", gap: "6px", marginTop: "8px" }}>
-              <span className="muted" style={{ fontSize: "11px" }}>Quick Try:</span>
+              <span className="muted" style={{ fontSize: "11px" }}>{t("synergy_quick_try")}</span>
               {[
                 { a: "Chili Pepper", b: "Bonsai Tree" },
                 { a: "Money Plant (Devil's Ivy)", b: "Bonsai Tree" },
@@ -1030,7 +1091,7 @@ export default function GardenSynergyWidget({ weather, plantCount = 0 }) {
                     color: "#334155",
                   }}
                 >
-                  {pair.a} + {pair.b}
+                  {formatNameByLanguage(pair.a, language)} + {formatNameByLanguage(pair.b, language)}
                 </button>
               ))}
             </div>
@@ -1064,7 +1125,7 @@ export default function GardenSynergyWidget({ weather, plantCount = 0 }) {
                   fontSize: "14px",
                   color: pairingResult.type === "synergistic" ? "#15803d" : pairingResult.type === "antagonistic" ? "#b91c1c" : "#334155"
                 }}>
-                  {pairingResult.title}
+                  {formatPairingTitle(pairingResult.title, language)}
                 </strong>
                 {pairingResult.score && (
                   <span style={{
@@ -1075,7 +1136,7 @@ export default function GardenSynergyWidget({ weather, plantCount = 0 }) {
                     background: pairingResult.score >= 80 ? "#dcfce7" : pairingResult.score >= 50 ? "#fef3c7" : "#fee2e2",
                     color: pairingResult.score >= 80 ? "#15803d" : pairingResult.score >= 50 ? "#b45309" : "#991b1b"
                   }}>
-                    {pairingResult.score}% Compatibility
+                    {pairingResult.score}% {t("synergy_compatibility")}
                   </span>
                 )}
               </div>
@@ -1102,25 +1163,31 @@ export default function GardenSynergyWidget({ weather, plantCount = 0 }) {
               <X size={18} />
             </button>
 
-            <p className="eyebrow"><Sparkles size={14} color="var(--green)" /> AI Botanical Companion Generator</p>
-            <h2 style={{ fontSize: "20px", margin: "4px 0 8px" }}>Add Custom Plant to Matcher</h2>
+            <p className="eyebrow"><Sparkles size={14} color="var(--green)" /> {language === "gu" ? "AI બોટનિકલ કમ્પેનિયન જનરેટર" : language === "hi" ? "AI बॉटनिकल कम्पैनियन जनरेटर" : "AI Botanical Companion Generator"}</p>
+            <h2 style={{ fontSize: "20px", margin: "4px 0 8px" }}>
+              {language === "gu" ? "મેચરમાં કસ્ટમ છોડ ઉમેરો" : language === "hi" ? "मैचर में कस्टम पौधा जोड़ें" : "Add Custom Plant to Matcher"}
+            </h2>
             <p className="muted" style={{ fontSize: "13px", margin: "0 0 16px" }}>
-              Enter <strong>1 plant name</strong>. Our Google Gemini AI will generate its full companion profile, beneficial neighbors, plants to avoid, pot sizes, and watering budget!
+              {language === "gu"
+                ? "૧ છોડનું નામ લખો. અમારું Google Gemini AI તેના માટે સારા સાથીદાર, અસંગત છોડ, કુંડાનું માપ અને પાણીનું બજેટ આપોઆપ તૈયાર કરશે!"
+                : language === "hi"
+                ? "1 पौधे का नाम लिखें। हमारा Google Gemini AI इसके लिए अच्छे साथी, असंगत पौधे, गमले का आकार और पानी का बजट तैयार करेगा!"
+                : "Enter 1 plant name. Our Google Gemini AI will generate its full companion profile, beneficial neighbors, plants to avoid, pot sizes, and watering budget!"}
             </p>
 
             <form onSubmit={handleGenerateSinglePlant} className="diagnosis-form">
               <label style={{ display: "block", marginBottom: "12px" }}>
-                Plant Name *
+                {language === "gu" ? "છોડનું નામ *" : language === "hi" ? "पौधे का नाम *" : "Plant Name *"}
                 <input
                   required
-                  placeholder="e.g. Bonsai (or bonzai), Chili (or chilly), Monstera"
+                  placeholder={language === "gu" ? "દા.ત. બોન્સાઈ, મરચાં, મોન્સ્ટેરા" : language === "hi" ? "उदा. बोन्साई, मिर्च, मॉन्स्टेरा" : "e.g. Bonsai (or bonzai), Chili (or chilly), Monstera"}
                   value={singlePlantName}
                   onChange={(e) => setSinglePlantName(e.target.value)}
                   style={{ width: "100%", marginTop: "6px" }}
                 />
                 {singlePlantName.trim() && autoCorrectPlantName(singlePlantName).wasAutoCorrected && (
                   <span style={{ fontSize: "11px", color: "var(--green-deep)", fontWeight: "600", marginTop: "4px", display: "block" }}>
-                    ✨ Auto-corrects to: <strong>{autoCorrectPlantName(singlePlantName).corrected}</strong>
+                    ✨ {language === "gu" ? "ઓટો-કરેક્ટ થશે:" : language === "hi" ? "ऑटो-करेक्ट होगा:" : "Auto-corrects to:"} <strong>{formatNameByLanguage(autoCorrectPlantName(singlePlantName).corrected, language)}</strong>
                   </span>
                 )}
               </label>
@@ -1128,7 +1195,7 @@ export default function GardenSynergyWidget({ weather, plantCount = 0 }) {
               {/* 1-Click Plant Suggestions */}
               <div style={{ marginTop: "6px", marginBottom: "16px" }}>
                 <span style={{ fontSize: "11px", fontWeight: "600", color: "#64748b", display: "block", marginBottom: "6px" }}>
-                  💡 Popular Urban Plants (Click to Auto-fill):
+                  {language === "gu" ? "💡 લોકપ્રિય શહેરી છોડ (ઓટો-ફિલ કરવા ક્લિક કરો):" : language === "hi" ? "💡 लोकप्रिय शहरी पौधे (ऑटो-फिल करने के लिए क्लिक करें):" : "💡 Popular Urban Plants (Click to Auto-fill):"}
                 </span>
                 <div style={{ display: "flex", flexWrap: "wrap", gap: "6px" }}>
                   {[
@@ -1155,7 +1222,7 @@ export default function GardenSynergyWidget({ weather, plantCount = 0 }) {
                         color: "#334155",
                       }}
                     >
-                      🌿 {plant}
+                      🌿 {formatNameByLanguage(plant, language)}
                     </button>
                   ))}
                 </div>
@@ -1167,14 +1234,16 @@ export default function GardenSynergyWidget({ weather, plantCount = 0 }) {
                   className="button button-outline"
                   onClick={() => setShowAddModal(false)}
                 >
-                  Cancel
+                  {language === "gu" ? "રદ કરો" : language === "hi" ? "रद्द करें" : "Cancel"}
                 </button>
                 <button
                   type="submit"
                   className="button"
                   disabled={generatingAi}
                 >
-                  {generatingAi ? "Generating Plant Profile…" : "✨ Generate Profile with AI"}
+                  {generatingAi
+                    ? (language === "gu" ? "પ્રોફાઇલ બનાવી રહ્યા છીએ..." : language === "hi" ? "प्रोफ़ाइल तैयार हो रही है..." : "Generating Plant Profile…")
+                    : (language === "gu" ? "✨ AI સાથે પ્રોફાઇલ બનાવો" : language === "hi" ? "✨ AI से प्रोफ़ाइल बनाएं" : "✨ Generate Profile with AI")}
                 </button>
               </div>
             </form>

@@ -12,16 +12,34 @@ import {
   Check,
 } from "lucide-react";
 import { useToast } from "../context/AppContext.jsx";
+import { useLanguage } from "../i18n/LanguageContext.jsx";
 import { api } from "../lib/api.js";
+import { formatNameByLanguage } from "../lib/format.js";
 
-const DAYS_OF_WEEK = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"];
-const MONTH_NAMES = [
-  "January", "February", "March", "April", "May", "June",
-  "July", "August", "September", "October", "November", "December",
-];
+const DAYS_OF_WEEK = {
+  en: ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"],
+  gu: ["રવિ", "સોમ", "મંગળ", "બુધ", "ગુરુ", "શુક્ર", "શનિ"],
+  hi: ["रवि", "सोम", "मंगल", "बुध", "गुरु", "शुक्र", "शनि"],
+};
+
+const MONTH_NAMES = {
+  en: [
+    "January", "February", "March", "April", "May", "June",
+    "July", "August", "September", "October", "November", "December",
+  ],
+  gu: [
+    "જાન્યુઆરી", "ફેબ્રુઆરી", "માર્ચ", "એપ્રિલ", "મે", "જૂન",
+    "જુલાઈ", "ઓગસ્ટ", "સપ્ટેમ્બર", "ઓક્ટોબર", "નવેમ્બર", "ડિસેમ્બર",
+  ],
+  hi: [
+    "जनवरी", "फ़रवरी", "मार्च", "अप्रैल", "मई", "जून",
+    "जुलाई", "अगस्त", "सितंबर", "अक्टूबर", "नवंबर", "दिसंबर",
+  ],
+};
 
 export default function GardenCalendar({ plants = [], onPlantUpdate }) {
   const notify = useToast();
+  const { t, language } = useLanguage();
   const [currentDate, setCurrentDate] = useState(new Date());
   const [selectedDay, setSelectedDay] = useState(new Date().getDate());
   const [busyPlantId, setBusyPlantId] = useState(null);
@@ -124,13 +142,13 @@ export default function GardenCalendar({ plants = [], onPlantUpdate }) {
 
   const handleQuickWater = async (plantId, plantName) => {
     if (!plantId || plantId.startsWith("sample-")) {
-      notify(`Watered ${plantName}! Next schedule updated.`, "success");
+      notify(`${t("cal_watered_success", "Watered")} ${formatNameByLanguage(plantName, language)}! ${t("cal_schedule_updated", "Next schedule updated.")}`, "success");
       return;
     }
     setBusyPlantId(plantId);
     try {
       await api(`/garden/plants/${plantId}/water`, { method: "POST" });
-      notify(`Watered ${plantName}! Next schedule updated.`, "success");
+      notify(`${t("cal_watered_success", "Watered")} ${formatNameByLanguage(plantName, language)}! ${t("cal_schedule_updated", "Next schedule updated.")}`, "success");
       if (onPlantUpdate) onPlantUpdate();
     } catch (err) {
       notify(err.message || "Failed to water plant", "error");
@@ -139,14 +157,17 @@ export default function GardenCalendar({ plants = [], onPlantUpdate }) {
     }
   };
 
+  const currentMonthName = MONTH_NAMES[language]?.[month] || MONTH_NAMES.en[month];
+  const currentDaysOfWeek = DAYS_OF_WEEK[language] || DAYS_OF_WEEK.en;
+
   return (
     <div className="garden-calendar-wrapper">
       <div className="calendar-top-bar">
         <div className="cal-title-group">
           <div className="cal-badge">
-            <CalendarIcon size={16} /> Care Schedule
+            <CalendarIcon size={16} /> {t("cal_care_schedule", "Care Schedule")}
           </div>
-          <h3>Garden Care Calendar & Automated Watering Rhythm</h3>
+          <h3>{t("cal_heading", "Garden Care Calendar & Automated Watering Rhythm")}</h3>
         </div>
 
         <div className="month-nav">
@@ -154,7 +175,7 @@ export default function GardenCalendar({ plants = [], onPlantUpdate }) {
             <ChevronLeft size={18} />
           </button>
           <span className="current-month-label">
-            {MONTH_NAMES[month]} {year}
+            {currentMonthName} {year}
           </span>
           <button className="icon-btn-subtle" onClick={nextMonth} aria-label="Next month">
             <ChevronRight size={18} />
@@ -181,10 +202,10 @@ export default function GardenCalendar({ plants = [], onPlantUpdate }) {
             <Sprout size={24} color="#166534" />
             <div>
               <strong style={{ color: "#166534", fontSize: "14px" }}>
-                Add plants to personalize your Care Calendar!
+                {t("cal_add_plants_title", "Add plants to personalize your Care Calendar!")}
               </strong>
               <p style={{ margin: "2px 0 0", fontSize: "12px", color: "#15803d" }}>
-                Upload or snap photos with our AI Scanner. Your calendar will automatically project custom watering and nutrition schedules for every plant.
+                {t("cal_add_plants_desc", "Upload or snap photos with our AI Scanner. Your calendar will automatically project custom watering and nutrition schedules for every plant.")}
               </p>
             </div>
           </div>
@@ -194,7 +215,7 @@ export default function GardenCalendar({ plants = [], onPlantUpdate }) {
       <div className="calendar-grid-container">
         {/* Day Names */}
         <div className="cal-weekdays">
-          {DAYS_OF_WEEK.map((d) => (
+          {currentDaysOfWeek.map((d) => (
             <div key={d} className="cal-weekday-cell">
               {d}
             </div>
@@ -240,23 +261,23 @@ export default function GardenCalendar({ plants = [], onPlantUpdate }) {
       <div className="day-agenda-box">
         <div className="agenda-header">
           <h4>
-            Tasks for {MONTH_NAMES[month]} {selectedDay}, {year}
-            {isTodaySelected && <span className="today-pill">Today</span>}
+            {t("cal_tasks_for", "Tasks for")} {currentMonthName} {selectedDay}, {year}
+            {isTodaySelected && <span className="today-pill">{t("cal_today", "Today")}</span>}
           </h4>
-          <span className="task-count-pill">{dayEvents.length} Tasks Scheduled</span>
+          <span className="task-count-pill">{dayEvents.length} {t("cal_tasks_scheduled", "Tasks Scheduled")}</span>
         </div>
 
         {dayEvents.length === 0 ? (
           <div>
             <div className="empty-agenda" style={{ padding: "20px 0" }}>
               <CheckCircle2 size={24} className="text-muted" />
-              <p>No care tasks scheduled for Day {selectedDay}. Your garden soil moisture is currently balanced!</p>
+              <p>{t("cal_no_tasks_day", "No care tasks scheduled for Day")} {selectedDay}. {t("cal_soil_balanced", "Your garden soil moisture is currently balanced!")}</p>
             </div>
 
             {upcomingEvents.length > 0 && (
               <div style={{ marginTop: "16px", borderTop: "1px solid var(--line)", paddingTop: "14px" }}>
                 <h5 style={{ margin: "0 0 10px", fontSize: "13px", color: "var(--muted)" }}>
-                  Upcoming Care Schedule (Next 7 Days):
+                  {t("cal_upcoming_title", "Upcoming Care Schedule (Next 7 Days):")}
                 </h5>
                 <div className="agenda-task-list">
                   {upcomingEvents.slice(0, 5).map((evt, idx) => (
@@ -265,9 +286,9 @@ export default function GardenCalendar({ plants = [], onPlantUpdate }) {
                         {evt.type === "water" ? <Droplets size={18} className="water-text" /> : <Sprout size={18} className="feed-text" />}
                       </div>
                       <div className="task-info">
-                        <strong>{evt.plantName}</strong>
+                        <strong>{formatNameByLanguage(evt.plantName, language)}</strong>
                         <span className="task-species text-xs muted">
-                          Day {evt.dayNum} · {evt.species} · {evt.type === "water" ? "Watering Due" : "Organic Nutrition Feed"}
+                          {t("cal_day_prefix", "Day")} {evt.dayNum} · {formatNameByLanguage(evt.species, language)} · {evt.type === "water" ? t("cal_watering_due", "Watering Due") : t("cal_feed_due", "Organic Nutrition Feed")}
                         </span>
                       </div>
                       <div className="task-action">
@@ -278,7 +299,7 @@ export default function GardenCalendar({ plants = [], onPlantUpdate }) {
                             onClick={() => handleQuickWater(evt.plantId, evt.plantName)}
                           >
                             <Droplets size={13} />
-                            {busyPlantId === evt.plantId ? "Saving…" : "Mark Watered"}
+                            {busyPlantId === evt.plantId ? t("cal_saving", "Saving…") : t("cal_mark_watered", "Mark Watered")}
                           </button>
                         )}
                       </div>
@@ -296,9 +317,9 @@ export default function GardenCalendar({ plants = [], onPlantUpdate }) {
                   {evt.type === "water" ? <Droplets size={18} className="water-text" /> : <Sprout size={18} className="feed-text" />}
                 </div>
                 <div className="task-info">
-                  <strong>{evt.plantName}</strong>
+                  <strong>{formatNameByLanguage(evt.plantName, language)}</strong>
                   <span className="task-species text-xs muted">
-                    {evt.species} · {evt.type === "water" ? "Watering Due" : "Organic Nutrition Feed"}
+                    {formatNameByLanguage(evt.species, language)} · {evt.type === "water" ? t("cal_watering_due", "Watering Due") : t("cal_feed_due", "Organic Nutrition Feed")}
                   </span>
                 </div>
                 <div className="task-action">
@@ -309,7 +330,7 @@ export default function GardenCalendar({ plants = [], onPlantUpdate }) {
                       onClick={() => handleQuickWater(evt.plantId, evt.plantName)}
                     >
                       <Droplets size={13} />
-                      {busyPlantId === evt.plantId ? "Saving…" : "Mark Watered"}
+                      {busyPlantId === evt.plantId ? t("cal_saving", "Saving…") : t("cal_mark_watered", "Mark Watered")}
                     </button>
                   )}
                 </div>

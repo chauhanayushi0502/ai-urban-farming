@@ -34,7 +34,7 @@ import {
 } from "lucide-react";
 import { useToast, useApp } from "../context/AppContext.jsx";
 import { api } from "../lib/api.js";
-import { imageSource, money, formatNameByLanguage, formatDescriptionByLanguage } from "../lib/format.js";
+import { imageSource, money, formatNameByLanguage, formatDescriptionByLanguage, formatWeatherCondition, formatWeatherTip } from "../lib/format.js";
 import { validatePlantImageFile, compressAndOptimizeImage, checkIsLikelyPlantImage, analyzePlantFoliageHealth } from "../lib/image-optimizer.js";
 import GardenSynergyWidget from "../components/GardenSynergy.jsx";
 import PrintableCareGuide from "../components/PrintableCareGuide.jsx";
@@ -1081,7 +1081,7 @@ export default function GardenPage({ initialTab }) {
 
             <div className="garden-weather-stat-card">
               <span className="w-label"><Sun size={12} color="#f0ad4e" /> {t("weather_condition", "Condition")}</span>
-              <span className="w-val" style={{ fontSize: "13px" }}>{weather.condition}</span>
+              <span className="w-val" style={{ fontSize: "13px" }}>{formatWeatherCondition(weather.condition, language)}</span>
               <span className="w-sub">{weather.rainAlert ? t("rain_alert", "Rain alert") : t("gardening_friendly", "Gardening friendly")}</span>
             </div>
 
@@ -1103,7 +1103,7 @@ export default function GardenPage({ initialTab }) {
             <HeartPulse size={16} color="var(--green)" style={{ flexShrink: 0, marginTop: "1px" }} />
             <div>
               <strong>{t("live_climate_advisory", "🩺 Live Climate AI Advisory:")} </strong>
-              {weather.tip}
+              {formatWeatherTip(weather.tip, language)}
             </div>
           </div>
         </section>
@@ -2186,26 +2186,26 @@ export default function GardenPage({ initialTab }) {
 
                 <div className="doctor-weather-grid">
                   <div className="doctor-weather-metric">
-                    <span>Temp</span>
+                    <span>{t("weather_temp", "Temp")}</span>
                     <strong>{weather.temperature}°C</strong>
                   </div>
                   <div className="doctor-weather-metric">
-                    <span>Humidity</span>
+                    <span>{t("weather_humidity_label", "Humidity")}</span>
                     <strong>{weather.humidity}%</strong>
                   </div>
                   <div className="doctor-weather-metric">
-                    <span>Condition</span>
-                    <strong style={{ fontSize: "12px" }}>{weather.condition}</strong>
+                    <span>{t("weather_cond_label", "Condition")}</span>
+                    <strong style={{ fontSize: "12px" }}>{formatWeatherCondition(weather.condition, language)}</strong>
                   </div>
                   <div className="doctor-weather-metric">
-                    <span>Rainfall</span>
+                    <span>{t("weather_rain_label", "Rainfall")}</span>
                     <strong>{weather.precipitation || 0}mm</strong>
                   </div>
                 </div>
 
                 <div className="doctor-weather-advisory">
-                  <strong>🩺 Microclimate Doctor Assessment: </strong>
-                  {weather.tip}
+                  <strong>{t("doc_assessment", "🩺 Microclimate Doctor Assessment:")} </strong>
+                  {formatWeatherTip(weather.tip, language)}
                 </div>
               </div>
             )}
@@ -2216,10 +2216,10 @@ export default function GardenPage({ initialTab }) {
                 <video ref={videoRef} autoPlay playsInline className="camera-video" />
                 <div className="camera-actions-bar">
                   <button type="button" className="button button-small" onClick={capturePhoto}>
-                    <Camera size={15} /> Snap Plant Photo
+                    <Camera size={15} /> {t("snap_plant_photo", "Snap Plant Photo")}
                   </button>
                   <button type="button" className="button button-outline button-small" onClick={stopCamera}>
-                    Cancel Camera
+                    {t("cancel_camera", "Cancel Camera")}
                   </button>
                 </div>
               </div>

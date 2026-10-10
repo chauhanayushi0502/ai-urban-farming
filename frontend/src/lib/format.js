@@ -62,6 +62,50 @@ export const NAME_DICTIONARY = {
   "seeds pack": { gu: "ગાર્ડન સ્ટાર્ટર બીજ કિટ", hi: "गार्डन स्टार्टर बीज किट", en: "Kitchen Garden Starter Seeds Pack" },
   "hand tools": { gu: "અર્ગોનોમિક ગાર્ડન ટૂલ્સ સેટ (3 પીસ)", hi: "एर्गोनोमिक गार्डन टूल्स सेट (3 पीस)", en: "Heavy-Duty Ergonomic Garden Hand Tools (3-Piece)" },
   "garden tools": { gu: "ગાર્ડન ટૂલ્સ સેટ", hi: "गार्डन टूल्स सेट", en: "Heavy-Duty Garden Hand Tools (3-Piece)" },
+  "desiccated nursery plant": { gu: "સૂકાયેલો નર્સરી છોડ", hi: "सूखा हुआ नर्सरी पौधा", en: "Desiccated Nursery Plant" },
+  "desiccated": { gu: "સૂકાયેલો છોડ", hi: "सूखा पौधा", en: "Desiccated Plant" },
+  "nursery plant": { gu: "નર્સરી છોડ", hi: "नर्सरी पौधा", en: "Nursery Plant" },
+  "rose": { gu: "ગુલાબનો છોડ", hi: "गुलाब का पौधा", en: "Rose Plant" },
+  "tulsi": { gu: "તુલસીનો છોડ", hi: "तुलसी का पौधा", en: "Tulsi (Holy Basil)" },
+  "holy basil": { gu: "તુલસીનો છોડ", hi: "तुलसी का पौधा", en: "Tulsi (Holy Basil)" },
+  "aloe vera": { gu: "એલોવેરા (કુંવારપાઠું)", hi: "एलोवेरा (घृतकुमारी)", en: "Aloe Vera" },
+  "aloe": { gu: "એલોવેરા (કુંવારપાઠું)", hi: "एलोवेरा (घृतकुमारी)", en: "Aloe Vera" },
+  "mint": { gu: "ફુદીનો", hi: "पुदीना", en: "Mint (Pudina)" },
+  "pudina": { gu: "ફુદીનો", hi: "पुदीना", en: "Mint (Pudina)" },
+  "coriander": { gu: "કોથમરી (ધાણા)", hi: "धनिया", en: "Coriander" },
+  "tomato": { gu: "ટમેટાં", hi: "टमाटर", en: "Tomato" },
+  "pepper": { gu: "મરચાં / શિમલા મરચાં", hi: "शिमला मिर्च", en: "Bell Pepper" },
+  "chili": { gu: "લીલાં મરચાં", hi: "हरी मिर्च", en: "Green Chili" },
+  "chilli": { gu: "લીલાં મરચાં", hi: "हरी मिर्च", en: "Green Chili" },
+  "sweet basil": { gu: "તુલસી (મીઠો બેસિલ)", hi: "मीठा तुलसी (बेसिल)", en: "Sweet Basil" },
+  "basil": { gu: "તુલસી / બેસિલ", hi: "बेसिल (तुलसी)", en: "Sweet Basil" },
+  "chili pepper": { gu: "મરચાંનો છોડ", hi: "मिर्च का पौधा", en: "Chili Pepper" },
+  "marigold": { gu: "ગલગોટો (હજારી ગલ)", hi: "गेंदा का फूल", en: "Marigold" },
+  "genda": { gu: "ગલગોટો (હજારી ગલ)", hi: "गेंदा का फूल", en: "Marigold" },
+  "borage": { gu: "બોરેજ (સ્ટારફ્લાવર)", hi: "बोरेज (स्टारफ्लावर)", en: "Borage" },
+  "strawberry": { gu: "સ્ટ્રોબેરી", hi: "स्ट्रॉबेरी", en: "Strawberry" },
+  "garlic": { gu: "લસણ", hi: "लहसुन", en: "Garlic" },
+  "onion": { gu: "ડુંગળી (કાંદા)", hi: "प्याज", en: "Onion" },
+  "cucumber": { gu: "કાકડી", hi: "खीरा", en: "Cucumber" },
+  "spinach": { gu: "પાલક", hi: "पालक", en: "Spinach" },
+  "bonsai tree": { gu: "બોન્સાઈ ટ્રી", hi: "बोन्साई का पेड़", en: "Bonsai Tree" },
+  "bonsai": { gu: "બોન્સાઈ ટ્રી", hi: "बोन्साई का पेड़", en: "Bonsai Tree" },
+  "rosemary": { gu: "રોઝમેરી", hi: "रोज़मेरी", en: "Rosemary" },
+  "thyme": { gu: "થાઇમ (અજમાના પાન)", hi: "थाइम (अजवाइन के पत्ते)", en: "Thyme" },
+  "oregano": { gu: "ઓરેગાનો", hi: "ऑरेगैनो", en: "Oregano" },
+  "parsley": { gu: "પાર્સલી (અજમોદ)", hi: "पार्सले (अजमोद)", en: "Parsley" },
+  "fennel": { gu: "વરિયાળી", hi: "सौंफ", en: "Fennel" },
+  "potato": { gu: "બટાકા", hi: "आलू", en: "Potato" },
+  "cabbage": { gu: "કોબીજ", hi: "पत्तागोभी", en: "Cabbage" },
+  "lavender": { gu: "લેવેન્ડર", hi: "लैवेंडर", en: "Lavender" },
+  "dill": { gu: "સુવા દાણા (સુવા)", hi: "सोया (सुवा)", en: "Dill" },
+  "radish": { gu: "મૂળો", hi: "मूली", en: "Radish" },
+  "monstera": { gu: "મોન્સ્ટેરા", hi: "मॉन्स्टेरा", en: "Monstera Deliciosa" },
+  "kohlrabi": { gu: "ગાંઠગોબી (નવલકોલ)", hi: "गांठ गोभी", en: "Kohlrabi" },
+  "pole beans": { gu: "વાલ / ચોળીના વેલા", hi: "सेम की फली", en: "Pole Beans" },
+  "spearmint": { gu: "ફુદીનો (સ્પિયરમિન્ટ)", hi: "पुदीना", en: "Spearmint" },
+  "garden houseplant": { gu: "બગીચાનો ઇન્ડોર છોડ", hi: "बगीचे का इनडोर पौधा", en: "Garden Houseplant" },
+  "houseplant": { gu: "ઇન્ડોર છોડ", hi: "इनडोर पौधा", en: "Houseplant" },
 };
 
 // Descriptions dictionary
@@ -208,4 +252,70 @@ export function formatDescriptionByLanguage(rawDesc, language = "en", rawName = 
   }
 
   return rawDesc || "";
+}
+
+export function formatWeatherCondition(condition, language = "en") {
+  if (!condition) return "";
+  const map = {
+    "hot & dry": { gu: "ગરમ અને સૂકું હવામાન", hi: "गर्म और शुष्क", en: "Hot & Dry" },
+    "sunny / pleasant": { gu: "તડકો / અનુકૂળ હવામાન", hi: "धूप / सुखद मौसम", en: "Sunny / Pleasant" },
+    "sunny": { gu: "તડકો", hi: "धूप", en: "Sunny" },
+    "pleasant": { gu: "અનુકૂળ હવામાન", hi: "सुखद मौसम", en: "Pleasant" },
+    "rainy / damp": { gu: "વરસાદી / ભેજવાળું", hi: "बारिश / नम", en: "Rainy / Damp" },
+    "rainy": { gu: "વરસાદી", hi: "बारिश", en: "Rainy" },
+    "cool / dormant": { gu: "ઠંડું હવામાન", hi: "ठंडा मौसम", en: "Cool / Dormant" },
+    "cool": { gu: "ઠંડું", hi: "ठंडा", en: "Cool" },
+    "clear sky": { gu: "સ્વચ્છ આકાશ", hi: "साफ आसमान", en: "Clear Sky" },
+    "partly cloudy": { gu: "અંશતઃ વાદળછાયું", hi: "आंशिक रूप से बादल", en: "Partly Cloudy" },
+    "overcast": { gu: "વાદળછાયું", hi: "बादल छाए हुए", en: "Overcast" },
+    "foggy": { gu: "ધુમ્મસિયું", hi: "कोहरा", en: "Foggy" },
+  };
+  const lower = String(condition).toLowerCase().trim();
+  for (const [k, v] of Object.entries(map)) {
+    if (lower.includes(k) || k.includes(lower)) {
+      return v[language] || v["en"] || condition;
+    }
+  }
+  return condition;
+}
+
+export function formatWeatherTip(tip, language = "en") {
+  if (!tip) return "";
+  if (language === "en") return tip;
+
+  const tipMap = [
+    {
+      match: "high heat alert",
+      gu: "તીવ્ર ગરમીની ચેતવણી (>32°C). ગરમીથી છોડને બચાવવા માટે વહેલી સવારે અથવા સાંજે ઊંડાણપૂર્વક પાણી આપો.",
+      hi: "अत्यधिक गर्मी का अलर्ट (>32°C)। गर्मी से तनाव कम करने के लिए सुबह जल्दी या शाम को गहराई से पानी दें।",
+    },
+    {
+      match: "rain detected",
+      gu: "વરસાદ પડી રહ્યો છે. મૂળ સડવાથી બચાવવા માટે આજે આઉટડોર અને બાલ્કનીના છોડને પાણી આપવાનું ટાળો.",
+      hi: "बारिश दर्ज की गई। जड़ों को सड़ने से बचाने के लिए आज बाहरी और बालकनी के पौधों को पानी न दें।",
+    },
+    {
+      match: "cooler temperatures",
+      gu: "ઠંડું તાપમાન બાષ્પીભવન ધીમું કરે છે. પાણી આપવાની આવર્તન ઓછી કરો.",
+      hi: "कम तापमान से पानी का वाष्पीकरण धीमा होता है। पानी देने की आवृत्ति कम करें।",
+    },
+    {
+      match: "standard watering routine",
+      gu: "શહેરી બાલ્કનીના છોડ માટે સામાન્ય વોટરિંગ રૂટીન અનુકૂળ છે.",
+      hi: "अधिकांश शहरी बालकनी पौधों के लिए सामान्य पानी की दिनचर्या उपयुक्त है।",
+    },
+    {
+      match: "high humidity warning",
+      gu: "વધુ ભેજની ચેતવણી: ફૂગ ઝડપથી ફેલાઈ શકે છે. પાંદડા પર ઉપરથી પાણી છાંટવાનું ટાળો.",
+      hi: "उच्च आर्द्रता चेतावनी: फफूंद तेजी से फैल सकती है। पत्तियों के ऊपर से पानी डालने से बचें।",
+    },
+  ];
+
+  const lower = tip.toLowerCase();
+  for (const item of tipMap) {
+    if (lower.includes(item.match)) {
+      return item[language] || tip;
+    }
+  }
+  return tip;
 }
