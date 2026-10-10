@@ -10,14 +10,11 @@ import {
   Droplets,
   Sprout,
   ShieldAlert,
-  ShoppingBag,
-  ExternalLink,
   ChevronDown,
 } from "lucide-react";
 import { api } from "../lib/api.js";
 import { useApp } from "../context/AppContext.jsx";
 import { useLanguage } from "../i18n/LanguageContext.jsx";
-import { formatNameByLanguage } from "../lib/format.js";
 import { compressAndOptimizeImage } from "../lib/image-optimizer.js";
 
 const QUICK_PROMPTS_BY_LANG = {
@@ -234,26 +231,6 @@ export default function AIAssistantChatbot() {
                     <img src={msg.image} alt="Uploaded plant" className="chat-msg-img" />
                   )}
                   <p className="chat-text">{msg.text}</p>
-                  
-                  {/* Recommended Products if any */}
-                  {msg.products && msg.products.length > 0 && (
-                    <div className="bot-product-recs">
-                      <span className="rec-header">{t("rec_solutions", "🌿 Recommended Solutions:")}</span>
-                      {msg.products.slice(0, 2).map((p) => (
-                        <a
-                          key={p._id}
-                          href={`/products/${p._id}`}
-                          className="bot-rec-chip"
-                          target="_blank"
-                          rel="noreferrer"
-                        >
-                          <ShoppingBag size={13} />
-                          <span>{formatNameByLanguage(p.name, language)} - ₹{p.price}</span>
-                          <ExternalLink size={12} />
-                        </a>
-                      ))}
-                    </div>
-                  )}
 
                   <span className="chat-time">{msg.time}</span>
                 </div>
