@@ -9,7 +9,10 @@ export const DEFAULT_MONGO_URI =
   "mongodb+srv://dbuser:db%40user@test.ntennoc.mongodb.net/plant_nursery?retryWrites=true&w=majority";
 
 export async function connectDatabase() {
-  const uri = process.env.MONGO_URI || DEFAULT_MONGO_URI;
+  let uri = process.env.MONGO_URI;
+  if (!uri || uri.includes("<username>") || uri.includes("<password>") || uri.includes("cluster0.mongodb.net")) {
+    uri = DEFAULT_MONGO_URI;
+  }
 
   if (cached.conn && mongoose.connection.readyState === 1) {
     return cached.conn;
