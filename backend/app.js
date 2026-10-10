@@ -17,7 +17,7 @@ app.get("/", (_req, res) => res.json({ status: "online", message: "Green Leaf Pl
 app.get("/api/*", (_req, res) => res.status(404).json({ message: "API route not found." }));
 app.use(errorHandler);
 
-if (process.env.NODE_ENV === "production") {
+if (process.env.NODE_ENV === "production" && !process.env.VERCEL) {
   app.use(express.static(frontendBuildDirectory));
   app.get("*", (_req, res) => res.sendFile(path.join(frontendBuildDirectory, "index.html")));
 }
