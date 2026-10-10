@@ -3,8 +3,18 @@ import { mkdirSync } from "node:fs";
 import path from "node:path";
 import { assetDirectory } from "../config/app-config.js";
 
-const catalogDirectory = path.join(assetDirectory, "images", "catalog");
-for (const folder of ["categories", "products", "reviews"]) mkdirSync(path.join(catalogDirectory, folder), { recursive: true });
+const isServerless = Boolean(process.env.VERCEL || process.env.AWS_LAMBDA_FUNCTION_NAME);
+const catalogDirectory = isServerless
+  ? path.join("/tmp", "catalog")
+  : path.join(assetDirectory, "images", "catalog");
+
+try {
+  for (const folder of ["categories", "products", "reviews"]) {
+    mkdirSync(path.join(catalogDirectory, folder), { recursive: true });
+  }
+} catch {
+  // Gracefully ignore in read-only serverless filesystems
+}
 
 const imageFilter = (_req, file, done) => {
   if (["image/jpeg", "image/png", "image/webp"].includes(file.mimetype)) return done(null, true);
@@ -19,7 +29,13 @@ export const plantPhotoUpload = multer({
 
 const catalogImageUpload = multer({
   storage: multer.diskStorage({
-    destination: (req, _file, done) => done(null, path.join(catalogDirectory, req.uploadFolder)),
+    destination: (req, _file, done) => {
+      const dir = path.join(catalogDirectory, req.uploadFolder || "");
+      try {
+        mkdirSync(dir, { recursive: true });
+      } catch {}
+      done(null, dir);
+    },
     filename: (_req, file, done) => done(null, `${Date.now()}-${file.originalname.replace(/[^a-zA-Z0-9._-]/g, "-")}`),
   }),
   limits: { fileSize: 8 * 1024 * 1024 },
