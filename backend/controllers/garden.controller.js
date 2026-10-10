@@ -1,3 +1,4 @@
+import mongoose from "mongoose";
 import { GardenPlant, Notification, PlantDiagnosis, User, Product, Category, Setting } from "../models/index.js";
 import { asyncHandler } from "../middleware/async-handler.js";
 import { isValidPlantImage } from "../middleware/uploads.js";
@@ -118,6 +119,7 @@ export async function callGeminiAI({ prompt, imageBuffer, imageMimeType, maxToke
 // Exclusively recommends plant care & protection, fertilizers/tonics, pots & planters, and tools (NEVER live plants)
 export async function findRelevantProducts(searchContext = "") {
   try {
+    if (mongoose.connection?.readyState !== 1) return [];
     const text = String(searchContext).toLowerCase();
 
     // 1. Fetch category IDs for care & supplies
@@ -1547,17 +1549,12 @@ Provide an accurate, reassuring, and practical diagnostic answer directly addres
 
   answer = answer.replace(/```/g, "").trim();
 
-  // Find matching nursery products strictly from Care & Protection, Pots, and Tools
-  const recommendedProducts = await findRelevantProducts(
-    `${question} ${answer} ${plantTitle} ${species} ${currentDisease || ""} compost neem pot fertilizer tonic`
-  );
-
   res.json({
     answer,
     plantName: plantTitle,
     plantSpecies: species,
     weatherUsed: parsedWeather,
-    recommendedProducts,
+    recommendedProducts: [],
   });
 });
 

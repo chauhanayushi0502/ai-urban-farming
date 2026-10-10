@@ -419,50 +419,6 @@ export default function AIAssistantChatbot() {
 
                   <FormattedChatText text={msg.text} />
 
-                  {/* Bot Product Recommendations */}
-                  {msg.sender === "bot" && msg.products && msg.products.length > 0 && (
-                    <div className="bot-product-recs">
-                      <span className="rec-header">
-                        {language === "gu"
-                          ? "🌿 ભલામણ કરેલ ઓર્ગેનિક ઉત્પાદનો:"
-                          : language === "hi"
-                          ? "🌿 अनुशंसित जैविक उत्पाद:"
-                          : "🌿 Recommended Care Products:"}
-                      </span>
-                      {msg.products.slice(0, 3).map((prod) => {
-                        const isAdded = addedProductIds.has(prod._id);
-                        return (
-                          <div key={prod._id} className="bot-product-card">
-                            <img src={imageSource(prod.image)} alt={prod.name} />
-                            <div className="bot-product-info">
-                              <h5 className="bot-product-title">{formatNameByLanguage(prod.name, language)}</h5>
-                              <p className="bot-product-price">{money(prod.price, settings?.currency || "₹")}</p>
-                            </div>
-                            <button
-                              type="button"
-                              className={`bot-add-cart-btn ${isAdded ? "added" : ""}`}
-                              onClick={() => handleAddToCart(prod)}
-                              disabled={isAdded}
-                              title={isAdded ? "Already in cart" : "Add to cart"}
-                            >
-                              {isAdded ? (
-                                <>
-                                  <CheckCircle size={12} />
-                                  <span>{language === "gu" ? "ઉમેરાઈ ગયું!" : language === "hi" ? "जुड़ गया!" : "Added!"}</span>
-                                </>
-                              ) : (
-                                <>
-                                  <ShoppingBag size={12} />
-                                  <span>{language === "gu" ? "કાર્ટમાં ઉમેરો" : language === "hi" ? "कार्ट में जोड़ें" : "Add to Cart"}</span>
-                                </>
-                              )}
-                            </button>
-                          </div>
-                        );
-                      })}
-                    </div>
-                  )}
-
                   {/* Actions Bar (Voice TTS Playback + Time) */}
                   <div className="bot-msg-actions">
                     {msg.sender === "bot" ? (
