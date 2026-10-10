@@ -169,6 +169,9 @@ export default function GardenPage({ initialTab }) {
       .then((scan) => {
         if (isCurrent && scan) {
           setAiScanPreview(scan);
+          if (scan.detectedSpecies && !userSpeciesChoice && scan.detectedSpecies !== "Houseplant" && scan.detectedSpecies !== "Urban Houseplant" && scan.detectedSpecies !== "Desiccated Nursery Plant") {
+            setUserSpeciesChoice(scan.detectedSpecies);
+          }
         }
       })
       .catch(() => {});

@@ -346,32 +346,37 @@ export async function analyzePlantFoliageHealth(file) {
         let healthStatus = "healthy";
         let healthDiagnosis = "Optimal foliage vitality and healthy chlorophyll turgor.";
 
+        // Check severe vertical drooping / wilted petioles first:
+        // When plant foliage has collapsed limp down below the top canopy
+        const hasSevereDroop = (bottomHalfFoliage >= 35 && droopRatio >= 1.45 && greenRatio >= 0.25) || (droopRatio >= 2.0 && greenRatio >= 0.18);
+
         // 1. COMPLETELY DRY / WITHERED / DEAD / SEVERELY DESICCATED PLANT
         // Only classify as desiccated if there is virtually NO green foliage (< 8% green) and dominant dry brown tissue (> 55% brown)
-        if ((brownRatio >= 0.55 && greenRatio < 0.08) || (greenFoliage < 25 && totalBrown > 150)) {
+        if ((brownRatio >= 0.55 && greenRatio < 0.08) || (greenFoliage < 20 && totalBrown > 180)) {
           isDesiccated = true;
           isBrowning = true;
           healthStatus = "underwatered";
           healthDiagnosis = "Severe Desiccation & Foliage Necrosis (Dried Out / Withered Plant)";
         }
-        // 2. FOLIAR NECROTIC LESIONS / LEAF SPOT / BLIGHT
-        // Brown spots appearing on live foliage (significant green present with localized brown necrotic spots)
-        else if (greenFoliage >= 50 && (brownRatio >= 0.18 || brownNecrosis >= 65)) {
+        // 2. SEVERE DROOPING & LIMP PETIOLE COLLAPSE (Loss of hydrostatic turgor pressure / dehydration)
+        // High priority: A plant drooping limp into its pot/basket needs immediate bottom-soak rehydration, NOT fungicide!
+        else if (hasSevereDroop) {
+          isSeverelyDrooping = true;
+          healthStatus = "underwatered";
+          healthDiagnosis = "Severe Foliage Drooping & Dehydration (Loss of Hydrostatic Turgor Pressure)";
+        }
+        // 3. FOLIAR NECROTIC LESIONS / LEAF SPOT / BLIGHT
+        // True foliar blight requires high brown necrosis ratio on the leaf surface itself, without being just a planter pot basket
+        else if (greenFoliage >= 50 && brownNecrosis >= 80 && brownRatio >= 0.28 && !hasSevereDroop) {
           isBrowning = true;
           healthStatus = "diseased";
           healthDiagnosis = "Foliar Necrotic Lesions & Leaf Spot Stress (Blight Risk)";
         }
-        // 3. CHLOROSIS / YELLOWING (Nutrient or Overwatering)
-        else if (yellowRatio >= 0.20 && yellowChlorosis >= 60) {
+        // 4. CHLOROSIS / YELLOWING (Nutrient or Overwatering)
+        else if (yellowRatio >= 0.22 && yellowChlorosis >= 70) {
           isYellowing = true;
           healthStatus = "needs_attention";
           healthDiagnosis = "Foliar Chlorosis & Yellowing Stress (Nutrient Depletion or Root Stress)";
-        }
-        // 4. SEVERE DROOPING & LIMP COLLAPSE (Loss of turgor pressure)
-        else if (bottomHalfFoliage > 45 && droopRatio >= 1.6 && greenRatio >= 0.35) {
-          isSeverelyDrooping = true;
-          healthStatus = "underwatered";
-          healthDiagnosis = "Severe Foliage Drooping & Dehydration (Loss of Hydrostatic Turgor Pressure)";
         }
         // 5. TRUE HEALTHY VITALITY (Predominantly green foliage with normal structure)
         else if (greenRatio >= 0.40 && brownRatio < 0.20 && yellowRatio < 0.20) {
@@ -389,7 +394,10 @@ export async function analyzePlantFoliageHealth(file) {
 
         if (isDesiccated) {
           detectedSpecies = "Desiccated Nursery Plant";
-        } else if (flowerRatio >= 0.03 || flowerPetals >= 30) {
+        } else if (isSeverelyDrooping) {
+          // Peace Lily / Spathiphyllum is famous for dramatical petiole collapse when dry
+          detectedSpecies = "Peace Lily";
+        } else if (flowerRatio >= 0.08 && flowerPetals >= 45) {
           detectedSpecies = "Hibiscus";
         } else if (aspectRatio >= 1.6 && greenRatio >= 0.45) {
           detectedSpecies = "Snake Plant";
@@ -397,8 +405,6 @@ export async function analyzePlantFoliageHealth(file) {
           detectedSpecies = "Money Plant";
         } else if (deepGreen >= 50 && aspectRatio >= 1.2 && droopRatio < 1.1) {
           detectedSpecies = "ZZ Plant";
-        } else if (isSeverelyDrooping) {
-          detectedSpecies = "Peace Lily";
         } else if (greenRatio >= 0.55 && aspectRatio < 0.95 && totalPlantPixels >= 180) {
           detectedSpecies = "Sweet Basil";
         } else if (plantHeight > 55 && greenFoliage > 90 && aspectRatio >= 1.25) {
