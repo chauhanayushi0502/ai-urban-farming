@@ -346,38 +346,40 @@ export async function analyzePlantFoliageHealth(file) {
         let healthStatus = "healthy";
         let healthDiagnosis = "Optimal foliage vitality and healthy chlorophyll turgor.";
 
-        // 1. COMPLETELY DRY / WITHERED / DEAD / SEVERELY DESICCATED PLANT (CRITICAL: NEVER MARK AS HEALTHY)
-        if (brownRatio >= 0.32 || (deadCrispyBrown >= 75 && greenFoliage < 60) || (greenRatio < 0.18 && totalBrown >= 60)) {
+        // 1. COMPLETELY DRY / WITHERED / DEAD / SEVERELY DESICCATED PLANT
+        // Only classify as desiccated if there is virtually NO green foliage (< 8% green) and dominant dry brown tissue (> 55% brown)
+        if ((brownRatio >= 0.55 && greenRatio < 0.08) || (greenFoliage < 25 && totalBrown > 150)) {
           isDesiccated = true;
           isBrowning = true;
           healthStatus = "underwatered";
-          healthDiagnosis = "Severe Desiccation & Foliage Necrosis (Completely Dried Out / Withered Plant)";
+          healthDiagnosis = "Severe Desiccation & Foliage Necrosis (Dried Out / Withered Plant)";
         }
-        // 2. SEVERE DROOPING & LIMP COLLAPSE (Loss of turgor pressure)
-        else if (bottomHalfFoliage > 35 && droopRatio >= 1.35 && greenRatio >= 0.25) {
-          isSeverelyDrooping = true;
-          healthStatus = "underwatered";
-          healthDiagnosis = "Severe Foliage Drooping & Dehydration (Loss of Hydrostatic Turgor Pressure)";
-        }
-        // 3. FOLIAR NECROTIC LESIONS / LEAF SPOT / BLIGHT
-        else if (brownRatio >= 0.12 || brownNecrosis >= 35) {
+        // 2. FOLIAR NECROTIC LESIONS / LEAF SPOT / BLIGHT
+        // Brown spots appearing on live foliage (significant green present with localized brown necrotic spots)
+        else if (greenFoliage >= 50 && (brownRatio >= 0.18 || brownNecrosis >= 65)) {
           isBrowning = true;
           healthStatus = "diseased";
           healthDiagnosis = "Foliar Necrotic Lesions & Leaf Spot Stress (Blight Risk)";
         }
-        // 4. CHLOROSIS / YELLOWING (Nutrient or Overwatering)
-        else if (yellowRatio >= 0.15 || yellowChlorosis >= 40) {
+        // 3. CHLOROSIS / YELLOWING (Nutrient or Overwatering)
+        else if (yellowRatio >= 0.20 && yellowChlorosis >= 60) {
           isYellowing = true;
           healthStatus = "needs_attention";
           healthDiagnosis = "Foliar Chlorosis & Yellowing Stress (Nutrient Depletion or Root Stress)";
         }
-        // 5. TRUE HEALTHY VITALITY (Must have dominant green, minimal brown/yellow, and erect canopy)
-        else if (greenRatio >= 0.65 && brownRatio < 0.08 && yellowRatio < 0.10 && droopRatio < 1.35) {
+        // 4. SEVERE DROOPING & LIMP COLLAPSE (Loss of turgor pressure)
+        else if (bottomHalfFoliage > 45 && droopRatio >= 1.6 && greenRatio >= 0.35) {
+          isSeverelyDrooping = true;
+          healthStatus = "underwatered";
+          healthDiagnosis = "Severe Foliage Drooping & Dehydration (Loss of Hydrostatic Turgor Pressure)";
+        }
+        // 5. TRUE HEALTHY VITALITY (Predominantly green foliage with normal structure)
+        else if (greenRatio >= 0.40 && brownRatio < 0.20 && yellowRatio < 0.20) {
           healthStatus = "healthy";
-          healthDiagnosis = "Optimal foliage vitality and vibrant chlorophyll turgor.";
+          healthDiagnosis = "Optimal foliage vitality and healthy chlorophyll turgor.";
         } else {
-          healthStatus = "needs_attention";
-          healthDiagnosis = "Moderate Foliage Stress / Watering Adjustment Needed";
+          healthStatus = "healthy";
+          healthDiagnosis = "Normal garden foliage condition (Mild environmental variation).";
         }
 
         // ==========================================

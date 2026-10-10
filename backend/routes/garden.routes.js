@@ -16,11 +16,17 @@ import {
   getDemoData,
   getLiveWeather,
   searchLocations,
+  getBotanicalDataset,
+  getBotanicalDatasetItem,
 } from "../controllers/garden.controller.js";
 import { authenticate, optionalAuthenticate } from "../auth/auth.middleware.js";
 import { plantPhotoUpload } from "../middleware/uploads.js";
 
 const router = Router();
+
+// Botanical Disease Dataset Endpoints
+router.get("/dataset", getBotanicalDataset);
+router.get("/dataset/:id", getBotanicalDatasetItem);
 
 router.get("/weather", async (req, res) => {
   const lat = req.query.lat ? parseFloat(req.query.lat) : 23.0225;

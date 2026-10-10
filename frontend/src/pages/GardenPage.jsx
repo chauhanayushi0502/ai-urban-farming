@@ -131,12 +131,17 @@ export default function GardenPage({ initialTab }) {
   const [diagFile, setDiagFile] = useState(null);
   const [diagPreview, setDiagPreview] = useState("");
   const [diagPlantId, setDiagPlantId] = useState("");
+  const [diagSpecies, setDiagSpecies] = useState("");
   const [diagLocation, setDiagLocation] = useState("balcony");
   const [diagBusy, setDiagBusy] = useState(false);
   const [diagResult, setDiagResult] = useState(null);
   const [diagProducts, setDiagProducts] = useState([]);
   const [diagFileError, setDiagFileError] = useState("");
   const [isDraggingDiag, setIsDraggingDiag] = useState(false);
+  const [showDatasetModal, setShowDatasetModal] = useState(false);
+  const [datasetList, setDatasetList] = useState([]);
+  const [datasetSearch, setDatasetSearch] = useState("");
+  const [datasetCropFilter, setDatasetCropFilter] = useState("all");
 
   // Live Camera Capture State
   const [cameraActive, setCameraActive] = useState(false);
@@ -749,6 +754,7 @@ export default function GardenPage({ initialTab }) {
     }
     setSelectedPlant(plant);
     setDiagPlantId(plant ? plant._id : "");
+    setDiagSpecies(plant?.species || "");
     setDiagLocation(plant?.location || "balcony");
     setDiagFile(null);
     setDiagPreview("");
@@ -817,6 +823,9 @@ export default function GardenPage({ initialTab }) {
       }
       if (selectedPlant?.name) {
         form.append("plant_name", selectedPlant.name);
+      }
+      if (diagSpecies || selectedPlant?.species) {
+        form.append("species", diagSpecies || selectedPlant.species);
       }
 
       const res = await api("/garden/diagnose", {
@@ -2539,6 +2548,50 @@ export default function GardenPage({ initialTab }) {
                 </label>
               </div>
 
+              {/* Plant Species / Crop (Matched against Botanical Dataset) */}
+              <div>
+                <label style={{ display: "block", fontSize: "12px", fontWeight: "600", color: "#334155", marginBottom: "4px" }}>
+                  🌿 Plant Type / Crop (Matched against Verified Dataset)
+                  <select
+                    value={diagSpecies}
+                    onChange={(e) => setDiagSpecies(e.target.value)}
+                    style={{ marginTop: "4px", width: "100%", padding: "9px 12px", fontSize: "13px", borderRadius: "6px", border: "1px solid var(--line)", background: "white" }}
+                  >
+                    <option value="">Auto-Detect from Image (AI Vision)</option>
+                    <option value="Tomato">Tomato (Solanum lycopersicum)</option>
+                    <option value="Rose">Rose (Rosa spp.)</option>
+                    <option value="Money Plant">Money Plant / Pothos</option>
+                    <option value="Snake Plant">Snake Plant (Sansevieria)</option>
+                    <option value="Peace Lily">Peace Lily (Spathiphyllum)</option>
+                    <option value="Hibiscus">Hibiscus (Gudhal)</option>
+                    <option value="Tulsi">Tulsi (Holy Basil)</option>
+                    <option value="Pepper">Chili / Bell Pepper</option>
+                    <option value="Urban Houseplant">Other Balcony / Houseplant</option>
+                  </select>
+                </label>
+              </div>
+
+              <div style={{ textAlign: "right", margin: "2px 0 10px" }}>
+                <button
+                  type="button"
+                  className="button button-outline button-small"
+                  onClick={async () => {
+                    setShowDatasetModal(true);
+                    if (!datasetList.length) {
+                      try {
+                        const res = await api("/garden/dataset");
+                        setDatasetList(res.dataset || []);
+                      } catch (err) {
+                        console.warn("Dataset fetch notice:", err.message);
+                      }
+                    }
+                  }}
+                  style={{ fontSize: "11px", padding: "5px 10px" }}
+                >
+                  <Sparkles size={12} /> View Pathology Dataset Classes ({datasetList.length || 19}+)
+                </button>
+              </div>
+
               <button
                 type="submit"
                 className="button full-button"
@@ -2832,6 +2885,108 @@ export default function GardenPage({ initialTab }) {
               <Link to="/register?redirect=/garden" className="button button-outline full-button" onClick={() => setModalType(null)}>
                 Create New Account
               </Link>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* ========================================================
+          MODAL: BOTANICAL PATHOLOGY DATASET EXPLORER
+         ======================================================== */}
+      {showDatasetModal && (
+        <div className="modal-overlay" onClick={() => setShowDatasetModal(false)}>
+          <div className="modal-card modal-card-large" style={{ maxWidth: "800px" }} onClick={(e) => e.stopPropagation()}>
+            <button className="modal-close" onClick={() => setShowDatasetModal(false)}>
+              <X size={18} />
+            </button>
+            <p className="eyebrow">
+              <Sparkles size={14} /> Certified Reference Dataset
+            </p>
+            <h2 style={{ margin: "4px 0 6px" }}>Botanical Pathology Dataset Explorer</h2>
+            <p className="muted" style={{ fontSize: "12px", margin: "0 0 16px" }}>
+              Standardized plant pathology benchmark with verified symptoms, organic remedies, and pathogen biology.
+            </p>
+
+            <div style={{ display: "flex", gap: "10px", marginBottom: "14px", flexWrap: "wrap" }}>
+              <input
+                type="text"
+                placeholder="Search disease, pathogen, or symptoms..."
+                value={datasetSearch}
+                onChange={(e) => setDatasetSearch(e.target.value)}
+                style={{ flex: 1, minWidth: "200px", padding: "8px 12px", fontSize: "13px", borderRadius: "6px", border: "1px solid var(--line)" }}
+              />
+              <select
+                value={datasetCropFilter}
+                onChange={(e) => setDatasetCropFilter(e.target.value)}
+                style={{ padding: "8px 12px", fontSize: "13px", borderRadius: "6px", border: "1px solid var(--line)", background: "white" }}
+              >
+                <option value="all">All Crops</option>
+                <option value="Tomato">Tomato</option>
+                <option value="Rose">Rose</option>
+                <option value="Money Plant">Money Plant</option>
+                <option value="Snake Plant">Snake Plant</option>
+                <option value="Peace Lily">Peace Lily</option>
+                <option value="Hibiscus">Hibiscus</option>
+                <option value="Tulsi">Tulsi</option>
+              </select>
+            </div>
+
+            <div style={{ display: "grid", gap: "12px", maxHeight: "450px", overflowY: "auto", paddingRight: "4px" }}>
+              {datasetList
+                .filter((item) => {
+                  if (datasetCropFilter !== "all" && !item.crop.toLowerCase().includes(datasetCropFilter.toLowerCase())) return false;
+                  if (!datasetSearch) return true;
+                  const q = datasetSearch.toLowerCase();
+                  return (
+                    item.crop.toLowerCase().includes(q) ||
+                    item.condition.toLowerCase().includes(q) ||
+                    (item.scientificName && item.scientificName.toLowerCase().includes(q)) ||
+                    item.symptoms.some((s) => s.toLowerCase().includes(q))
+                  );
+                })
+                .map((item) => (
+                  <div
+                    key={item.id}
+                    style={{
+                      border: "1px solid var(--line)",
+                      borderRadius: "8px",
+                      padding: "14px",
+                      background: item.isHealthy ? "#f6faf6" : "#fffcf9",
+                    }}
+                  >
+                    <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "6px", flexWrap: "wrap", gap: "6px" }}>
+                      <div>
+                        <strong style={{ fontSize: "15px", color: "var(--green-deep)" }}>
+                          {item.crop}: {item.condition}
+                        </strong>
+                        <span style={{ display: "block", fontSize: "11px", color: "var(--muted)", fontStyle: "italic" }}>
+                          {item.scientificName}
+                        </span>
+                      </div>
+                      <span
+                        className={`health-pill ${item.isHealthy ? "healthy" : "diseased"}`}
+                        style={{ fontSize: "11px" }}
+                      >
+                        {item.isHealthy ? "✓ Healthy Class" : `⚠️ ${item.severity} Severity`}
+                      </span>
+                    </div>
+
+                    <div style={{ marginTop: "8px", fontSize: "12px", color: "#334155" }}>
+                      <strong>Symptoms:</strong>
+                      <ul style={{ margin: "4px 0 8px 18px", padding: 0 }}>
+                        {item.symptoms.map((s, idx) => (
+                          <li key={idx}>{s}</li>
+                        ))}
+                      </ul>
+                    </div>
+
+                    {item.organicTreatment?.length > 0 && (
+                      <div style={{ fontSize: "12px", color: "#2b6d27", background: "#f0f7f1", padding: "8px 10px", borderRadius: "6px", marginTop: "6px" }}>
+                        <strong>🌱 Organic Treatment:</strong> {item.organicTreatment[0]}
+                      </div>
+                    )}
+                  </div>
+                ))}
             </div>
           </div>
         </div>

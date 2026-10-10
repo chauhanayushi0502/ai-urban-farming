@@ -1,6 +1,7 @@
 import { GardenPlant, Notification, PlantDiagnosis, User, Product, Category, Setting } from "../models/index.js";
 import { asyncHandler } from "../middleware/async-handler.js";
 import { isValidPlantImage } from "../middleware/uploads.js";
+import { BOTANICAL_DISEASE_DATASET, matchDatasetDisease } from "../data/botanical-dataset.js";
 
 // Helper to execute Google Gemini API with fallback models
 export async function callGeminiAI({ prompt, imageBuffer, imageMimeType, maxTokens = 1200, responseJson = false }) {
@@ -17,7 +18,7 @@ export async function callGeminiAI({ prompt, imageBuffer, imageMimeType, maxToke
   }
   if (!apiKey) return null;
 
-  const models = ["gemini-2.5-flash", "gemini-2.0-flash", "gemini-1.5-flash", "gemini-1.5-pro"];
+  const models = ["gemini-3.8-flash", "gemini-3.7-flash", "gemini-flash-latest"];
 
   // 1. Try standard generateContent endpoint
   for (const model of models) {
@@ -658,117 +659,40 @@ Respond with ONLY a valid, raw JSON object (NO markdown backticks, NO \`\`\`json
     });
   }
 
-  // Fallback botanical vision analysis if API key not available or request timed out
+  // Fallback botanical dataset matching if API key exhausted or request timed out
   if (!aiData) {
-    const isDesiccated = Boolean(clientVisualScan?.isDesiccated);
-    const isDrooping = Boolean(clientVisualScan?.isSeverelyDrooping);
-    const isYellow = Boolean(clientVisualScan?.isYellowing);
-    const isBrown = Boolean(clientVisualScan?.isBrowning);
-
     const userSpecifiedSpecies = String(req.body.species || req.body.name || "").trim();
     const detectedVisualSpecies = String(clientVisualScan?.detectedSpecies || "").trim();
     const candidateSpecies = userSpecifiedSpecies || (detectedVisualSpecies && detectedVisualSpecies !== "Houseplant" ? detectedVisualSpecies : "");
 
-    let resolvedSpeciesName = candidateSpecies || (isDesiccated ? "Desiccated Nursery Plant" : "Urban Houseplant");
+    const matched = matchDatasetDisease({
+      cropName: candidateSpecies,
+      visualScan: clientVisualScan,
+    });
+
+    const isDesiccated = Boolean(clientVisualScan?.isDesiccated);
+    const resolvedSpeciesName = candidateSpecies || matched.crop || "Urban Houseplant";
     const key = normalizeSpeciesKey(resolvedSpeciesName);
     const defaults = SPECIES_WATERING_DEFAULTS[key] || SPECIES_WATERING_DEFAULTS.other;
 
-    if (!candidateSpecies) {
-      resolvedSpeciesName = defaults.name.split("/")[0].trim();
-    }
-
-    if (isDesiccated) {
-      aiData = {
-        isPlant: true,
-        identifiedSpecies: resolvedSpeciesName,
-        originalName: resolvedSpeciesName,
-        confidence: 94,
-        currentHealthStatus: "underwatered",
-        healthDiagnosis: clientVisualScan?.healthDiagnosis || "Severe Desiccation & Foliage Necrosis (Completely Dried Out / Withered Plant)",
-        careSummary: `This ${resolvedSpeciesName} is severely dried out, brittle, and dehydrated from prolonged lack of water. Perform an emergency bottom-soak rehydration, prune dead crispy foliage, and place in bright sheltered shade to stimulate root revival.`,
-        waterQuantity: "500ml bottom-soak / deep slow drench",
-        wateringSchedule: "Water deeply immediately right now! Soak root ball for 30 minutes, then check soil every 2 days.",
-        wateringIntervalDays: 2,
-        sunlightAdvice: "Place in bright indirect shade away from scorching direct afternoon sun or drying hot drafts.",
-        nutrientAdvice: "Do NOT fertilize while dehydrated or withered. Only resume mild organic compost after fresh new growth appears.",
-        fertilizingIntervalDays: 14,
-        protectionAdvice: "Prune off completely dried brown, dead foliage with clean shears. Scratch stem lightly: if green beneath, the plant will rebound!",
-      };
-    } else if (isDrooping) {
-      aiData = {
-        isPlant: true,
-        identifiedSpecies: resolvedSpeciesName,
-        originalName: resolvedSpeciesName,
-        confidence: 94,
-        currentHealthStatus: "underwatered",
-        healthDiagnosis: "Severe Foliage Drooping & Dehydration (Loss of Hydrostatic Turgor Pressure)",
-        careSummary: `Your ${resolvedSpeciesName} is dehydrated with limp, drooping foliage from dry potting mix. Water thoroughly with 400ml–500ml water immediately; its foliage will regain hydrostatic turgor pressure within 2–4 hours.`,
-        waterQuantity: "400ml - 500ml deep soak at root base",
-        wateringSchedule: "Water deeply right now! Then every 2-3 days early morning.",
-        wateringIntervalDays: Math.min(defaults.interval, 3),
-        sunlightAdvice: "Place in bright indirect or filtered morning sunlight; keep away from hot dry winds.",
-        nutrientAdvice: "Pause fertilizer while wilting. Once upright and recovered, apply 1 tbsp organic vermicompost every 14 days.",
-        fertilizingIntervalDays: 14,
-        protectionAdvice: "Foliage wilts when root moisture depletes. Water directly into soil until water trickles from drainage holes.",
-      };
-    } else if (isBrown) {
-      aiData = {
-        isPlant: true,
-        identifiedSpecies: resolvedSpeciesName,
-        originalName: resolvedSpeciesName,
-        confidence: 92,
-        currentHealthStatus: "diseased",
-        healthDiagnosis: clientVisualScan?.healthDiagnosis || "Foliar Necrotic Lesions & Leaf Spot Stress",
-        careSummary: `${resolvedSpeciesName} foliage shows necrotic spots or fungal leaf lesions. Prune diseased leaves, ensure proper ventilation, and apply organic neem spray.`,
-        waterQuantity: "250ml - 350ml at soil level (avoid wetting leaves)",
-        wateringSchedule: `Every ${defaults.interval} days early morning`,
-        wateringIntervalDays: defaults.interval,
-        sunlightAdvice: "Bright filtered sunlight with good ambient air circulation.",
-        nutrientAdvice: "Apply 1-2 tbsp organic compost around root base to build systemic immunity.",
-        fertilizingIntervalDays: 14,
-        protectionAdvice: "Spray cold-pressed organic Neem oil solution (5ml/L) once a week at sunset. Discard fallen infected leaves.",
-      };
-    } else if (isYellow) {
-      aiData = {
-        isPlant: true,
-        identifiedSpecies: resolvedSpeciesName,
-        originalName: resolvedSpeciesName,
-        confidence: 92,
-        currentHealthStatus: "needs_attention",
-        healthDiagnosis: clientVisualScan?.healthDiagnosis || "Foliar Chlorosis & Yellowing Stress (Nutrient or Drainage Issue)",
-        careSummary: `${resolvedSpeciesName} is displaying chlorotic yellowing foliage. Inspect drainage holes for standing water and nourish with micronutrients.`,
-        waterQuantity: "250ml - 350ml only when top inch of soil is dry",
-        wateringSchedule: `Every ${defaults.interval} days early morning`,
-        wateringIntervalDays: defaults.interval,
-        sunlightAdvice: "Bright indirect light or gentle morning sun; avoid soggy dark corners.",
-        nutrientAdvice: "Feed with balanced seaweed liquid tonic or vermicompost to restore rich green chlorophyll.",
-        fertilizingIntervalDays: 14,
-        protectionAdvice: "Check soil moisture before each watering. Ensure bottom drainage holes flow freely.",
-      };
-    } else {
-      const isActuallyHealthy = clientVisualScan?.healthStatus === "healthy";
-      const healthStatus = isActuallyHealthy ? "healthy" : "needs_attention";
-      const diagnosisDesc = isActuallyHealthy
-        ? (clientVisualScan?.healthDiagnosis || "Optimal foliage vitality and healthy chlorophyll turgor.")
-        : (clientVisualScan?.healthDiagnosis || "Moderate foliage stress — monitor soil moisture and light levels.");
-
-      aiData = {
-        isPlant: true,
-        identifiedSpecies: resolvedSpeciesName,
-        originalName: resolvedSpeciesName,
-        confidence: 94,
-        currentHealthStatus: healthStatus,
-        healthDiagnosis: diagnosisDesc,
-        careSummary: `Vibrant ${resolvedSpeciesName} thriving in ${location} conditions with balanced watering and sunlight.`,
-        waterQuantity: key === "aloe" || key === "snake_plant" || key === "zz_plant" ? "150ml - 200ml" : "300ml - 400ml at root base",
-        wateringSchedule: `Every ${defaults.interval} days early morning`,
-        wateringIntervalDays: defaults.interval,
-        sunlightAdvice: key === "snake_plant" || key === "pothos" || key === "zz_plant" ? "Bright indirect sunlight or partial shade" : "4–6 hours direct morning sun",
-        nutrientAdvice: "Apply 1-2 tbsp organic compost or seaweed liquid fertilizer every 14 days.",
-        fertilizingIntervalDays: 14,
-        protectionAdvice: "Inspect leaves weekly; spray organic neem oil solution if pests appear.",
-      };
-    }
+    aiData = {
+      isPlant: true,
+      identifiedSpecies: resolvedSpeciesName,
+      originalName: resolvedSpeciesName,
+      confidence: matched.confidence || 95,
+      currentHealthStatus: matched.isHealthy ? "healthy" : isDesiccated ? "underwatered" : "diseased",
+      healthDiagnosis: matched.isHealthy
+        ? "Optimal foliage vitality and healthy chlorophyll turgor."
+        : `${matched.condition} (${matched.scientificName || ""})`,
+      careSummary: `Care profile for ${resolvedSpeciesName} in ${location}. ${matched.wateringAdvice}`,
+      waterQuantity: defaults.waterQuantity || "300ml - 500ml per watering",
+      wateringSchedule: defaults.wateringSchedule || `Every ${defaults.interval || 2} days early morning`,
+      wateringIntervalDays: defaults.interval || 2,
+      sunlightAdvice: defaults.sunlightAdvice || "Bright indirect sunlight",
+      nutrientAdvice: defaults.nutrientAdvice || "Feed monthly with organic vermicompost or seaweed tonic",
+      fertilizingIntervalDays: defaults.fertilizingIntervalDays || 14,
+      protectionAdvice: matched.organicTreatment?.[0] || "Spray preventive organic Neem oil once a month",
+    };
   }
 
   const plantNameFetched = (aiData.originalName || aiData.identifiedSpecies || "Urban Plant").trim();
@@ -1237,164 +1161,32 @@ Respond with ONLY a valid, raw JSON object (NO markdown backticks, NO \`\`\`json
     return res.status(400).json({ message: "The uploaded image is not a plant or leaf. Please upload a clear photo of a plant leaf to diagnose." });
   }
 
-  // If Gemini was unavailable, API key missing, or JSON parse failed, use botanical heuristic engine
+  // If Gemini was unavailable, quota-limited, or failed, match against Botanical Pathology Dataset:
   if (!diagnosisResult) {
-    const isDesiccated = Boolean(clientVisualScan?.isDesiccated);
-    const isDrooping = Boolean(clientVisualScan?.isSeverelyDrooping);
-    const isYellow = Boolean(clientVisualScan?.isYellowing);
-    const isBrown = Boolean(clientVisualScan?.isBrowning);
-    const isHealthy = Boolean(clientVisualScan?.healthStatus === "healthy");
-    const detectedSpecies = clientVisualScan?.detectedSpecies || plantNameFromReq || "Urban Houseplant";
+    const userCrop = req.body.species || req.body.plant_name || plantNameFromReq;
+    const matched = matchDatasetDisease({
+      cropName: userCrop,
+      visualScan: clientVisualScan,
+      queryText: req.body.condition || req.body.disease,
+    });
 
-    if (isDesiccated) {
-      diagnosisResult = {
-        identifiedPlant: detectedSpecies,
-        diseaseName: "Severe Foliage Desiccation & Drought Necrosis",
-        isHealthy: false,
-        confidence: 95,
-        severity: "Severe",
-        symptoms: [
-          "Foliage is completely crispy, dry, brittle, and brown",
-          "Loss of moisture throughout petiole and leaf tissues",
-          "Potting soil compacted and severely dehydrated",
-        ],
-        causes: [
-          "Prolonged absence of irrigation or intense ambient heat",
-          "Dry air currents and hydrophobic desiccated potting substrate",
-        ],
-        organicTreatment: [
-          "Perform a deep 30-minute bottom-soaking bath to fully hydrate root ball.",
-          "Prune off fully dead, brittle foliage using clean sterile shears to reduce transpiration.",
-          "Relocate pot to sheltered, bright filtered shade away from hot drafts and scorching midday sun.",
-        ],
-        chemicalTreatment: ["Do not apply chemical fertilizers while roots are desiccated. Hold until active recovery."],
-        preventiveCare: [
-          "Establish a consistent automated watering schedule in your garden app.",
-          "Add a top layer of organic mulch or coco-chips to retain soil moisture.",
-        ],
-        wateringAdvice: `Immediate emergency bottom soak (500ml). After revival, water every 2 days early morning in your ${location}.`,
-        smartFarmingInsight: `Critical alert: Soil moisture is below 15%. Target recovery range is 45%–60% moisture.`,
-      };
-    } else if (isDrooping) {
-      diagnosisResult = {
-        identifiedPlant: detectedSpecies,
-        diseaseName: "Acute Foliage Wilting & Dehydration (Loss of Turgor)",
-        isHealthy: false,
-        confidence: 94,
-        severity: "Moderate",
-        symptoms: [
-          "Downward limp drooping of stems and leaves",
-          "Loss of cell hydrostatic pressure (flaccid leaf structure)",
-          "Dry topsoil layer",
-        ],
-        causes: [
-          "Depleted moisture in root zone",
-          "High evapotranspiration rate in current environment",
-        ],
-        organicTreatment: [
-          "Deeply drench soil with 400ml–500ml water at root level immediately.",
-          "Lightly mist foliage to reduce transpiration rate while roots uptake water.",
-        ],
-        chemicalTreatment: ["None required — hydration is the immediate cure."],
-        preventiveCare: [
-          "Check soil moisture daily; water before foliage begins to flag or droop.",
-          "Shield from dry hot winds.",
-        ],
-        wateringAdvice: `Water deeply right now! Leaves will regain upright turgor within 2–4 hours. Water every 2 days in ${location}.`,
-        smartFarmingInsight: `Sensor insight: Keep soil moisture above 35% to prevent stress-induced turgor collapse.`,
-      };
-    } else if (isYellow) {
-      diagnosisResult = {
-        identifiedPlant: detectedSpecies,
-        diseaseName: "Foliar Chlorosis (Nitrogen / Micronutrient Deficiency)",
-        isHealthy: false,
-        confidence: 92,
-        severity: "Mild",
-        symptoms: [
-          "Pale or yellowing leaf lamina with prominent or faded veins",
-          "Reduced chlorophyll concentration and slower growth",
-        ],
-        causes: [
-          "Nutrient deficiency (nitrogen, iron, or magnesium) or poor container drainage",
-          "Frequent shallow watering causing root suffocation",
-        ],
-        organicTreatment: [
-          "Top-dress with 2 tablespoons of organic vermicompost or apply liquid seaweed extract.",
-          "Verify container drainage holes are clear of root plugs.",
-        ],
-        chemicalTreatment: ["Chelated micronutrient foliar spray (0.5g/L) if yellowing persists."],
-        preventiveCare: [
-          "Water only when top 1 inch of soil is dry.",
-          "Ensure potting mix contains perlite or sand for aeration.",
-        ],
-        wateringAdvice: `Allow soil to dry slightly before watering. Water every 3 days in ${location}.`,
-        smartFarmingInsight: `Nutrient alert: Boost organic bio-fertilizer and maintain soil aeration in ${location}.`,
-      };
-    } else if (isBrown) {
-      diagnosisResult = {
-        identifiedPlant: detectedSpecies,
-        diseaseName: "Foliar Necrotic Lesions & Leaf Spot (Fungal Blight Risk)",
-        isHealthy: false,
-        confidence: 92,
-        severity: "Moderate",
-        symptoms: [
-          "Brown necrotic spots with chlorotic yellow halos on foliage",
-          "Crispy leaf tips or localized edge browning",
-        ],
-        causes: [
-          "Fungal pathogens favored by stagnant air and water drops left on leaves",
-          "Overhead evening watering or low ambient ventilation",
-        ],
-        organicTreatment: [
-          "Prune heavily infected leaves and dispose of them outside the garden.",
-          "Spray cold-pressed organic Neem oil solution (5ml/L with mild soap) weekly at sunset.",
-        ],
-        chemicalTreatment: ["Apply broad-spectrum copper fungicide if lesions expand rapidly."],
-        preventiveCare: [
-          "Water early morning directly at soil level; never wet leaves in evening.",
-          `Ensure good air circulation and 4-6 hours filtered sun in ${location}.`,
-        ],
-        wateringAdvice: `Water strictly at soil base every 3 days. Keep foliage dry.`,
-        smartFarmingInsight: `Fungus prevention: Maintain humidity below 75% and ensure cross-ventilation in ${location}.`,
-      };
-    } else if (isHealthy) {
-      diagnosisResult = {
-        identifiedPlant: detectedSpecies,
-        diseaseName: "Healthy Foliage (No Disease Detected)",
-        isHealthy: true,
-        confidence: 96,
-        severity: "None",
-        symptoms: [
-          "Vibrant deep green chlorophyll coloration",
-          "Erect, firm leaf turgor and healthy cuticle",
-          "Zero signs of fungal lesions, chlorosis, or pest infestation",
-        ],
-        causes: ["Optimal urban gardening care, balanced sunlight, and ideal moisture"],
-        organicTreatment: ["No treatment needed! Maintain current excellent routine."],
-        chemicalTreatment: ["None needed."],
-        preventiveCare: [
-          "Continue regular watering schedule tailored to your container.",
-          "Provide monthly organic vermicompost for sustained vigor.",
-        ],
-        wateringAdvice: `Maintain regular watering routine every 2-3 days in ${location}.`,
-        smartFarmingInsight: `Baseline optimal: Plant health index is 96%. Continue current cultivation regime.`,
-      };
-    } else {
-      diagnosisResult = {
-        identifiedPlant: detectedSpecies,
-        diseaseName: "Mild Environmental Stress",
-        isHealthy: false,
-        confidence: 88,
-        severity: "Mild",
-        symptoms: ["Minor foliage irregularities or slight edge discoloration"],
-        causes: ["Irregular watering or sudden microclimate fluctuations"],
-        organicTreatment: ["Trim dry edges and apply light organic vermicompost."],
-        chemicalTreatment: ["None needed."],
-        preventiveCare: ["Maintain consistent watering and bright indirect lighting."],
-        wateringAdvice: `Water consistently every 2–3 days early in the morning in ${location}.`,
-        smartFarmingInsight: `Microclimate advice: Stabilize watering intervals for optimal growth.`,
-      };
-    }
+    diagnosisResult = {
+      identifiedPlant: matched.crop,
+      diseaseName: matched.condition,
+      isHealthy: matched.isHealthy,
+      confidence: matched.confidence || 95,
+      severity: matched.severity || (matched.isHealthy ? "None" : "Moderate"),
+      scientificName: matched.scientificName,
+      symptoms: matched.symptoms || [],
+      causes: matched.causes || [],
+      organicTreatment: matched.organicTreatment || [],
+      chemicalTreatment: matched.chemicalTreatment || [],
+      preventiveCare: matched.preventiveCare || [],
+      wateringAdvice: matched.wateringAdvice || `Water ${matched.crop} at root level every 2-3 days in ${location}.`,
+      smartFarmingInsight: matched.smartFarmingInsight || `Urban farming insight: Maintain balanced humidity and container drainage in ${location}.`,
+      fromDataset: true,
+      datasetId: matched.id,
+    };
   }
 
   const finalPlantName = diagnosisResult.identifiedPlant || plantNameFromReq || "Urban Garden Plant";
@@ -1921,4 +1713,31 @@ Respond ONLY with a raw JSON object (no markdown backticks, no \`\`\`json):
   } : null;
 
   res.json(aiEvaluation);
+});
+
+// GET /api/garden/dataset - Returns Botanical Pathology Dataset
+export const getBotanicalDataset = asyncHandler(async (req, res) => {
+  const crop = req.query.crop ? String(req.query.crop).toLowerCase().trim() : "";
+  const q = req.query.q ? String(req.query.q).toLowerCase().trim() : "";
+  let results = BOTANICAL_DISEASE_DATASET;
+  if (crop) {
+    results = results.filter((d) => d.crop.toLowerCase().includes(crop));
+  }
+  if (q) {
+    results = results.filter(
+      (d) =>
+        d.crop.toLowerCase().includes(q) ||
+        d.condition.toLowerCase().includes(q) ||
+        d.scientificName.toLowerCase().includes(q) ||
+        d.symptoms.some((s) => s.toLowerCase().includes(q))
+    );
+  }
+  res.json({ total: results.length, dataset: results });
+});
+
+// GET /api/garden/dataset/:id - Returns specific pathology entry
+export const getBotanicalDatasetItem = asyncHandler(async (req, res) => {
+  const item = BOTANICAL_DISEASE_DATASET.find((d) => d.id === req.params.id);
+  if (!item) return res.status(404).json({ message: "Disease class not found in dataset." });
+  res.json(item);
 });
