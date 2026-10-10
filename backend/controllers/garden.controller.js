@@ -588,10 +588,8 @@ export const identifyAndAddPlant = asyncHandler(async (req, res) => {
   const prompt = `You are an expert botanical AI assistant and certified plant pathologist. Analyze the uploaded plant image with utmost accuracy.
 Growing Location: "${location}".
 ${req.body.species ? `User Declared Plant Species: "${req.body.species}".` : ""}
-${clientVisualScan?.isDesiccated ? "CRITICAL BOTANICAL OBSERVATION: Plant tissue is brown, dry, crispy, and severely desiccated / dehydrated (withered plant). Check for severe dehydration / drought stress." : ""}
-${clientVisualScan?.isSeverelyDrooping ? "CRITICAL BOTANICAL OBSERVATION: Foliage shows severe downward drooping and limp petioles (dehydration / loss of hydrostatic turgor pressure)." : ""}
-${clientVisualScan?.isYellowing ? "CRITICAL BOTANICAL OBSERVATION: Foliage shows noticeable yellowing (chlorosis / overwatering / nutrient depletion)." : ""}
-${clientVisualScan?.isBrowning ? "CRITICAL BOTANICAL OBSERVATION: Foliage displays brown necrotic spots, scorched margins, or fungal lesions." : ""}
+${clientVisualScan?.detectedSpecies && clientVisualScan.detectedSpecies !== "Houseplant" ? `Visual Detector Species Hint: "${clientVisualScan.detectedSpecies}".` : ""}
+${clientVisualScan?.isDesiccated ? "Visual Note: Check if foliage is dried, withered, or brown." : ""}
 
 CRITICAL FIRST STEP - VERIFY PLANT:
 Determine whether the image contains a plant, potted houseplant, leaf, stem, flower, vegetable, herb, tree, succulent, seedling, nursery pot, or an image/screenshot showing a plant.

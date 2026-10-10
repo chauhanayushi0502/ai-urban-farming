@@ -348,9 +348,9 @@ export async function analyzePlantFoliageHealth(file) {
         let healthStatus = "healthy";
         let healthDiagnosis = "Optimal foliage vitality and healthy chlorophyll turgor.";
 
-        // Check severe vertical drooping / wilted petioles first:
-        // When plant foliage has collapsed limp down below the top canopy
-        const hasSevereDroop = (bottomHalfFoliage >= 35 && droopRatio >= 1.45 && greenRatio >= 0.25) || (droopRatio >= 2.0 && greenRatio >= 0.18);
+        // Check severe vertical drooping / wilted petioles:
+        // A truly dehydrated plant has almost all petioles collapsed limp down with virtually no erect upper leaves
+        const hasSevereDroop = (topHalfFoliage < 15 && bottomHalfFoliage >= 45 && droopRatio >= 3.2 && greenRatio >= 0.20);
 
         // 1. COMPLETELY DRY / WITHERED / DEAD / SEVERELY DESICCATED PLANT
         // Only classify as desiccated if there is virtually NO green foliage (< 8% green) and dominant dry brown tissue (> 55% brown)
