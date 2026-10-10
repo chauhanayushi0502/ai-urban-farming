@@ -7,17 +7,17 @@ import { useLoad } from "../../hooks/useLoad.js";
 import { api } from "../../lib/api.js";
 
 const fields = [
-  ["site_name", "Store / Nursery Name", "સાઇટનું નામ"],
-  ["contact_email", "Support & Contact Email", "સંપર્ક ઇમેઇલ"],
-  ["contact_phone", "Helpline Phone Number", "ફોન"],
-  ["address", "Nursery Physical Address", "સરનામું"],
-  ["currency", "Currency Symbol", "ચલણ પ્રતીક"],
-  ["shipping_charge", "Standard Shipping Charge (₹)", "શિપિંગ ચાર્જ"],
-  ["tax_rate", "GST / Tax Rate (%)", "ટેક્સ દર (%)"],
-  ["facebook", "Facebook Page URL", "ફેસબુક URL"],
-  ["instagram", "Instagram Profile URL", "ઇન્સ્ટાગ્રામ URL"],
-  ["twitter", "Twitter/X URL", "ટ્વિટર URL"],
-  ["gemini_api_key", "Google Gemini AI API Key (AI Plant Doctor)", "Google Gemini AI API Key"],
+  ["site_name", "Store / Nursery Name", "સાઇટનું નામ", "स्टोर / नर्सरी का नाम"],
+  ["contact_email", "Support & Contact Email", "સંપર્ક ઇમેઇલ", "संपर्क एवं सहायता ईमेल"],
+  ["contact_phone", "Helpline Phone Number", "ફોન નંબર", "हेल्पलाइन फ़ोन नंबर"],
+  ["address", "Nursery Physical Address", "સરનામું", "नर्सरी का पता"],
+  ["currency", "Currency Symbol", "ચલણ પ્રતીક", "मुद्रा प्रतीक"],
+  ["shipping_charge", "Standard Shipping Charge (₹)", "શિપિંગ ચાર્જ (₹)", "शिपिंग शुल्क (₹)"],
+  ["tax_rate", "GST / Tax Rate (%)", "ટેક્સ દર (%)", "जीएसटी / टैक्स दर (%)"],
+  ["facebook", "Facebook Page URL", "ફેસબુક URL", "फेसबुक पेज URL"],
+  ["instagram", "Instagram Profile URL", "ઇન્સ્ટાગ્રામ URL", "इंस्टाग्राम प्रोफ़ाइल URL"],
+  ["twitter", "Twitter/X URL", "ટ્વિટર URL", "ट्विटर/X URL"],
+  ["gemini_api_key", "Google Gemini AI API Key (AI Plant Doctor)", "Google Gemini AI API Key", "Google Gemini AI API Key"],
 ];
 
 export default function AdminSettings() {
@@ -57,9 +57,9 @@ export default function AdminSettings() {
       ) : (
         <form className="admin-form settings-form" onSubmit={submit} style={{ maxWidth: "860px" }}>
           <div className="admin-form-grid">
-            {fields.map(([key, labelEn, labelGu]) => (
+            {fields.map(([key, labelEn, labelGu, labelHi]) => (
               <label key={key} className={key === "address" || key === "gemini_api_key" ? "wide-field" : ""}>
-                {language === "gu" ? labelGu : labelEn}
+                {language === "gu" ? labelGu : language === "hi" ? labelHi : labelEn}
                 <input
                   name={key}
                   defaultValue={settings[key] || ""}

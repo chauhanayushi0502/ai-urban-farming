@@ -106,6 +106,38 @@ export const NAME_DICTIONARY = {
   "spearmint": { gu: "ફુદીનો (સ્પિયરમિન્ટ)", hi: "पुदीना", en: "Spearmint" },
   "garden houseplant": { gu: "બગીચાનો ઇન્ડોર છોડ", hi: "बगीचे का इनडोर पौधा", en: "Garden Houseplant" },
   "houseplant": { gu: "ઇન્ડોર છોડ", hi: "इनडोर पौधा", en: "Houseplant" },
+  "jasmine": { gu: "ચમેલી / મોગરો", hi: "चमेली / मोगरा", en: "Jasmine Plant" },
+  "mogra": { gu: "મોગરો", hi: "मोगरा", en: "Mogra Plant (Arabian Jasmine)" },
+  "bougainvillea": { gu: "બોગનવેલ", hi: "बोगनवेलिया", en: "Bougainvillea" },
+  "champa": { gu: "ચંપો (પ્લુમેરિયા)", hi: "चंपा का पौधा", en: "Champa (Plumeria)" },
+  "fern": { gu: "બોસ્ટન ફર્ન", hi: "बोस्टन फर्न", en: "Boston Fern" },
+  "jade plant": { gu: "જેડ પ્લાન્ટ (લકી પ્લાન્ટ)", hi: "जेड प्लांट (भाग्यशाली पौधा)", en: "Jade Plant (Crassula)" },
+  "jade": { gu: "જેડ પ્લાન્ટ", hi: "जेड प्लांट", en: "Jade Plant" },
+  "succulent": { gu: "સુક્યુલન્ટ છોડ", hi: "सक्यूलेंट पौधा", en: "Exotic Succulent" },
+  "cactus": { gu: "થોર / કેક્ટસ", hi: "कैक्टस", en: "Cactus Specimen" },
+  "bamboo": { gu: "લકી બામ્બૂ પ્લાન્ટ", hi: "लकी बैम्बू पौधा", en: "Lucky Bamboo Plant" },
+  "rubber plant": { gu: "રબર પ્લાન્ટ", hi: "रबर का पौधा", en: "Rubber Plant (Ficus elastica)" },
+  "calathea": { gu: "કેલેથિયા પ્રેયર પ્લાન્ટ", hi: "कैलेथिया पौधा", en: "Calathea Prayer Plant" },
+  "philodendron": { gu: "ફિલોડેન્ડ્રોન", hi: "फिलोडेन्ड्रॉन", en: "Philodendron Houseplant" },
+  "aglaonema": { gu: "અગ્લાઓનેમા (ચાઇનીઝ એવરગ્રીન)", hi: "एग्लोनिमा", en: "Aglaonema Chinese Evergreen" },
+  "curry leaves": { gu: "મીઠો લીમડો (કઢી પત્તા)", hi: "मीठा नीम (कढ़ी पत्ता)", en: "Curry Leaves Plant" },
+  "curry leaf": { gu: "મીઠો લીમડો (કઢી પત્તા)", hi: "मीठा नीम (कढ़ी पत्ता)", en: "Curry Leaves Plant" },
+  "lemon": { gu: "લીંબુનો છોડ", hi: "नींबू का पौधा", en: "Lemon Tree / Lime Plant" },
+  "lime": { gu: "લીંબુનો છોડ", hi: "नींबू का पौधा", en: "Lemon Tree / Lime Plant" },
+  "mango": { gu: "આંબાનો કલમી છોડ", hi: "आम का कलमी पौधा", en: "Grafted Mango Plant" },
+  "guava": { gu: "જામફળનો છોડ", hi: "अमरूद का पौधा", en: "Guava Plant" },
+  "perlite": { gu: "પરલાઇટ સોઇલ કન્ડીશનર", hi: "परलाइट मिट्टी कंडीशनर", en: "Horticultural Perlite" },
+  "cocopeat": { gu: "હાઇડ્રો-વોશ કોકોપીટ બ્લોક", hi: "कोकोपीट ब्लॉक", en: "Washed Cocopeat Block" },
+  "neem cake": { gu: "ઓર્ગેનિક લીમડાનો ખોળ (Neem Cake)", hi: "ऑर्गेनिक नीम खली", en: "Organic Neem Cake Fertilizer" },
+  "mustard cake": { gu: "સરસવની ખોળ ખાતર", hi: "सरसों की खली खाद", en: "Mustard Cake Fertilizer" },
+  "bone meal": { gu: "સ્ટીમ બોનમીલ ઓર્ગેનિક ખાતર", hi: "स्टीम्ड बोनमील जैविक खाद", en: "Steamed Bone Meal Organic Fertilizer" },
+  "watering can": { gu: "વોટરિંગ કેન (સ્પ્રેયર સાથે)", hi: "वाटरिंग कैन (फुहारा)", en: "Ergonomic Watering Can" },
+  "spray bottle": { gu: "પ્રેશર સ્પ્રે બોટલ (1L)", hi: "प्रेशर स्प्रे बोतल", en: "Pressure Garden Spray Bottle" },
+  "pruner": { gu: "પ્રોફેશનલ પ્રૂનિંગ કાતર", hi: "प्रोफेशनल प्रूनिंग कैंची", en: "Heavy-Duty Pruning Shears" },
+  "shears": { gu: "ગાર્ડનિંગ કાતર", hi: "बागवानी कैंची", en: "Garden Pruning Shears" },
+  "planter": { gu: "કુંડું / પ્લાન્ટર", hi: "गमला / प्लांटर", en: "Planter Pot" },
+  "seeds": { gu: "ઓર્ગેનિક દેશી બીજ", hi: "जैविक देशी बीज", en: "Organic Heirloom Seeds" },
+  "seed": { gu: "ઓર્ગેનિક બીજ", hi: "जैविक बीज", en: "Organic Seeds" },
 };
 
 // Descriptions dictionary
@@ -212,15 +244,30 @@ export const DESCRIPTION_DICTIONARY = {
   },
 };
 
-export function formatNameByLanguage(rawName, language = "en") {
-  if (!rawName || typeof rawName !== "string") return "";
+export function formatNameByLanguage(rawItemOrName, language = "en") {
+  if (!rawItemOrName) return "";
 
-  const trimmed = rawName.trim();
+  // 0. If product or category object is passed with explicit multilingual fields
+  if (typeof rawItemOrName === "object" && rawItemOrName !== null) {
+    if (language === "gu" && rawItemOrName.name_gu && String(rawItemOrName.name_gu).trim()) {
+      return String(rawItemOrName.name_gu).trim();
+    }
+    if (language === "hi" && rawItemOrName.name_hi && String(rawItemOrName.name_hi).trim()) {
+      return String(rawItemOrName.name_hi).trim();
+    }
+    if (language === "en" && rawItemOrName.name_en && String(rawItemOrName.name_en).trim()) {
+      return String(rawItemOrName.name_en).trim();
+    }
+    return formatNameByLanguage(rawItemOrName.name || "", language);
+  }
+
+  const trimmed = String(rawItemOrName).trim();
   const lower = trimmed.toLowerCase();
 
   // 1. Direct dictionary match
   for (const [key, map] of Object.entries(NAME_DICTIONARY)) {
-    if (lower.includes(key)) {
+    const k = key.toLowerCase();
+    if (lower.includes(k) || k.includes(lower)) {
       return map[language] || map["en"] || trimmed;
     }
   }
@@ -234,24 +281,76 @@ export function formatNameByLanguage(rawName, language = "en") {
     if (language === "en") {
       return enText.charAt(0).toUpperCase() + enText.slice(1);
     }
-    // Gujarati ('gu') or Hindi ('hi') without brackets
+    // Check if there is a Hindi dictionary translation for English or Gujarati text
+    for (const [key, map] of Object.entries(NAME_DICTIONARY)) {
+      const k = key.toLowerCase();
+      if (enText.toLowerCase().includes(k) || guText.toLowerCase().includes(k)) {
+        return map[language] || (language === "hi" ? map["hi"] || guText : guText);
+      }
+    }
     return guText;
   }
 
   return trimmed;
 }
 
-export function formatDescriptionByLanguage(rawDesc, language = "en", rawName = "") {
-  if (language === "en") return rawDesc || "";
-  
-  const searchKey = `${rawName || ""} ${rawDesc || ""}`.toLowerCase();
-  for (const [key, map] of Object.entries(DESCRIPTION_DICTIONARY)) {
-    if (searchKey.includes(key)) {
-      return map[language] || rawDesc || "";
+export function getTranslationsForName(inputName) {
+  if (!inputName || !String(inputName).trim()) {
+    return { en: "", gu: "", hi: "" };
+  }
+  const clean = String(inputName).trim();
+  const lower = clean.toLowerCase();
+
+  for (const [key, map] of Object.entries(NAME_DICTIONARY)) {
+    const k = key.toLowerCase();
+    if (lower.includes(k) || k.includes(lower)) {
+      return {
+        en: map.en || clean,
+        gu: map.gu || clean,
+        hi: map.hi || clean,
+      };
     }
   }
 
-  return rawDesc || "";
+  const match = clean.match(/^(.*?)\s*\((.*?)\)$/);
+  if (match) {
+    const first = match[1].trim();
+    const second = match[2].trim();
+    return {
+      en: second,
+      gu: first,
+      hi: first,
+    };
+  }
+
+  return { en: clean, gu: clean, hi: clean };
+}
+
+export function formatDescriptionByLanguage(rawDescOrItem, language = "en", rawName = "") {
+  if (!rawDescOrItem) return "";
+  if (typeof rawDescOrItem === "object" && rawDescOrItem !== null) {
+    if (language === "gu" && rawDescOrItem.description_gu && String(rawDescOrItem.description_gu).trim()) {
+      return String(rawDescOrItem.description_gu).trim();
+    }
+    if (language === "hi" && rawDescOrItem.description_hi && String(rawDescOrItem.description_hi).trim()) {
+      return String(rawDescOrItem.description_hi).trim();
+    }
+    if (language === "en" && rawDescOrItem.description_en && String(rawDescOrItem.description_en).trim()) {
+      return String(rawDescOrItem.description_en).trim();
+    }
+    return formatDescriptionByLanguage(rawDescOrItem.description || "", language, rawDescOrItem.name || "");
+  }
+
+  if (language === "en") return rawDescOrItem || "";
+
+  const searchKey = `${rawName || ""} ${rawDescOrItem || ""}`.toLowerCase();
+  for (const [key, map] of Object.entries(DESCRIPTION_DICTIONARY)) {
+    if (searchKey.includes(key)) {
+      return map[language] || rawDescOrItem || "";
+    }
+  }
+
+  return rawDescOrItem || "";
 }
 
 export function formatWeatherCondition(condition, language = "en") {

@@ -6,7 +6,7 @@ import { useLanguage } from "../../i18n/LanguageContext.jsx";
 import { DataTable } from "../../components/Feedback.jsx";
 import { useLoad } from "../../hooks/useLoad.js";
 import { api } from "../../lib/api.js";
-import { imageSource, formatNameByLanguage } from "../../lib/format.js";
+import { imageSource, formatNameByLanguage, getTranslationsForName } from "../../lib/format.js";
 import { compressAndOptimizeImage } from "../../lib/image-optimizer.js";
 
 export default function AdminCategories() {
@@ -15,16 +15,37 @@ export default function AdminCategories() {
   const [editing, setEditing] = useState(null);
   const [showForm, setShowForm] = useState(false);
   const [busy, setBusy] = useState(false);
+  const [nameVal, setNameVal] = useState("");
+  const [nameGuVal, setNameGuVal] = useState("");
+  const [nameHiVal, setNameHiVal] = useState("");
+  const [nameEnVal, setNameEnVal] = useState("");
   const notify = useToast();
+
+  const handleAutoFill = (text) => {
+    const query = (text || nameVal || "").trim();
+    if (!query) return;
+    const res = getTranslationsForName(query);
+    if (res.gu) setNameGuVal(res.gu);
+    if (res.hi) setNameHiVal(res.hi);
+    if (res.en) setNameEnVal(res.en);
+  };
 
   const handleEditClick = (category) => {
     setEditing(category);
+    setNameVal(category.name || "");
+    setNameGuVal(category.name_gu || "");
+    setNameHiVal(category.name_hi || "");
+    setNameEnVal(category.name_en || "");
     setShowForm(true);
     window.scrollTo({ top: 0, behavior: "smooth" });
   };
 
   const handleCancel = () => {
     setEditing(null);
+    setNameVal("");
+    setNameGuVal("");
+    setNameHiVal("");
+    setNameEnVal("");
     setShowForm(false);
   };
 
@@ -32,6 +53,15 @@ export default function AdminCategories() {
     event.preventDefault();
     setBusy(true);
     const form = new FormData(event.currentTarget);
+    const auto = getTranslationsForName(nameVal);
+    const finalGu = (nameGuVal || "").trim() || auto.gu || nameVal.trim();
+    const finalHi = (nameHiVal || "").trim() || auto.hi || nameVal.trim();
+    const finalEn = (nameEnVal || "").trim() || auto.en || nameVal.trim();
+    form.set("name", nameVal.trim() || finalEn);
+    form.set("name_gu", finalGu);
+    form.set("name_hi", finalHi);
+    form.set("name_en", finalEn);
+
     try {
       const rawImage = form.get("image");
       if (rawImage && rawImage.size > 0 && typeof rawImage !== "string") {
@@ -85,6 +115,10 @@ export default function AdminCategories() {
             if (showForm) handleCancel();
             else {
               setEditing(null);
+              setNameVal("");
+              setNameGuVal("");
+              setNameHiVal("");
+              setNameEnVal("");
               setShowForm(true);
             }
           }}
@@ -104,10 +138,66 @@ export default function AdminCategories() {
           <h2>{editing ? t("edit_category", "Edit Category") : t("add_category", "Add New Category")}</h2>
           <div className="admin-form-grid">
             <label>
-              {t("category_name", "Category Name *")}
-              <input name="name" defaultValue={editing?.name || ""} placeholder="e.g. Bonsai & Exotics" required />
+              <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+                <span>{t("category_name", "Category Name *")}</span>
+                <button
+                  type="button"
+                  className="button-subtle-pill"
+                  style={{ fontSize: "11px", padding: "2px 8px", cursor: "pointer" }}
+                  onClick={() => handleAutoFill(nameVal)}
+                >
+                  ✨ {language === "gu" ? "ઓટો-અનુવાદ ભરો" : language === "hi" ? "स्वतः अनुवाद भरें" : "Auto-Fill Names"}
+                </button>
+              </div>
+              <input
+                name="name"
+                value={nameVal}
+                onChange={(e) => {
+                  setNameVal(e.target.value);
+                  if (!nameGuVal && !nameHiVal && !nameEnVal) {
+                    const auto = getTranslationsForName(e.target.value);
+                    if (auto.gu) setNameGuVal(auto.gu);
+                    if (auto.hi) setNameHiVal(auto.hi);
+                    if (auto.en) setNameEnVal(auto.en);
+                  }
+                }}
+                onBlur={() => {
+                  if (nameVal && (!nameGuVal || !nameHiVal || !nameEnVal)) {
+                    handleAutoFill(nameVal);
+                  }
+                }}
+                placeholder="e.g. Bonsai & Exotics / બોન્સાઈ"
+                required
+              />
             </label>
             <label>
+              {t("category_name_gu", "Name in Gujarati (ગુજરાતી)")}
+              <input
+                name="name_gu"
+                value={nameGuVal}
+                onChange={(e) => setNameGuVal(e.target.value)}
+                placeholder="દા.ત. બોન્સાઈ અને વિદેશી છોડ"
+              />
+            </label>
+            <label>
+              {t("category_name_hi", "Name in Hindi (हिन्दी)")}
+              <input
+                name="name_hi"
+                value={nameHiVal}
+                onChange={(e) => setNameHiVal(e.target.value)}
+                placeholder="उदा. बोन्साई और विदेशी पौधे"
+              />
+            </label>
+            <label>
+              {t("category_name_en", "Name in English")}
+              <input
+                name="name_en"
+                value={nameEnVal}
+                onChange={(e) => setNameEnVal(e.target.value)}
+                placeholder="e.g. Bonsai & Exotics"
+              />
+            </label>
+            <label className="wide-field">
               {t("category_image", "Category Banner Image")}
               <input name="image" type="file" accept="image/jpeg,image/png,image/webp" />
             </label>
@@ -136,8 +226,8 @@ export default function AdminCategories() {
                 }}
               />
               <div>
-                <strong>{formatNameByLanguage(category.name, language)}</strong>
-                <span className="muted">{category.productCount ? `${category.productCount} plants` : "0 plants"}</span>
+                <strong>{formatNameByLanguage(category, language)}</strong>
+                <span className="muted">{category.productCount ? `${category.productCount} ${t("plants_count", "plants")}` : `0 ${t("plants_count", "plants")}`}</span>
               </div>
               <button
                 className="table-action"

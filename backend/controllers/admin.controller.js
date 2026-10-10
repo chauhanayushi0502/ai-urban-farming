@@ -50,16 +50,93 @@ export const updateOrderStatus = asyncHandler(async (req, res) => {
   res.json(order);
 });
 
+const BOTANICAL_DICTIONARY = {
+  "indoor plants": { gu: "ઇન્ડોર છોડ", hi: "इनडोर पौधे", en: "Indoor Plants" },
+  "indoor plant": { gu: "ઇન્ડોર છોડ", hi: "इनडोर पौधे", en: "Indoor Plants" },
+  "outdoor plants": { gu: "આઉટડોર છોડ", hi: "आउटडोर पौधे", en: "Outdoor Plants" },
+  "outdoor plant": { gu: "આઉટડોર છોડ", hi: "आउटडोर पौधे", en: "Outdoor Plants" },
+  "flowering plants": { gu: "ફૂલોના છોડ", hi: "फूलों वाले पौधे", en: "Flowering Plants" },
+  "flowering plant": { gu: "ફૂલોના છોડ", hi: "फूलों वाले पौधे", en: "Flowering Plants" },
+  "plant care": { gu: "છોડની સંભાળ અને રક્ષણ", hi: "पौधों की देखभाल और सुरक्षा", en: "Plant Care & Protection" },
+  "pots & planters": { gu: "કુંડાં અને પ્લાન્ટર્સ", hi: "गमले और प्लांटर्स", en: "Pots & Planters" },
+  "pots & planter": { gu: "કુંડાં અને પ્લાન્ટર્સ", hi: "गमले और प्लांटर्स", en: "Pots & Planters" },
+  "seeds & tools": { gu: "બીજ અને ઓજારો", hi: "बीज और उपकरण", en: "Seeds & Tools" },
+  "seeds & tool": { gu: "બીજ અને ઓજારો", hi: "बीज और उपकरण", en: "Seeds & Tools" },
+  "money plant": { gu: "મની પ્લાન્ટ", hi: "मनी प्लांट", en: "Money Plant" },
+  "snake plant": { gu: "સ્નેક પ્લાન્ટ", hi: "स्नेक प्लांट", en: "Snake Plant" },
+  "peace lily": { gu: "પીસ લીલી", hi: "पीस लिली", en: "Peace Lily" },
+  "zz plant": { gu: "ZZ પ્લાન્ટ", hi: "ZZ प्लांट", en: "ZZ Plant" },
+  "areca palm": { gu: "એરેકા પામ", hi: "एरेका पाम", en: "Areca Palm" },
+  "tulsi": { gu: "તુલસીનો છોડ", hi: "तुलसी का पौधा", en: "Tulsi (Holy Basil)" },
+  "rose": { gu: "ગુલાબનો છોડ", hi: "गुलाब का पौधा", en: "Rose Plant" },
+  "aloe": { gu: "એલોવેરા (કુંવારપાઠું)", hi: "एलोवेरा", en: "Aloe Vera" },
+  "mint": { gu: "ફુદીનો", hi: "पुदीना", en: "Mint Plant" },
+  "pudina": { gu: "ફુદીનો", hi: "पुदीना", en: "Mint Plant" },
+  "jasmine": { gu: "ચમેલી / મોગરો", hi: "चमेली / मोगरा", en: "Jasmine Plant" },
+  "mogra": { gu: "મોગરો", hi: "मोगरा", en: "Mogra Plant" },
+  "hibiscus": { gu: "જાસૂદ (ગુડહલ)", hi: "गुड़हल", en: "Hibiscus" },
+  "marigold": { gu: "ગલગોટો (હજારી ગલ)", hi: "गेंदा", en: "Marigold" },
+  "bougainvillea": { gu: "બોગનવેલ", hi: "बोगनवेलिया", en: "Bougainvillea" },
+  "jade": { gu: "જેડ પ્લાન્ટ", hi: "जेड प्लांट", en: "Jade Plant" },
+  "cactus": { gu: "થોર / કેક્ટસ", hi: "कैक्टस", en: "Cactus" },
+  "succulent": { gu: "સુક્યુલન્ટ છોડ", hi: "सक्यूलेंट पौधा", en: "Succulent" },
+  "rubber plant": { gu: "રબર પ્લાન્ટ", hi: "रबर का पौधा", en: "Rubber Plant" },
+  "curry leaf": { gu: "મીઠો લીમડો (કઢી પત્તા)", hi: "कढ़ी पत्ता", en: "Curry Leaf Plant" },
+  "curry leaves": { gu: "મીઠો લીમડો (કઢી પત્તા)", hi: "कढ़ी पत्ता", en: "Curry Leaf Plant" },
+  "tomato": { gu: "ટામેટાનો છોડ", hi: "टमाटर का पौधा", en: "Tomato Plant" },
+  "lemon": { gu: "લીંબુનો છોડ", hi: "नींबू का पौधा", en: "Lemon Plant" },
+  "mango": { gu: "આંબાનો કલમી છોડ", hi: "आम का कलमी पौधा", en: "Mango Plant" },
+  "neem oil": { gu: "શુદ્ધ લીમડાનું તેલ", hi: "शुद्ध नीम तेल", en: "Neem Oil Spray" },
+  "vermicompost": { gu: "ઓર્ગેનિક વર્મીકમ્પોસ્ટ", hi: "जैविक वर्मीकंपोस्ट", en: "Organic Vermicompost" },
+  "cocopeat": { gu: "કોકોપીટ બ્લોક", hi: "कोकोपीट ब्लॉक", en: "Cocopeat Block" },
+  "perlite": { gu: "પરલાઇટ સોઇલ કન્ડીશનર", hi: "परलाइट मिट्टी कंडीशनर", en: "Horticultural Perlite" },
+  "planter": { gu: "કુંડું / પ્લાન્ટર", hi: "गमला / प्लांटर", en: "Planter Pot" },
+  "pot": { gu: "કુંડું", hi: "गमला", en: "Pot / Planter" },
+  "shears": { gu: "ગાર્ડનિંગ કાતર", hi: "बागवानी कैंची", en: "Garden Shears" },
+};
+
+function resolveTranslations(rawName, gu, hi, en) {
+  const clean = String(rawName || "").trim();
+  let resolvedGu = String(gu || "").trim();
+  let resolvedHi = String(hi || "").trim();
+  let resolvedEn = String(en || "").trim();
+
+  const lower = clean.toLowerCase();
+  for (const [key, map] of Object.entries(BOTANICAL_DICTIONARY)) {
+    if (lower.includes(key) || key.includes(lower)) {
+      if (!resolvedGu) resolvedGu = map.gu;
+      if (!resolvedHi) resolvedHi = map.hi;
+      if (!resolvedEn) resolvedEn = map.en;
+      break;
+    }
+  }
+
+  // Fallbacks if still empty
+  if (!resolvedGu) resolvedGu = resolvedHi || resolvedEn || clean;
+  if (!resolvedHi) resolvedHi = resolvedGu || resolvedEn || clean;
+  if (!resolvedEn) resolvedEn = clean || resolvedGu || resolvedHi;
+
+  return {
+    name: clean || resolvedEn || resolvedGu || resolvedHi,
+    name_gu: resolvedGu,
+    name_hi: resolvedHi,
+    name_en: resolvedEn,
+  };
+}
+
 export const createCategory = asyncHandler(async (req, res) => {
-  const name = String(req.body.name || "").trim();
-  if (!name) return res.status(400).json({ message: "Category name is required." });
+  const rawName = String(req.body.name || req.body.name_en || req.body.name_gu || req.body.name_hi || "").trim();
+  if (!rawName) return res.status(400).json({ message: "Category name is required." });
+  const names = resolveTranslations(rawName, req.body.name_gu, req.body.name_hi, req.body.name_en);
   const image = formatCatalogImage(req.file) || "";
-  const category = await Category.create({ name, image });
+  const category = await Category.create({ ...names, image });
   res.status(201).json(category);
 });
 
 export const updateCategory = asyncHandler(async (req, res) => {
-  const update = { name: String(req.body.name || "").trim() };
+  const rawName = String(req.body.name || req.body.name_en || req.body.name_gu || req.body.name_hi || "").trim();
+  const names = resolveTranslations(rawName, req.body.name_gu, req.body.name_hi, req.body.name_en);
+  const update = { ...names };
   if (req.file) update.image = formatCatalogImage(req.file);
   const category = await Category.findByIdAndUpdate(req.params.id, update, { new: true, runValidators: true });
   if (!category) return res.status(404).json({ message: "Category not found." });
@@ -74,9 +151,20 @@ export const deleteCategory = asyncHandler(async (req, res) => {
 });
 
 export const createProduct = asyncHandler(async (req, res) => {
+  const rawName = String(req.body.name || req.body.name_en || req.body.name_gu || req.body.name_hi || "").trim();
+  if (!rawName) return res.status(400).json({ message: "Product name is required." });
+  const names = resolveTranslations(rawName, req.body.name_gu, req.body.name_hi, req.body.name_en);
+  const desc = String(req.body.description || "").trim();
+  const desc_gu = String(req.body.description_gu || "").trim() || desc;
+  const desc_hi = String(req.body.description_hi || "").trim() || desc;
+  const desc_en = String(req.body.description_en || "").trim() || desc;
+
   const product = await Product.create({
-    name: String(req.body.name || "").trim(),
-    description: req.body.description || "",
+    ...names,
+    description: desc,
+    description_gu: desc_gu,
+    description_hi: desc_hi,
+    description_en: desc_en,
     price: Number(req.body.price),
     stock: Number(req.body.stock),
     category: req.body.category,
@@ -86,9 +174,19 @@ export const createProduct = asyncHandler(async (req, res) => {
 });
 
 export const updateProduct = asyncHandler(async (req, res) => {
+  const rawName = String(req.body.name || req.body.name_en || req.body.name_gu || req.body.name_hi || "").trim();
+  const names = resolveTranslations(rawName, req.body.name_gu, req.body.name_hi, req.body.name_en);
+  const desc = String(req.body.description || "").trim();
+  const desc_gu = String(req.body.description_gu || "").trim() || desc;
+  const desc_hi = String(req.body.description_hi || "").trim() || desc;
+  const desc_en = String(req.body.description_en || "").trim() || desc;
+
   const update = {
-    name: String(req.body.name || "").trim(),
-    description: req.body.description || "",
+    ...names,
+    description: desc,
+    description_gu: desc_gu,
+    description_hi: desc_hi,
+    description_en: desc_en,
     price: Number(req.body.price),
     stock: Number(req.body.stock),
     category: req.body.category,

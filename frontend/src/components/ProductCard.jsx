@@ -31,10 +31,10 @@ export default function ProductCard({ product }) {
   const notify = useToast();
   const saved = user?.wishlist?.some((id) => String(id) === product._id);
 
-  const formattedCat = product.category?.name
-    ? formatNameByLanguage(product.category.name, language)
+  const formattedCat = product.category
+    ? formatNameByLanguage(product.category, language)
     : t("nursery_favorite", "Nursery favorite");
-  const formattedName = formatNameByLanguage(product.name, language);
+  const formattedName = formatNameByLanguage(product, language);
 
   async function addToCart() {
     if (!user) return notify(t("signed_in_cart_err", "Sign in to add items to your cart."), "error");

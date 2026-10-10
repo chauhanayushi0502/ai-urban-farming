@@ -6,7 +6,7 @@ import { useLanguage } from "../../i18n/LanguageContext.jsx";
 import { DataTable } from "../../components/Feedback.jsx";
 import { useLoad } from "../../hooks/useLoad.js";
 import { api } from "../../lib/api.js";
-import { imageSource, money, formatNameByLanguage } from "../../lib/format.js";
+import { imageSource, money, formatNameByLanguage, getTranslationsForName } from "../../lib/format.js";
 import { compressAndOptimizeImage } from "../../lib/image-optimizer.js";
 
 export default function AdminProducts() {
@@ -17,11 +17,28 @@ export default function AdminProducts() {
   const [showForm, setShowForm] = useState(false);
   const [busy, setBusy] = useState(false);
   const [previewUrl, setPreviewUrl] = useState(null);
+  const [nameVal, setNameVal] = useState("");
+  const [nameGuVal, setNameGuVal] = useState("");
+  const [nameHiVal, setNameHiVal] = useState("");
+  const [nameEnVal, setNameEnVal] = useState("");
   const formRef = useRef(null);
   const notify = useToast();
 
+  const handleAutoFill = (text) => {
+    const query = (text || nameVal || "").trim();
+    if (!query) return;
+    const res = getTranslationsForName(query);
+    if (res.gu) setNameGuVal(res.gu);
+    if (res.hi) setNameHiVal(res.hi);
+    if (res.en) setNameEnVal(res.en);
+  };
+
   const handleEditClick = (product) => {
     setEditing(product);
+    setNameVal(product.name || "");
+    setNameGuVal(product.name_gu || "");
+    setNameHiVal(product.name_hi || "");
+    setNameEnVal(product.name_en || "");
     setPreviewUrl(product.image ? imageSource(product.image) : null);
     setShowForm(true);
     window.scrollTo({ top: 0, behavior: "smooth" });
@@ -29,6 +46,10 @@ export default function AdminProducts() {
 
   const handleCancel = () => {
     setEditing(null);
+    setNameVal("");
+    setNameGuVal("");
+    setNameHiVal("");
+    setNameEnVal("");
     setPreviewUrl(null);
     setShowForm(false);
     if (formRef.current) formRef.current.reset();
@@ -47,6 +68,15 @@ export default function AdminProducts() {
 
     const form = new FormData(event.currentTarget);
     const id = editing?._id;
+
+    const auto = getTranslationsForName(nameVal);
+    const finalGu = (nameGuVal || "").trim() || auto.gu || nameVal.trim();
+    const finalHi = (nameHiVal || "").trim() || auto.hi || nameVal.trim();
+    const finalEn = (nameEnVal || "").trim() || auto.en || nameVal.trim();
+    form.set("name", nameVal.trim() || finalEn);
+    form.set("name_gu", finalGu);
+    form.set("name_hi", finalHi);
+    form.set("name_en", finalEn);
 
     // Validate category selection
     const categoryVal = form.get("category");
@@ -121,6 +151,10 @@ export default function AdminProducts() {
               handleCancel();
             } else {
               setEditing(null);
+              setNameVal("");
+              setNameGuVal("");
+              setNameHiVal("");
+              setNameEnVal("");
               setPreviewUrl(null);
               setShowForm(true);
             }
@@ -143,12 +177,66 @@ export default function AdminProducts() {
 
           <div className="admin-form-grid">
             <label>
-              {t("plant_name", "Plant / Item Name *")}
+              <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+                <span>{t("plant_name", "Plant / Item Name *")}</span>
+                <button
+                  type="button"
+                  className="button-subtle-pill"
+                  style={{ fontSize: "11px", padding: "2px 8px", cursor: "pointer" }}
+                  onClick={() => handleAutoFill(nameVal)}
+                >
+                  ✨ {language === "gu" ? "ઓટો-અનુવાદ ભરો" : language === "hi" ? "स्वतः अनुवाद भरें" : "Auto-Fill Names"}
+                </button>
+              </div>
               <input
                 name="name"
-                defaultValue={editing?.name || ""}
-                placeholder="e.g. Variegated Monstera Deliciosa"
+                value={nameVal}
+                onChange={(e) => {
+                  setNameVal(e.target.value);
+                  if (!nameGuVal && !nameHiVal && !nameEnVal) {
+                    const auto = getTranslationsForName(e.target.value);
+                    if (auto.gu) setNameGuVal(auto.gu);
+                    if (auto.hi) setNameHiVal(auto.hi);
+                    if (auto.en) setNameEnVal(auto.en);
+                  }
+                }}
+                onBlur={() => {
+                  if (nameVal && (!nameGuVal || !nameHiVal || !nameEnVal)) {
+                    handleAutoFill(nameVal);
+                  }
+                }}
+                placeholder="e.g. Variegated Monstera Deliciosa / તુલસી"
                 required
+              />
+            </label>
+
+            <label>
+              {t("plant_name_gu", "Name in Gujarati (ગુજરાતી)")}
+              <input
+                name="name_gu"
+                value={nameGuVal}
+                onChange={(e) => setNameGuVal(e.target.value)}
+                placeholder="દા.ત. મોન્સ્ટેરા / તુલસીનો છોડ"
+              />
+            </label>
+
+            <label>
+              {t("plant_name_hi", "Name in Hindi (हिन्दी)")}
+              <input
+                name="name_hi"
+                value={nameHiVal}
+                onChange={(e) => setNameHiVal(e.target.value)}
+                placeholder="उदा. मॉन्स्टेरा / तुलसी का पौधा"
+              />
+            </label>
+
+            <label>
+              {t("plant_name_en", "Name in English")}
+              <input
+                name="name_en"
+                value={nameEnVal}
+                onChange={(e) => setNameEnVal(e.target.value)}
+                placeholder="e.g. Monstera / Tulsi Plant"
               />
             </label>
 
@@ -188,7 +276,7 @@ export default function AdminProducts() {
                 ) : (
                   categories.map((category) => (
                     <option key={category._id} value={category._id}>
-                      {formatNameByLanguage(category.name, language)}
+                      {formatNameByLanguage(category, language)}
                     </option>
                   ))
                 )}
@@ -273,7 +361,7 @@ export default function AdminProducts() {
                     }}
                   />
                   <div>
-                    <strong>{formatNameByLanguage(product.name, language)}</strong>
+                    <strong>{formatNameByLanguage(product, language)}</strong>
                     {product.description && (
                       <small className="table-subline" style={{ maxWidth: "260px", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
                         {product.description}
@@ -283,7 +371,7 @@ export default function AdminProducts() {
                 </td>
                 <td>
                   <span className="badge-pill">
-                    {product.category?.name ? formatNameByLanguage(product.category.name, language) : "—"}
+                    {product.category ? formatNameByLanguage(product.category, language) : "—"}
                   </span>
                 </td>
                 <td>
@@ -291,7 +379,7 @@ export default function AdminProducts() {
                 </td>
                 <td>
                   <span className={product.stock <= 5 ? "stock-low" : ""}>
-                    {product.stock} {product.stock <= 5 && "⚠️ Low"}
+                    {product.stock} {product.stock <= 5 && `(${t("low_stock", "⚠️ Low")})`}
                   </span>
                 </td>
                 <td>

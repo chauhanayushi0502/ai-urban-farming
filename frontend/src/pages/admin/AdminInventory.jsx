@@ -74,11 +74,11 @@ function InventoryRow({ product, onUpdate, language, t }) {
   return (
     <tr>
       <td>
-        <strong>{formatNameByLanguage(product.name, language)}</strong>
+        <strong>{formatNameByLanguage(product, language)}</strong>
       </td>
       <td>
         <span className={product.stock <= 5 ? "stock-low" : ""}>
-          {product.stock} {product.stock <= 5 && "⚠️ Low Stock"}
+          {product.stock} {product.stock <= 5 && `(${t("low_stock", "⚠️ Low Stock")})`}
         </span>
       </td>
       <td>

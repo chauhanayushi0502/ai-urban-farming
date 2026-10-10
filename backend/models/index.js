@@ -36,6 +36,9 @@ const categorySchema = new Schema(
   {
     legacyId: { type: Number, unique: true, sparse: true },
     name: { type: String, required: true, trim: true, unique: true },
+    name_gu: { type: String, trim: true, default: "" },
+    name_hi: { type: String, trim: true, default: "" },
+    name_en: { type: String, trim: true, default: "" },
     image: { type: String, default: "" },
   },
   { timestamps: true },
@@ -45,7 +48,13 @@ const productSchema = new Schema(
   {
     legacyId: { type: Number, unique: true, sparse: true },
     name: { type: String, required: true, trim: true, maxlength: 160 },
+    name_gu: { type: String, trim: true, default: "" },
+    name_hi: { type: String, trim: true, default: "" },
+    name_en: { type: String, trim: true, default: "" },
     description: { type: String, default: "" },
+    description_gu: { type: String, default: "" },
+    description_hi: { type: String, default: "" },
+    description_en: { type: String, default: "" },
     price: { type: Number, required: true, min: 0 },
     image: { type: String, default: "" },
     stock: { type: Number, required: true, min: 0, default: 0 },

@@ -110,11 +110,11 @@ export default function ProductPage() {
       </Link>
       <div className="product-detail">
         <div className="detail-photo">
-          <img src={imageSource(product.image)} alt={formatNameByLanguage(product.name, language)} loading="lazy" decoding="async" />
+          <img src={imageSource(product.image)} alt={formatNameByLanguage(product, language)} loading="lazy" decoding="async" />
         </div>
         <section className="detail-copy">
-          <p className="eyebrow">{formatNameByLanguage(product.category?.name || "Green Leaf collection", language)}</p>
-          <h1>{formatNameByLanguage(product.name, language)}</h1>
+          <p className="eyebrow">{product.category ? formatNameByLanguage(product.category, language) : "Green Leaf collection"}</p>
+          <h1>{formatNameByLanguage(product, language)}</h1>
           <div className="rating-line">
             <span className="stars">
               <Star size={17} fill="currentColor" /> {product.averageRating || t("new_tag", "New")}
@@ -132,7 +132,7 @@ export default function ProductPage() {
               : t("stock_out", "Currently out of stock")}
           </p>
           <p className="detail-description">
-            {formatDescriptionByLanguage(product.description, language, product.name) ||
+            {formatDescriptionByLanguage(product, language) ||
               t("product_default_desc", "A thoughtful addition to your indoor garden. Give it a little care and room to grow.")}
           </p>
 

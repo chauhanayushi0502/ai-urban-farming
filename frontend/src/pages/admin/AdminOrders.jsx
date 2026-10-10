@@ -18,11 +18,11 @@ const nextStatuses = {
 };
 
 const statusLabels = {
-  pending: "પેન્ડિંગ (Pending)",
-  processing: "પ્રોસેસિંગ (Processing)",
-  shipped: "શિપ થઈ ગયું (Shipped)",
-  delivered: "ડિલિવર થઈ ગયું (Delivered)",
-  cancelled: "રદ કરેલ (Cancelled)",
+  pending: { gu: "પેન્ડિંગ (Pending)", hi: "लंबित (Pending)", en: "Pending" },
+  processing: { gu: "પ્રોસેસિંગ (Processing)", hi: "प्रसंस्करण (Processing)", en: "Processing" },
+  shipped: { gu: "શિપ થઈ ગયું (Shipped)", hi: "भेज दिया गया (Shipped)", en: "Shipped" },
+  delivered: { gu: "ડિલિવર થઈ ગયું (Delivered)", hi: "डिलीवर हो गया (Delivered)", en: "Delivered" },
+  cancelled: { gu: "રદ કરેલ (Cancelled)", hi: "रद्द (Cancelled)", en: "Cancelled" },
 };
 
 export default function AdminOrders() {
@@ -93,7 +93,7 @@ export default function AdminOrders() {
                   >
                     {[order.status, ...(nextStatuses[order.status] || [])].map((status) => (
                       <option key={status} value={status}>
-                        {language === "gu" && statusLabels[status] ? statusLabels[status] : status}
+                        {statusLabels[status]?.[language] || statusLabels[status]?.["en"] || status}
                       </option>
                     ))}
                   </select>

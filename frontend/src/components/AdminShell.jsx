@@ -1,9 +1,9 @@
-import { ArrowLeft, Mail, Package, Settings, ShoppingBag, Sprout, Tags, Tag, Truck } from "lucide-react";
+import { ArrowLeft, Mail, Package, Settings, ShoppingBag, Sprout, Tags, Tag, Truck, Globe } from "lucide-react";
 import { Link, NavLink } from "react-router-dom";
 import { useLanguage } from "../i18n/LanguageContext.jsx";
 
 export default function AdminShell({ children }) {
-  const { t } = useLanguage();
+  const { t, language, setLanguage, LANGUAGES } = useLanguage();
 
   const sections = [
     ["/admin", t("admin_overview", "Overview"), Package],
@@ -21,6 +21,29 @@ export default function AdminShell({ children }) {
       <aside className="admin-sidebar">
         <p className="eyebrow">{t("site_name", "Green Leaf")}</p>
         <h2>{t("admin_title", "Nursery Admin")}</h2>
+
+        {/* Dedicated Admin Language Switcher */}
+        <div className="admin-lang-box">
+          <div className="admin-lang-label">
+            <Globe size={13} />
+            <span>{language === "gu" ? "એડમિન ભાષા" : language === "hi" ? "एडमिन भाषा" : "Admin Language"}</span>
+          </div>
+          <div className="admin-lang-pills">
+            {LANGUAGES.map((l) => (
+              <button
+                key={l.code}
+                type="button"
+                className={`admin-lang-pill ${language === l.code ? "active" : ""}`}
+                onClick={() => setLanguage(l.code)}
+                title={l.label}
+              >
+                <span>{l.flag}</span>
+                <span>{l.label}</span>
+              </button>
+            ))}
+          </div>
+        </div>
+
         <nav>
           {sections.map(([path, title, Icon]) => (
             <NavLink end={path === "/admin"} to={path} key={path}>
