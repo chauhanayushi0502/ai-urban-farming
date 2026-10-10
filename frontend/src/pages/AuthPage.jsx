@@ -111,7 +111,7 @@ export default function AuthPage({ mode }) {
 
           <label>
             {t("email_address", "Email Address")}
-            <input name="email" type="email" autoComplete="email" required />
+            <input name="email" type={isRegister ? "email" : "text"} inputMode="email" autoComplete="email" required />
           </label>
 
           <label>
