@@ -499,10 +499,7 @@ export default function GardenPage({ initialTab }) {
 
       notify(`Identified as ${res.plant.originalName || res.plant.species || res.plant.name}! Step-by-step care guide ready.`, "success");
     } catch (err) {
-      setAiPhoto(null);
-      setAiPreview("");
       setAiPhotoError(err.message || "Failed to identify plant.");
-      alert(`⚠️ Image Error:\n\n${err.message || "The uploaded image is not a plant. Please upload a clear photo of a plant or leaf."}`);
       notify(err.message || "Failed to identify plant. Please check your image.", "error");
     } finally {
       setAiAddBusy(false);

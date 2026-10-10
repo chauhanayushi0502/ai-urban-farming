@@ -18,7 +18,7 @@ export async function callGeminiAI({ prompt, imageBuffer, imageMimeType, maxToke
   }
   if (!apiKey) return null;
 
-  const models = ["gemini-3.8-flash", "gemini-3.7-flash", "gemini-flash-latest"];
+  const models = ["gemini-flash-latest", "gemini-3.1-flash-lite", "gemini-flash-lite-latest", "gemini-3.8-flash"];
 
   // 1. Try standard generateContent endpoint
   for (const model of models) {
@@ -49,7 +49,7 @@ export async function callGeminiAI({ prompt, imageBuffer, imageMimeType, maxToke
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(bodyPayload),
-        signal: AbortSignal.timeout(20000),
+        signal: AbortSignal.timeout(12000),
       });
 
       if (res.ok) {
@@ -594,9 +594,10 @@ ${clientVisualScan?.isYellowing ? "CRITICAL BOTANICAL OBSERVATION: Foliage shows
 ${clientVisualScan?.isBrowning ? "CRITICAL BOTANICAL OBSERVATION: Foliage displays brown necrotic spots, scorched margins, or fungal lesions." : ""}
 
 CRITICAL FIRST STEP - VERIFY PLANT:
-Determine whether the image contains a plant, leaf, stem, flower, vegetable, herb, tree, succulent, houseplant, seedling, nursery pot, or dry botanical specimen.
-- If the image is completely NOT a plant (for example: human face, car, electronics, building, furniture, screenshot, receipt, invoice):
-  Respond with ONLY:
+Determine whether the image contains a plant, potted houseplant, leaf, stem, flower, vegetable, herb, tree, succulent, seedling, nursery pot, or an image/screenshot showing a plant.
+- Even if the image is taken from a phone screen, screenshot, or contains surrounding margins, if there is ANY potted plant or foliage shown, classify as "isPlant": true and identify the plant.
+- Only if the image has absolutely NO plant whatsoever (for example: pure human face, pure car, plain electronics without plant, blank paper):
+  Respond with:
   {
     "isPlant": false,
     "errorMessage": "The uploaded image is not a plant. Please upload a clear photo of a plant, leaf, or flower."
@@ -654,9 +655,13 @@ Respond with ONLY a valid, raw JSON object (NO markdown backticks, NO \`\`\`json
   }
 
   if (isNotPlantError) {
-    return res.status(400).json({
-      message: "The uploaded image is not a plant. Please upload a clear photo of a plant, leaf, or flower.",
-    });
+    // If client visual scan found plant tones or user chose species, do not reject: fallback to botanical dataset instead
+    const hasVisualOrUserSpecies = Boolean(req.body.species || (clientVisualScan?.detectedSpecies && clientVisualScan.detectedSpecies !== "Houseplant"));
+    if (!hasVisualOrUserSpecies) {
+      return res.status(400).json({
+        message: "The uploaded image does not appear to be a plant. Please upload a clear photo of your plant, leaf, or flower.",
+      });
+    }
   }
 
   // Fallback botanical dataset matching if API key exhausted or request timed out

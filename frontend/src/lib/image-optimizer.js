@@ -202,20 +202,11 @@ export async function checkIsLikelyPlantImage(file) {
         }
 
         const docRatio = grayscaleDocPixels / totalPixels;
-        const plantRatio = plantTonePixels / totalPixels;
-
-        // Scanned document / paper receipt detection: high grayscale/white and virtually no botanical colors
-        if (docRatio >= 0.55 && plantRatio < 0.05) {
+        // Scanned document / paper receipt detection: extremely high pure monochrome text and virtually zero plant/flower/pot tones
+        if (docRatio >= 0.85 && plantRatio < 0.01) {
           return resolve({
             isPlant: false,
-            reason: "The uploaded file is a text document, receipt, or non-plant image. Please upload a clear photo of a live plant, leaf, or flower.",
-          });
-        }
-
-        if (plantRatio < 0.02 && docRatio >= 0.35) {
-          return resolve({
-            isPlant: false,
-            reason: "No plant foliage, flowers, or leaves detected in this image. Please upload a clear photo of your plant.",
+            reason: "The uploaded file appears to be a pure text document or receipt. Please upload a clear photo of your plant, leaf, or flower.",
           });
         }
 
@@ -267,6 +258,7 @@ export async function analyzePlantFoliageHealth(file) {
         let greenFoliage = 0;
         let deepGreen = 0;
         let variegated = 0;
+        let pinkFoliage = 0;
         let yellowChlorosis = 0;
         let brownNecrosis = 0;
         let deadCrispyBrown = 0;
@@ -274,6 +266,7 @@ export async function analyzePlantFoliageHealth(file) {
 
         let topHalfFoliage = 0;
         let bottomHalfFoliage = 0;
+        const plantPixelsList = [];
 
         let minX = size, maxX = 0, minY = size, maxY = 0;
 
@@ -304,23 +297,31 @@ export async function analyzePlantFoliageHealth(file) {
             const isDeadBrown = (r >= 45 && r <= 180 && g >= 25 && g <= 130 && b >= 15 && b <= 95 && r >= g * 1.08 && g >= b * 0.95);
             if (isDeadBrown) deadCrispyBrown++;
 
-            // 5. Flower petals
-            const isFlower = (r >= 130 && g <= 90 && b <= 90) || (r >= 120 && b >= 90 && g <= 110) || (r >= 160 && g >= 100 && b <= 50);
-            if (isFlower) flowerPetals++;
+            // 5. Flower petals or pink/red foliar spots (e.g., Polka Dot Plant / Hypoestes)
+            const isPinkOrRedFoliage = (r >= 100 && r > g * 1.05 && b >= 60 && Math.abs(r - b) < 65) || (r >= 130 && g <= 100 && b <= 110);
+            if (isPinkOrRedFoliage) {
+              pinkFoliage++;
+              flowerPetals++;
+            }
 
-            const isPlantPixel = isGreen || isYellow || isBrownLesion || isDeadBrown || isFlower;
+            const isPlantPixel = isGreen || isYellow || isBrownLesion || isDeadBrown || isPinkOrRedFoliage;
             if (isPlantPixel) {
               if (x < minX) minX = x;
               if (x > maxX) maxX = x;
               if (y < minY) minY = y;
               if (y > maxY) maxY = y;
 
-              if (y < size * 0.45) {
-                topHalfFoliage++;
-              } else {
-                bottomHalfFoliage++;
-              }
+              plantPixelsList.push({ x, y });
             }
+          }
+        }
+
+        const plantCenterY = (minY + maxY) / 2;
+        for (const pt of plantPixelsList) {
+          if (pt.y < plantCenterY) {
+            topHalfFoliage++;
+          } else {
+            bottomHalfFoliage++;
           }
         }
 
@@ -334,6 +335,7 @@ export async function analyzePlantFoliageHealth(file) {
         const greenRatio = totalPlantPixels > 0 ? (greenFoliage / totalPlantPixels) : 0;
         const yellowRatio = totalPlantPixels > 0 ? (yellowChlorosis / totalPlantPixels) : 0;
         const flowerRatio = totalPlantPixels > 0 ? (flowerPetals / totalPlantPixels) : 0;
+        const pinkRatio = totalPlantPixels > 0 ? (pinkFoliage / totalPlantPixels) : 0;
         const droopRatio = bottomHalfFoliage / (topHalfFoliage + 1);
 
         // ==========================================
@@ -394,6 +396,8 @@ export async function analyzePlantFoliageHealth(file) {
 
         if (isDesiccated) {
           detectedSpecies = "Desiccated Nursery Plant";
+        } else if (pinkFoliage >= 10 || pinkRatio >= 0.08) {
+          detectedSpecies = "Polka Dot Plant (Hypoestes)";
         } else if (isSeverelyDrooping) {
           // Peace Lily / Spathiphyllum is famous for dramatical petiole collapse when dry
           detectedSpecies = "Peace Lily";
