@@ -315,6 +315,8 @@ export default function GardenSynergyWidget({ weather, plantCount = 0 }) {
   const allPlants = [...DEFAULT_COMPANION_MATRIX, ...customPlants];
 
   const [selectedPlantId, setSelectedPlantId] = useState("tomato");
+  const [matcherMode, setMatcherMode] = useState("dropdown"); // 'dropdown' | 'manual'
+  const [matcherManualInput, setMatcherManualInput] = useState("");
   const [balconyAreaSqFt, setBalconyAreaSqFt] = useState(40);
   const [useManualCount, setUseManualCount] = useState(false);
   const [manualPlantCount, setManualPlantCount] = useState(plantCount || 4);
@@ -663,52 +665,144 @@ export default function GardenSynergyWidget({ weather, plantCount = 0 }) {
             )}
           </div>
 
-          <label style={{ display: "block", fontSize: "13px", fontWeight: "600", marginBottom: "6px" }}>
-            {t("synergy_select_main")}
-          </label>
-          <div style={{ display: "flex", gap: "8px", marginBottom: "16px" }}>
-            <select
-              value={selectedPlantId}
-              onChange={(e) => setSelectedPlantId(e.target.value)}
-              style={{
-                flex: 1,
-                padding: "10px 12px",
-                borderRadius: "6px",
-                border: "1px solid var(--line)",
-                fontSize: "14px",
-                background: "white"
-              }}
-            >
-              <optgroup label={t("synergy_std_crops")}>
-                {DEFAULT_COMPANION_MATRIX.map((p) => (
-                  <option key={p.id} value={p.id}>
-                    {formatNameByLanguage(p.name, language)} ({p.species})
-                  </option>
-                ))}
-              </optgroup>
-              {customPlants.length > 0 && (
-                <optgroup label={t("synergy_ai_crops")}>
-                  {customPlants.map((p) => (
+          {/* Mode Switch: Select from list vs Type manually */}
+          <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "8px" }}>
+            <label style={{ fontSize: "13px", fontWeight: "600", margin: 0 }}>
+              {t("synergy_select_main")}
+            </label>
+            <div style={{ display: "flex", gap: "4px", background: "#e2e8f0", padding: "2px", borderRadius: "6px" }}>
+              <button
+                type="button"
+                onClick={() => setMatcherMode("dropdown")}
+                style={{
+                  border: "none",
+                  background: matcherMode === "dropdown" ? "white" : "transparent",
+                  padding: "3px 8px",
+                  fontSize: "11px",
+                  fontWeight: matcherMode === "dropdown" ? "700" : "500",
+                  borderRadius: "4px",
+                  cursor: "pointer",
+                  color: matcherMode === "dropdown" ? "var(--green-deep)" : "#64748b",
+                  boxShadow: matcherMode === "dropdown" ? "0 1px 3px rgba(0,0,0,0.1)" : "none",
+                }}
+              >
+                {t("synergy_sel_list")}
+              </button>
+              <button
+                type="button"
+                onClick={() => setMatcherMode("manual")}
+                style={{
+                  border: "none",
+                  background: matcherMode === "manual" ? "white" : "transparent",
+                  padding: "3px 8px",
+                  fontSize: "11px",
+                  fontWeight: matcherMode === "manual" ? "700" : "500",
+                  borderRadius: "4px",
+                  cursor: "pointer",
+                  color: matcherMode === "manual" ? "var(--green-deep)" : "#64748b",
+                  boxShadow: matcherMode === "manual" ? "0 1px 3px rgba(0,0,0,0.1)" : "none",
+                }}
+              >
+                {t("synergy_type_manual")}
+              </button>
+            </div>
+          </div>
+
+          {matcherMode === "dropdown" ? (
+            <div style={{ display: "flex", gap: "8px", marginBottom: "16px" }}>
+              <select
+                value={selectedPlantId}
+                onChange={(e) => setSelectedPlantId(e.target.value)}
+                style={{
+                  flex: 1,
+                  padding: "10px 12px",
+                  borderRadius: "6px",
+                  border: "1px solid var(--line)",
+                  fontSize: "14px",
+                  background: "white"
+                }}
+              >
+                <optgroup label={t("synergy_std_crops")}>
+                  {DEFAULT_COMPANION_MATRIX.map((p) => (
                     <option key={p.id} value={p.id}>
                       {formatNameByLanguage(p.name, language)} ({p.species})
                     </option>
                   ))}
                 </optgroup>
-              )}
-            </select>
+                {customPlants.length > 0 && (
+                  <optgroup label={t("synergy_ai_crops")}>
+                    {customPlants.map((p) => (
+                      <option key={p.id} value={p.id}>
+                        {formatNameByLanguage(p.name, language)} ({p.species})
+                      </option>
+                    ))}
+                  </optgroup>
+                )}
+              </select>
 
-            {currentPlant.isCustom && (
-              <button
-                type="button"
-                className="button button-outline button-small"
-                onClick={() => handleDeleteCustomPlant(currentPlant.id, currentPlant.name)}
-                title="Delete this custom plant"
-                style={{ color: "var(--rust)", borderColor: "var(--rust)" }}
+              {currentPlant.isCustom && (
+                <button
+                  type="button"
+                  className="button button-outline button-small"
+                  onClick={() => handleDeleteCustomPlant(currentPlant.id, currentPlant.name)}
+                  title="Delete this custom plant"
+                  style={{ color: "var(--rust)", borderColor: "var(--rust)" }}
+                >
+                  <Trash2 size={15} />
+                </button>
+              )}
+            </div>
+          ) : (
+            <div style={{ marginBottom: "16px" }}>
+              <form
+                onSubmit={(e) => {
+                  e.preventDefault();
+                  if (matcherManualInput.trim()) {
+                    setSinglePlantName(matcherManualInput.trim());
+                    handleGenerateSinglePlant(e);
+                  }
+                }}
+                style={{ display: "flex", gap: "8px" }}
               >
-                <Trash2 size={15} />
-              </button>
-            )}
-          </div>
+                <input
+                  type="text"
+                  list="tester-plants-list"
+                  placeholder={language === "gu" ? "છોડનું નામ લખો (દા.ત. Bonsai, Chili, Rose)..." : language === "hi" ? "पौधे का नाम टाइप करें (उदा. Bonsai, Chili, Rose)..." : "Type plant name (e.g. Bonsai, Chili, Rose)..."}
+                  value={matcherManualInput}
+                  onChange={(e) => {
+                    const val = e.target.value;
+                    setMatcherManualInput(val);
+                    // If user selects an existing plant from datalist/autocomplete, switch selectedPlantId
+                    const found = allPlants.find((p) => p.name.toLowerCase() === val.trim().toLowerCase());
+                    if (found) {
+                      setSelectedPlantId(found.id);
+                    }
+                  }}
+                  style={{
+                    flex: 1,
+                    padding: "9px 12px",
+                    borderRadius: "6px",
+                    border: "1px solid var(--line)",
+                    fontSize: "14px",
+                    background: "white"
+                  }}
+                />
+                <button
+                  type="submit"
+                  className="button button-small"
+                  disabled={generatingAi || !matcherManualInput.trim()}
+                  style={{ whiteSpace: "nowrap" }}
+                >
+                  {generatingAi ? "..." : (language === "gu" ? "મેચ કરો ✨" : language === "hi" ? "मैच करें ✨" : "Match ✨")}
+                </button>
+              </form>
+              {matcherManualInput.trim() && autoCorrectPlantName(matcherManualInput).wasAutoCorrected && (
+                <span style={{ fontSize: "11px", color: "var(--green-deep)", fontWeight: "600", marginTop: "4px", display: "inline-block" }}>
+                  ✨ {language === "gu" ? "ઓટો-કરેક્ટ થશે:" : language === "hi" ? "ऑटो-करेक्ट होगा:" : "Auto-corrects to:"} <strong>{formatNameByLanguage(autoCorrectPlantName(matcherManualInput).corrected, language)}</strong>
+                </span>
+              )}
+            </div>
+          )}
 
           {/* Synergy Card with Plant Image */}
           <div style={{ background: "white", padding: "16px", borderRadius: "8px", border: "1px solid var(--line)" }}>
