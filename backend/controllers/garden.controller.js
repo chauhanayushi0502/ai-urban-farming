@@ -588,7 +588,6 @@ export const identifyAndAddPlant = asyncHandler(async (req, res) => {
   const prompt = `You are an expert botanical AI assistant and certified plant pathologist. Analyze the uploaded plant image with utmost accuracy.
 Growing Location: "${location}".
 ${req.body.species ? `User Declared Plant Species: "${req.body.species}".` : ""}
-${clientVisualScan?.detectedSpecies && clientVisualScan.detectedSpecies !== "Houseplant" ? `Visual Detector Species Hint: "${clientVisualScan.detectedSpecies}".` : ""}
 ${clientVisualScan?.isDesiccated ? "Visual Note: Check if foliage is dried, withered, or brown." : ""}
 
 CRITICAL FIRST STEP - VERIFY PLANT:

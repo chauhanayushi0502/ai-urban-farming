@@ -169,9 +169,6 @@ export default function GardenPage({ initialTab }) {
       .then((scan) => {
         if (isCurrent && scan) {
           setAiScanPreview(scan);
-          if (scan.detectedSpecies && !userSpeciesChoice && scan.detectedSpecies !== "Houseplant" && scan.detectedSpecies !== "Urban Houseplant" && scan.detectedSpecies !== "Desiccated Nursery Plant") {
-            setUserSpeciesChoice(scan.detectedSpecies);
-          }
         }
       })
       .catch(() => {});
@@ -1812,8 +1809,7 @@ export default function GardenPage({ initialTab }) {
                         </span>
                       </div>
                       <div style={{ color: "#475569", lineHeight: "1.4" }}>
-                        <strong>Detected:</strong> {aiScanPreview.detectedSpecies || "Plant"} ·{" "}
-                        <em>{aiScanPreview.healthDiagnosis}</em>
+                        <em>{aiScanPreview.healthDiagnosis}</em> · <span>Species will be verified by Gemini AI below</span>
                       </div>
                     </div>
                   )}
