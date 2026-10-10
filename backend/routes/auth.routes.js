@@ -2,7 +2,7 @@ import { Router } from "express";
 import rateLimit from "express-rate-limit";
 import {
 	currentUser, login, logout, register, requestPasswordReset, resendVerification,
-	resetPassword, updateProfile, verifyEmail,
+	resetPassword, updateProfile, updateLanguage, verifyEmail,
 } from "../controllers/auth.controller.js";
 import { authenticate, optionalAuthenticate } from "../auth/auth.middleware.js";
 
@@ -17,5 +17,6 @@ router.post("/reset-password", resetPassword);
 router.post("/logout", logout);
 router.get("/me", optionalAuthenticate, currentUser);
 router.patch("/profile", authenticate, updateProfile);
+router.patch("/language", authenticate, updateLanguage);
 
 export default router;

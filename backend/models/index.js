@@ -18,6 +18,7 @@ const userSchema = new Schema(
     phone: { type: String, trim: true, default: "" },
     address: { type: String, trim: true, default: "" },
     wishlist: [{ type: Schema.Types.ObjectId, ref: "Product" }],
+    language: { type: String, enum: ["gu", "en", "hi"], default: "gu" },
   },
   { timestamps: true },
 );

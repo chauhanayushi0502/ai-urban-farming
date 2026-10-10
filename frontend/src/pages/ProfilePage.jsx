@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { ArrowRight, Heart, MapPin, Package, Pencil, Phone, Sprout, UserRound } from "lucide-react";
+import { ArrowRight, Globe, Heart, MapPin, Package, Pencil, Phone, Sprout, UserRound } from "lucide-react";
 import { Link } from "react-router-dom";
 import { useApp, useToast } from "../context/AppContext.jsx";
 import { useLanguage } from "../i18n/LanguageContext.jsx";
@@ -7,10 +7,10 @@ import { api } from "../lib/api.js";
 
 export default function ProfilePage() {
   const { user, refreshUser, notify } = useApp();
-  const { t } = useLanguage();
+  const { t, language, setLanguage, LANGUAGES } = useLanguage();
   const [editing, setEditing] = useState(false);
   const [busy, setBusy] = useState(false);
-  const [form, setForm] = useState({ fullName: user.fullName, phone: user.phone || "", address: user.address || "" });
+  const [form, setForm] = useState({ fullName: user.fullName, phone: user.phone || "", address: user.address || "", language: user.language || language });
 
   async function save(event) {
     event.preventDefault();
@@ -64,6 +64,23 @@ export default function ProfilePage() {
                 {t("street_address", "Address")}
                 <textarea rows="3" value={form.address} onChange={(event) => setForm({ ...form, address: event.target.value })} />
               </label>
+              <label>
+                {t("preferred_language", "Preferred Language")}
+                <select
+                  value={form.language || language}
+                  onChange={(event) => {
+                    const chosen = event.target.value;
+                    setForm({ ...form, language: chosen });
+                    setLanguage(chosen);
+                  }}
+                >
+                  {LANGUAGES.map((lang) => (
+                    <option key={lang.code} value={lang.code}>
+                      {lang.flag} {lang.label}
+                    </option>
+                  ))}
+                </select>
+              </label>
               <button className="button" disabled={busy}>
                 {t("save_changes", "Save changes")}
               </button>
@@ -76,6 +93,7 @@ export default function ProfilePage() {
               <div className="profile-details">
                 <p><Phone size={16} />{user.phone || t("no_phone_added", "No phone number added")}</p>
                 <p><MapPin size={16} />{user.address || t("no_address_added", "No address added")}</p>
+                <p><Globe size={16} />{t("preferred_language", "Preferred Language")}: <strong>{LANGUAGES.find((l) => l.code === (user.language || language))?.label || "ગુજરાતી"}</strong></p>
                 <p><UserRound size={16} />{user.role === "admin" ? t("administrator", "Administrator") : t("customer_account", "Customer Account")}</p>
               </div>
 

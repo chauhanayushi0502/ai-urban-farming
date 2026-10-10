@@ -23,6 +23,7 @@ export const register = asyncHandler(async (req, res) => {
     password,
     phone: req.body.phone || "",
     address: req.body.address || "",
+    language: ["gu", "en", "hi"].includes(req.body.language) ? req.body.language : "gu",
     emailVerifiedAt: verifyEmail ? null : new Date(),
   });
   if (verifyEmail) {
@@ -135,12 +136,30 @@ export const currentUser = asyncHandler(async (req, res) => {
 });
 
 export const updateProfile = asyncHandler(async (req, res) => {
-  const fullName = String(req.body.fullName || "").trim();
-  if (!fullName) return res.status(400).json({ message: "Full name is required." });
-  const user = await User.findByIdAndUpdate(req.auth.id, {
-    fullName,
-    phone: String(req.body.phone || "").trim(),
-    address: String(req.body.address || "").trim(),
-  }, { new: true, runValidators: true });
+  const updates = {};
+  if (req.body.fullName !== undefined) {
+    const fullName = String(req.body.fullName || "").trim();
+    if (!fullName) return res.status(400).json({ message: "Full name is required." });
+    updates.fullName = fullName;
+  }
+  if (req.body.phone !== undefined) updates.phone = String(req.body.phone || "").trim();
+  if (req.body.address !== undefined) updates.address = String(req.body.address || "").trim();
+  if (req.body.language !== undefined) {
+    const lang = String(req.body.language).trim();
+    if (["gu", "en", "hi"].includes(lang)) {
+      updates.language = lang;
+    }
+  }
+
+  const user = await User.findByIdAndUpdate(req.auth.id, updates, { new: true, runValidators: true });
+  res.json({ user: userPayload(user) });
+});
+
+export const updateLanguage = asyncHandler(async (req, res) => {
+  const lang = String(req.body.language || "").trim();
+  if (!["gu", "en", "hi"].includes(lang)) {
+    return res.status(400).json({ message: "Invalid language. Allowed: gu, en, hi." });
+  }
+  const user = await User.findByIdAndUpdate(req.auth.id, { language: lang }, { new: true });
   res.json({ user: userPayload(user) });
 });

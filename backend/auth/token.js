@@ -15,5 +15,14 @@ export function clearAuthCookie(res) {
 }
 
 export function userPayload(user) {
-  return { id: user._id, fullName: user.fullName, email: user.email, role: user.role, phone: user.phone, address: user.address, wishlist: user.wishlist };
+  return {
+    id: user._id,
+    fullName: user.fullName,
+    email: user.email,
+    role: user.role,
+    phone: user.phone,
+    address: user.address,
+    wishlist: user.wishlist,
+    language: user.language || "gu",
+  };
 }

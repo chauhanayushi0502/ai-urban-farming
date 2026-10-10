@@ -1,5 +1,7 @@
 import React, { createContext, useContext, useState, useEffect } from "react";
 import { translations } from "./translations.js";
+import { useApp } from "../context/AppContext.jsx";
+import { api } from "../lib/api.js";
 
 export const LANGUAGES = [
   { code: "gu", label: "ગુજરાતી", flag: "🌿", fontClass: "font-gu" },
@@ -10,9 +12,37 @@ export const LANGUAGES = [
 const LanguageContext = createContext();
 
 export function LanguageProvider({ children }) {
+  const { user } = useApp() || {};
+
   const [language, setLanguageState] = useState(() => {
-    return localStorage.getItem("app_language") || "gu";
+    const saved = localStorage.getItem("app_language");
+    if (saved && (saved === "gu" || saved === "en" || saved === "hi")) {
+      return saved;
+    }
+    if (typeof navigator !== "undefined") {
+      const navLangs = navigator.languages || [navigator.language];
+      for (const l of navLangs) {
+        if (!l) continue;
+        const clean = l.toLowerCase();
+        if (clean.startsWith("gu")) return "gu";
+        if (clean.startsWith("hi")) return "hi";
+        if (clean.startsWith("en")) return "en";
+      }
+    }
+    return "gu";
   });
+
+  // Automatically adapt language when user logs in with saved preferred language
+  useEffect(() => {
+    if (user?.language && (user.language === "gu" || user.language === "en" || user.language === "hi")) {
+      if (user.language !== language) {
+        setLanguageState(user.language);
+        localStorage.setItem("app_language", user.language);
+        document.documentElement.setAttribute("lang", user.language);
+        document.documentElement.setAttribute("data-lang", user.language);
+      }
+    }
+  }, [user?.language]);
 
   const setLanguage = (code) => {
     if (translations[code]) {
@@ -20,6 +50,13 @@ export function LanguageProvider({ children }) {
       localStorage.setItem("app_language", code);
       document.documentElement.setAttribute("lang", code);
       document.documentElement.setAttribute("data-lang", code);
+
+      // Persist to user profile in database if logged in
+      if (user?.id) {
+        api("/auth/language", { method: "PATCH", body: { language: code } }).catch((err) => {
+          console.warn("Could not save preferred language to profile:", err);
+        });
+      }
     }
   };
 

@@ -72,6 +72,24 @@ export default function AIAssistantChatbot() {
     }
   }, [messages, isOpen]);
 
+  useEffect(() => {
+    setMessages((prev) => {
+      if (prev.length === 1 && prev[0].sender === "bot") {
+        return [
+          {
+            sender: "bot",
+            text: t(
+              "bot_greeting",
+              "Hello! 🌱 I'm **GreenBot**, your AI Botanical & Urban Gardening Assistant. Ask me anything about plant care, pest diagnosis, potting soil, or nursery recommendations!"
+            ),
+            time: prev[0].time,
+          },
+        ];
+      }
+      return prev;
+    });
+  }, [language]);
+
   const handleFileChange = (e) => {
     const f = e.target.files?.[0];
     if (f) {
