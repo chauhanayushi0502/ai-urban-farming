@@ -32,10 +32,11 @@ export default function AdminCategories() {
 
   const handleEditClick = (category) => {
     setEditing(category);
+    const auto = getTranslationsForName(category.name || category.name_en || "");
     setNameVal(category.name || "");
-    setNameGuVal(category.name_gu || "");
-    setNameHiVal(category.name_hi || "");
-    setNameEnVal(category.name_en || "");
+    setNameGuVal(category.name_gu || auto.gu || "");
+    setNameHiVal(category.name_hi || auto.hi || "");
+    setNameEnVal(category.name_en || auto.en || "");
     setShowForm(true);
     window.scrollTo({ top: 0, behavior: "smooth" });
   };

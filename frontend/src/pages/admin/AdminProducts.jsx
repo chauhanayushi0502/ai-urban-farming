@@ -6,7 +6,7 @@ import { useLanguage } from "../../i18n/LanguageContext.jsx";
 import { DataTable } from "../../components/Feedback.jsx";
 import { useLoad } from "../../hooks/useLoad.js";
 import { api } from "../../lib/api.js";
-import { imageSource, money, formatNameByLanguage, getTranslationsForName } from "../../lib/format.js";
+import { imageSource, money, formatNameByLanguage, formatDescriptionByLanguage, getTranslationsForName } from "../../lib/format.js";
 import { compressAndOptimizeImage } from "../../lib/image-optimizer.js";
 
 export default function AdminProducts() {
@@ -35,10 +35,11 @@ export default function AdminProducts() {
 
   const handleEditClick = (product) => {
     setEditing(product);
+    const auto = getTranslationsForName(product.name || product.name_en || "");
     setNameVal(product.name || "");
-    setNameGuVal(product.name_gu || "");
-    setNameHiVal(product.name_hi || "");
-    setNameEnVal(product.name_en || "");
+    setNameGuVal(product.name_gu || auto.gu || "");
+    setNameHiVal(product.name_hi || auto.hi || "");
+    setNameEnVal(product.name_en || auto.en || "");
     setPreviewUrl(product.image ? imageSource(product.image) : null);
     setShowForm(true);
     window.scrollTo({ top: 0, behavior: "smooth" });
@@ -364,7 +365,7 @@ export default function AdminProducts() {
                     <strong>{formatNameByLanguage(product, language)}</strong>
                     {product.description && (
                       <small className="table-subline" style={{ maxWidth: "260px", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
-                        {product.description}
+                        {formatDescriptionByLanguage(product, language)}
                       </small>
                     )}
                   </div>

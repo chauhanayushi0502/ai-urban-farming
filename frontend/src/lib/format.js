@@ -138,6 +138,61 @@ export const NAME_DICTIONARY = {
   "planter": { gu: "કુંડું / પ્લાન્ટર", hi: "गमला / प्लांटर", en: "Planter Pot" },
   "seeds": { gu: "ઓર્ગેનિક દેશી બીજ", hi: "जैविक देशी बीज", en: "Organic Heirloom Seeds" },
   "seed": { gu: "ઓર્ગેનિક બીજ", hi: "जैविक बीज", en: "Organic Seeds" },
+
+  // User nursery items from admin panel
+  "glazed pots": { gu: "ગ્લેઝ્ડ કુંડાં (Glazed Pots)", hi: "ग्लेज़्ड गमले (Glazed Pots)", en: "Glazed Pots" },
+  "glazed pot": { gu: "ગ્લેઝ્ડ કુંડું", hi: "ग्लेज़्ड गमला", en: "Glazed Pot" },
+  "glazed": { gu: "ગ્લેઝ્ડ કુંડું", hi: "ग्लेज़्ड गमला", en: "Glazed Pot" },
+  "erodium": { gu: "ઇરોડિયમ ફૂલોનો છોડ (Erodium)", hi: "इरोडियम का फूल वाला पौधा (Erodium)", en: "Erodium Flowering Plant" },
+  "plumeria": { gu: "પ્લુમેરિયા / ચંપો (Plumeria)", hi: "प्लुमेरिया / चंपा का पौधा (Plumeria)", en: "Plumeria (Champa Flower)" },
+  "agribloom": { gu: "એગ્રીબ્લૂમ ગાર્ડનિંગ કેર (AgriBloom)", hi: "एग्रीब्लूम गार्डनिंग केयर (AgriBloom)", en: "AgriBloom Plant Care" },
+  "gardening tools": { gu: "બગીચાના ઓજારો (Gardening Tools)", hi: "बागवानी उपकरण (Gardening Tools)", en: "Gardening Tools Set" },
+  "gardening tool": { gu: "બગીચાનું ઓજાર", hi: "बागवानी उपकरण", en: "Gardening Tool" },
+  "jashmin": { gu: "ચમેલી / મોગરો (Jasmine)", hi: "चमेली / मोगरा (Jasmine)", en: "Jasmine Plant (Mogra)" },
+  "potting mix": { gu: "ઓર્ગેનિક પોટિંગ સોઇલ મિક્સ", hi: "ऑर्गेनिक पॉटिंग सॉइल मिक्स", en: "Organic Potting Soil Mix" },
+  "potting soil": { gu: "ઓર્ગેનિક પોટિંગ સોઇલ મિક્સ", hi: "ऑर्गेनिक पॉटिंग सॉइल मिक्स", en: "Organic Potting Soil Mix" },
+  "sunflower": { gu: "સૂર્યમુખીનો છોડ (Sunflower)", hi: "सूरजमुखी का पौधा (Sunflower)", en: "Sunflower Plant" },
+  "sun flower": { gu: "સૂર્યમુખીનો છોડ (Sunflower)", hi: "सूरजमुखी का पौधा (Sunflower)", en: "Sunflower Plant" },
+
+  // Devanagari Hindi direct matches
+  "गुलाब का पौधा": { gu: "ગુલાબનો છોડ", hi: "गुलाब का पौधा", en: "Rose Plant" },
+  "गुलाब": { gu: "ગુલાબનો છોડ", hi: "गुलाब का पौधा", en: "Rose Plant" },
+  "धनिया": { gu: "કોથમીર / ધાણાના બીજ (Coriander)", hi: "धनिया के बीज (Coriander)", en: "Coriander Seeds" },
+  "टमाटर": { gu: "ટામેટાંના દેશી બીજ / છોડ (Tomato)", hi: "टमाटर के बीज / पौधा (Tomato)", en: "Tomato Seeds & Plant" },
+  "सूरजमुखी": { gu: "સૂર્યમુખીનો છોડ (Sunflower)", hi: "सूरजमुखी का पौधा (Sunflower)", en: "Sunflower Plant" },
+  "चंपा": { gu: "ચંપો (પ્લુમેરિયા)", hi: "चंपा / प्लुमेरिया का पौधा", en: "Plumeria (Champa)" },
+  "चमेली": { gu: "ચમેલી / મોગરો (Jasmine)", hi: "चमेली / मोगरा (Jasmine)", en: "Jasmine (Chameli)" },
+  "मोगरा": { gu: "મોગરો (Mogra)", hi: "मोगरा का पौधा", en: "Mogra Plant (Arabian Jasmine)" },
+  "तुलसी": { gu: "તુલસીનો છોડ", hi: "तुलसी का पौधा", en: "Tulsi (Holy Basil)" },
+  "एलोवेरा": { gu: "એલોવેરા (કુંવારપાઠું)", hi: "एलोवेरा (घृतकुमारी)", en: "Aloe Vera Plant" },
+  "पुदीना": { gu: "ફુદીનો (Pudina)", hi: "पुदीना का पौधा", en: "Mint Plant (Pudina)" },
+  "बागवानी उपकरण": { gu: "બગીચાના ઓજારો", hi: "बागवानी उपकरण", en: "Gardening Tools" },
+  "गमले": { gu: "કુંડાં અને પ્લાન્ટર્સ", hi: "गमले और प्लांटर्स", en: "Pots & Planters" },
+  "गमला": { gu: "કુંડું / પ્લાન્ટર", hi: "गमला / प्लांटर", en: "Planter Pot" },
+  "खाद": { gu: "ઓર્ગેનિક જૈવિક ખાતર", hi: "जैविक खाद", en: "Organic Fertilizer" },
+  "बीज": { gu: "ઓર્ગેનિક બીજ પેક", hi: "जैविक बीज", en: "Organic Seeds" },
+  "इरोडियम": { gu: "ઇરોડિયમ ફૂલોનો છોડ (Erodium)", hi: "इरोडियम का फूल वाला पौधा (Erodium)", en: "Erodium Flowering Plant" },
+  "प्लुमेरिया": { gu: "પ્લુમેરિયા (ચંપો)", hi: "प्लुमेरिया (चंपा)", en: "Plumeria (Champa)" },
+  "एग्रीब्लूम": { gu: "એગ્રીબ્લૂમ ગાર્ડનિંગ કેર", hi: "एग्रीब्लूम गार्डनिंग केयर", en: "AgriBloom Plant Care" },
+  "पॉटिंग सॉइल": { gu: "પોટિંગ સોઇલ મિક્સ", hi: "पॉटिंग सॉइल मिक्स", en: "Potting Soil Mix" },
+
+  // Gujarati direct matches
+  "ગુલાબનો છોડ": { gu: "ગુલાબનો છોડ", hi: "गुलाब का पौधा", en: "Rose Plant" },
+  "ગુલાબ": { gu: "ગુલાબનો છોડ", hi: "गुलाब का पौधा", en: "Rose Plant" },
+  "કોથમીર": { gu: "કોથમીર / ધાણાના બીજ (Coriander)", hi: "धनिया के बीज (Coriander)", en: "Coriander Seeds" },
+  "ધાણા": { gu: "કોથમીર / ધાણાના બીજ (Coriander)", hi: "धनिया के बीज (Coriander)", en: "Coriander Seeds" },
+  "ટામેટાં": { gu: "ટામેટાંના બીજ / છોડ (Tomato)", hi: "टमाटर के बीज / पौधा (Tomato)", en: "Tomato Seeds & Plant" },
+  "ટામેટા": { gu: "ટામેટાંના બીજ / છોડ (Tomato)", hi: "टमाटर के बीज / पौधा (Tomato)", en: "Tomato Seeds & Plant" },
+  "સૂર્યમુખી": { gu: "સૂર્યમુખીનો છોડ (Sunflower)", hi: "सूरजमुखी का पौधा (Sunflower)", en: "Sunflower Plant" },
+  "ચંપો": { gu: "ચંપો (પ્લુમેરિયા)", hi: "चंपा / प्लुमेरिया का पौधा", en: "Plumeria (Champa)" },
+  "મોગરો": { gu: "મોગરો (Mogra)", hi: "मोगरा का पौधा", en: "Mogra Plant (Arabian Jasmine)" },
+  "તુલસીનો છોડ": { gu: "તુલસીનો છોડ", hi: "तुलसी का पौधा", en: "Tulsi (Holy Basil)" },
+  "કુંડાં": { gu: "કુંડાં અને પ્લાન્ટર્સ", hi: "गमले और प्लांटर्स", en: "Pots & Planters" },
+  "કુંડું": { gu: "કુંડું / પ્લાન્ટર", hi: "गमला / प्लांटर", en: "Planter Pot" },
+  "ઓજારો": { gu: "બગીચાના ઓજારો", hi: "बागवानी उपकरण", en: "Gardening Tools" },
+  "ઇરોડિયમ": { gu: "ઇરોડિયમ ફૂલોનો છોડ", hi: "इरोडियम का फूल वाला पौधा", en: "Erodium Flowering Plant" },
+  "એગ્રીબ્લૂમ": { gu: "એગ્રીબ્લૂમ ગાર્ડનિંગ કેર", hi: "एग्रीब्लूम गार्डनिंग केयर", en: "AgriBloom Plant Care" },
+  "પોટિંગ સોઇલ": { gu: "પોટિંગ સોઇલ મિક્સ", hi: "पॉटिंग सॉइल मिक्स", en: "Potting Soil Mix" },
 };
 
 // Descriptions dictionary
@@ -242,37 +297,144 @@ export const DESCRIPTION_DICTIONARY = {
     hi: "मजबूत स्टेनलेस-स्टील और रबर ग्रिप वाले 3 बागवानी उपकरण जो आसानी से काम करने में मदद करते हैं।",
     en: "Stainless-steel trowel, cultivator rake, and transplanter with rubber grips for effortless potting and aerating.",
   },
+  "glazed pots": {
+    gu: "આકર્ષક અને સુંદર ગ્લેઝ્ડ સિરામિક કુંડાં જે ઇન્ડોર અને બાલ્કની ડેકોરેશન માટે શ્રેષ્ઠ છે.",
+    hi: "सुंदर और सुरुचिपूर्ण चमकदार गमले जो इनडोर और बालकनी की सुंदरता बढ़ाते हैं।",
+    en: "Beautiful glazed pots with an elegant finish, perfect for decoration.",
+  },
+  "glazed pot": {
+    gu: "આકર્ષક અને સુંદર ગ્લેઝ્ડ સિરામિક કુંડું જે ઇન્ડોર અને બાલ્કની ડેકોરેશન માટે શ્રેષ્ઠ છે.",
+    hi: "सुंदर और सुरुचिपूर्ण चमकदार गमला जो इनडोर और बालकनी की सुंदरता बढ़ाता है।",
+    en: "Beautiful glazed pots with an elegant finish, perfect for decoration.",
+  },
+  "erodium": {
+    gu: "નાજુક અને સુંદર ફૂલોવાળો છોડ જે રોક ગાર્ડન અને કુંડાં માટે આદર્શ છે.",
+    hi: "नाजुक फूलों वाला मनमोहक पौधा जो गमलों और गार्डन के लिए बहुत सुंदर है।",
+    en: "Erodium is a charming flowering plant with delicate blooms.",
+  },
+  "plumeria": {
+    gu: "સુગંધિત અને ઉષ્ણકટિબંધીય સુંદર ફૂલોવાળો ચંપાનો છોડ.",
+    hi: "सुगंधित और सुंदर फूलों वाला चंपा का उष्णकटिबंधीय पौधा।",
+    en: "Plumeria is a beautiful tropical flowering plant known for its fragrant blooms.",
+  },
+  "agribloom": {
+    gu: "છોડના તંદુરસ્ત વિકાસ, પોષણ અને સુરક્ષા માટે ઓર્ગેનિક બૂસ્ટર.",
+    hi: "पौधों के स्वस्थ विकास, पोषण और सुरक्षा के लिए बागवानी उत्पाद।",
+    en: "Agribloom is a gardening product designed to support plant growth.",
+  },
+  "gardening tools": {
+    gu: "બગીચાની માટી ગોડવા અને છોડ વાવવા માટે મજબૂત ઓજારોનો સેટ.",
+    hi: "बागवानी के काम को आसान बनाने के लिए उपयोगी उपकरणों का सेट।",
+    en: "Make gardening easier with our practical gardening tools.",
+  },
+  "jashmin": {
+    gu: "મધુર સુગંધ આપતો મોગરા / ચમેલીનો સુંદર છોડ.",
+    hi: "मीठी सुगंध देने वाला चमेली / मोगरा का लोकप्रिय फूल वाला पौधा।",
+    en: "Jasmine is a lovely flowering plant known for its delicate blooms.",
+  },
+  "coriander": {
+    gu: "ઘરે તાજી કોથમીર ઉગાડવા માટે ઓર્ગેનિક દેશી બીજ.",
+    hi: "घर पर ताज़ा धनिया उगाने के लिए उत्तम गुणवत्ता वाले बीज।",
+    en: "Grow fresh coriander at home with these coriander seeds.",
+  },
+  "धनिया": {
+    gu: "ઘરે તાજી કોથમીર ઉગાડવા માટે ઓર્ગેનિક દેશી બીજ.",
+    hi: "घर पर ताज़ा धनिया उगाने के लिए उत्तम गुणवत्ता वाले बीज।",
+    en: "Grow fresh coriander at home with these coriander seeds.",
+  },
+  "tomato": {
+    gu: "ઘરઆંગણે ભરપૂર ટામેટાં મેળવવા માટે ઉત્તમ હાઇબ્રિડ/દેશી બીજ.",
+    hi: "अपने बगीचे में ताज़े टमाटर उगाने के लिए टमाटर के बीज।",
+    en: "Grow your own fresh tomatoes with tomato seeds.",
+  },
+  "टमाटर": {
+    gu: "ઘરઆંગણે ભરપૂર ટામેટાં મેળવવા માટે ઉત્તમ હાઇબ્રિડ/દેશી બીજ.",
+    hi: "अपने बगीचे में ताज़े टमाटर उगाने के लिए टमाटर के बीज।",
+    en: "Grow your own fresh tomatoes with tomato seeds.",
+  },
+  "potting mix": {
+    gu: "છોડના ઝડપી મૂળ વિકાસ માટે વર્મીકમ્પોસ્ટ અને કોકોપીટ યુક્ત પોટિંગ સોઇલ.",
+    hi: "पौधों के बेहतर विकास के लिए पोषक तत्वों से भरपूर पॉटिंग सॉइल मिक्स।",
+    en: "Give your plants a suitable growing medium with our potting mix.",
+  },
+  "sunflower": {
+    gu: "ચમકદાર પીળા સૂર્યમુખીના ફૂલો જે બગીચામાં ખુશી અને રોનક લાવે છે.",
+    hi: "अपने बगीचे को खूबसूरत पीले सूरजमुखी के फूलों से रोशन करें।",
+    en: "Brighten your garden with beautiful sunflowers.",
+  },
+  "गुलाब": {
+    gu: "બગીચાની સુંદરતા વધારતો સુગંધિત લાલ ગુલાબનો છોડ.",
+    hi: "अपने बगीचे में सुंदरता और सुगंध लाने के लिए खूबसूरत गुलाब का पौधा।",
+    en: "Bring beauty and elegance to your garden with our rose plant.",
+  },
 };
 
 export function formatNameByLanguage(rawItemOrName, language = "en") {
   if (!rawItemOrName) return "";
 
-  // 0. If product or category object is passed with explicit multilingual fields
+  let itemStr = "";
   if (typeof rawItemOrName === "object" && rawItemOrName !== null) {
     if (language === "gu" && rawItemOrName.name_gu && String(rawItemOrName.name_gu).trim()) {
-      return String(rawItemOrName.name_gu).trim();
+      return formatNameByLanguage(rawItemOrName.name_gu, "gu");
     }
     if (language === "hi" && rawItemOrName.name_hi && String(rawItemOrName.name_hi).trim()) {
-      return String(rawItemOrName.name_hi).trim();
+      return formatNameByLanguage(rawItemOrName.name_hi, "hi");
     }
     if (language === "en" && rawItemOrName.name_en && String(rawItemOrName.name_en).trim()) {
-      return String(rawItemOrName.name_en).trim();
+      const enVal = String(rawItemOrName.name_en).trim();
+      if (!/[\u0900-\u097F\u0A80-\u0AFF]/.test(enVal)) {
+        return enVal;
+      }
     }
-    return formatNameByLanguage(rawItemOrName.name || "", language);
+    itemStr = String(rawItemOrName.name || rawItemOrName.name_en || rawItemOrName.name_hi || rawItemOrName.name_gu || "").trim();
+  } else {
+    itemStr = String(rawItemOrName).trim();
   }
 
-  const trimmed = String(rawItemOrName).trim();
+  if (!itemStr) return "";
+
+  const trimmed = itemStr;
   const lower = trimmed.toLowerCase();
 
   // 1. Direct dictionary match
   for (const [key, map] of Object.entries(NAME_DICTIONARY)) {
     const k = key.toLowerCase();
-    if (lower.includes(k) || k.includes(lower)) {
+    if (lower === k || lower.includes(k) || k.includes(lower)) {
       return map[language] || map["en"] || trimmed;
     }
   }
 
-  // 2. Parse parenthetical strings like "Gujarati Text (English Text)"
+  // 2. Normalize and Stem match (e.g. "gardening" -> "garden", "jashmin" -> "jasmine", "pots" -> "pot")
+  const normalized = lower
+    .replace(/\bgardening\b/g, "garden")
+    .replace(/\bjashmin\b/g, "jasmine")
+    .replace(/\bjasmin\b/g, "jasmine")
+    .replace(/\bpots\b/g, "pot")
+    .replace(/\btools\b/g, "tool")
+    .replace(/\bseeds\b/g, "seed")
+    .replace(/\bplants\b/g, "plant");
+
+  if (normalized !== lower) {
+    for (const [key, map] of Object.entries(NAME_DICTIONARY)) {
+      const k = key.toLowerCase();
+      if (normalized === k || normalized.includes(k) || k.includes(normalized)) {
+        return map[language] || map["en"] || trimmed;
+      }
+    }
+  }
+
+  // 3. Word token matching for compound phrases
+  const words = lower.split(/[\s,+/&_-]+/).filter(Boolean);
+  if (words.length > 1) {
+    for (const [key, map] of Object.entries(NAME_DICTIONARY)) {
+      const k = key.toLowerCase();
+      if (words.some((w) => w.length > 3 && (k === w || k.includes(w)))) {
+        return map[language] || map["en"] || trimmed;
+      }
+    }
+  }
+
+  // 4. Parse parenthetical strings like "Gujarati Text (English Text)"
   const match = trimmed.match(/^(.*?)\s*\((.*?)\)$/);
   if (match) {
     const guText = match[1].trim();
@@ -281,7 +443,6 @@ export function formatNameByLanguage(rawItemOrName, language = "en") {
     if (language === "en") {
       return enText.charAt(0).toUpperCase() + enText.slice(1);
     }
-    // Check if there is a Hindi dictionary translation for English or Gujarati text
     for (const [key, map] of Object.entries(NAME_DICTIONARY)) {
       const k = key.toLowerCase();
       if (enText.toLowerCase().includes(k) || guText.toLowerCase().includes(k)) {
