@@ -3,7 +3,6 @@ import { Link, useLocation } from "react-router-dom";
 import { useApp } from "../context/AppContext.jsx";
 import { useLanguage } from "../i18n/LanguageContext.jsx";
 import { Loading, Notice } from "./Feedback.jsx";
-import AdminShell from "./AdminShell.jsx";
 
 export function Protected({ children }) {
   const { user, ready } = useApp();
@@ -29,7 +28,7 @@ export function AdminProtected({ children }) {
       </main>
     );
   }
-  return <AdminShell>{children}</AdminShell>;
+  return children;
 }
 
 function NavigateToLogin({ path }) {
