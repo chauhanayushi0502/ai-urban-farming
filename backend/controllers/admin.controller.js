@@ -2,7 +2,7 @@ import { Cart, Category, ContactMessage, Order, Product, Setting, User } from ".
 import { randomBytes } from "node:crypto";
 import { asyncHandler } from "../middleware/async-handler.js";
 import { settingsDefaults } from "../config/app-config.js";
-import { productImagePath } from "../middleware/uploads.js";
+import { productImagePath, formatCatalogImage } from "../middleware/uploads.js";
 import { createNotification } from "../services/notification.service.js";
 
 export const getSummary = asyncHandler(async (_req, res) => {
@@ -53,13 +53,14 @@ export const updateOrderStatus = asyncHandler(async (req, res) => {
 export const createCategory = asyncHandler(async (req, res) => {
   const name = String(req.body.name || "").trim();
   if (!name) return res.status(400).json({ message: "Category name is required." });
-  const category = await Category.create({ name, image: req.file ? `categories/${req.file.filename}` : "" });
+  const image = formatCatalogImage(req.file) || "";
+  const category = await Category.create({ name, image });
   res.status(201).json(category);
 });
 
 export const updateCategory = asyncHandler(async (req, res) => {
   const update = { name: String(req.body.name || "").trim() };
-  if (req.file) update.image = `categories/${req.file.filename}`;
+  if (req.file) update.image = formatCatalogImage(req.file);
   const category = await Category.findByIdAndUpdate(req.params.id, update, { new: true, runValidators: true });
   if (!category) return res.status(404).json({ message: "Category not found." });
   res.json(category);

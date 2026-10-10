@@ -27,17 +27,8 @@ export const plantPhotoUpload = multer({
   fileFilter: imageFilter,
 });
 
-const catalogImageUpload = multer({
-  storage: multer.diskStorage({
-    destination: (req, _file, done) => {
-      const dir = path.join(catalogDirectory, req.uploadFolder || "");
-      try {
-        mkdirSync(dir, { recursive: true });
-      } catch {}
-      done(null, dir);
-    },
-    filename: (_req, file, done) => done(null, `${Date.now()}-${file.originalname.replace(/[^a-zA-Z0-9._-]/g, "-")}`),
-  }),
+export const catalogImageUpload = multer({
+  storage: multer.memoryStorage(),
   limits: { fileSize: 8 * 1024 * 1024 },
   fileFilter: imageFilter,
 });
@@ -56,6 +47,15 @@ export function isValidPlantImage(buffer) {
   return jpeg || png || webp;
 }
 
-export function productImagePath(file) {
-  return file ? `products/${file.filename}` : undefined;
+export function formatCatalogImage(file) {
+  if (!file) return undefined;
+  if (file.buffer) {
+    const mime = file.mimetype || "image/jpeg";
+    return `data:${mime};base64,${file.buffer.toString("base64")}`;
+  }
+  return file.filename ? `products/${file.filename}` : undefined;
 }
+
+export function productImagePath(file) {
+  return formatCatalogImage(file);
+}

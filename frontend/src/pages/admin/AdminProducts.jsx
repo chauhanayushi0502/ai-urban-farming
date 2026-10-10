@@ -7,6 +7,7 @@ import { DataTable } from "../../components/Feedback.jsx";
 import { useLoad } from "../../hooks/useLoad.js";
 import { api } from "../../lib/api.js";
 import { imageSource, money, formatNameByLanguage } from "../../lib/format.js";
+import { compressAndOptimizeImage } from "../../lib/image-optimizer.js";
 
 export default function AdminProducts() {
   const { data: products, loading, setData } = useLoad("/products?limit=100", []);
@@ -56,6 +57,16 @@ export default function AdminProducts() {
     }
 
     try {
+      const rawImage = form.get("image");
+      if (rawImage && rawImage.size > 0 && typeof rawImage !== "string") {
+        try {
+          const optimizedImage = await compressAndOptimizeImage(rawImage, 800, 0.82);
+          form.set("image", optimizedImage);
+        } catch {
+          // If compression fails, continue with original
+        }
+      }
+
       await api(id ? `/admin/products/${id}` : "/admin/products", {
         method: id ? "PATCH" : "POST",
         body: form,

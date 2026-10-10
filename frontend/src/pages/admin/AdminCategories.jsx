@@ -7,6 +7,7 @@ import { DataTable } from "../../components/Feedback.jsx";
 import { useLoad } from "../../hooks/useLoad.js";
 import { api } from "../../lib/api.js";
 import { imageSource, formatNameByLanguage } from "../../lib/format.js";
+import { compressAndOptimizeImage } from "../../lib/image-optimizer.js";
 
 export default function AdminCategories() {
   const { data: categories, loading, setData } = useLoad("/categories", []);
@@ -32,6 +33,14 @@ export default function AdminCategories() {
     setBusy(true);
     const form = new FormData(event.currentTarget);
     try {
+      const rawImage = form.get("image");
+      if (rawImage && rawImage.size > 0 && typeof rawImage !== "string") {
+        try {
+          const optimizedImage = await compressAndOptimizeImage(rawImage, 800, 0.82);
+          form.set("image", optimizedImage);
+        } catch {}
+      }
+
       await api(editing ? `/admin/categories/${editing._id}` : "/admin/categories", {
         method: editing ? "PATCH" : "POST",
         body: form,

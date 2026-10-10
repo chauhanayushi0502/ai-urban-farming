@@ -1,7 +1,11 @@
 const catalogBase = "/assets/images/catalog/";
 
 export function imageSource(image) {
-  return image ? `${catalogBase}${image.split("/").map(encodeURIComponent).join("/")}` : `${catalogBase}bg.png`;
+  if (!image) return `${catalogBase}bg.png`;
+  if (image.startsWith("data:") || image.startsWith("http://") || image.startsWith("https://") || image.startsWith("/assets/")) {
+    return image;
+  }
+  return `${catalogBase}${image.split("/").map(encodeURIComponent).join("/")}`;
 }
 
 export function money(value, currency = "₹") {
