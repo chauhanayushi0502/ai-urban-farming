@@ -2408,4 +2408,710 @@ button:focus-visible, a:focus-visible, input:focus-visible, textarea:focus-visib
   color: var(--ink);
   padding: 6px;
 }
+
+/* ========================================================
+   THEME TOGGLE BUTTON & DARK MODE ENGINE
+======================================================== */
+.theme-toggle-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 36px;
+  height: 36px;
+  border-radius: 50%;
+  border: 1px solid rgba(32, 40, 32, 0.14);
+  background: #eeefe7;
+  color: var(--green);
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+.theme-toggle-btn:hover {
+  background: #e2e6d8;
+  transform: scale(1.08);
+}
+
+/* Dark Mode Variables & Foundations */
+:root[data-theme="dark"],
+html[data-theme="dark"],
+html.dark,
+body[data-theme="dark"],
+[data-theme="dark"] {
+  color-scheme: dark;
+  color: #e2e8f0;
+  background-color: #0c140e;
+  --ink: #f0fdf4;
+  --muted: #94a3b8;
+  --green: #4ade80;
+  --green-deep: #22c55e;
+  --green-soft: #142a1b;
+  --lime: #86efac;
+  --paper: #131d16;
+  --line: #223426;
+  --rust: #f87171;
+  --gold: #fbbf24;
+  --shadow: 0 16px 44px rgba(0, 0, 0, 0.65);
+}
+
+/* Body & Backgrounds in Dark Mode */
+[data-theme="dark"] body,
+html.dark body,
+body[data-theme="dark"] {
+  background: radial-gradient(ellipse at 8% 10%, rgba(74, 222, 128, 0.08), transparent 36%), #0c140e !important;
+  color: #f0fdf4 !important;
+}
+
+[data-theme="dark"] .app-frame,
+html.dark .app-frame {
+  background: transparent;
+  color: #f0fdf4;
+}
+
+/* Header & Navigation */
+[data-theme="dark"] .site-header,
+html.dark .site-header {
+  background: rgba(15, 23, 17, 0.95);
+  border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+}
+
+[data-theme="dark"] .brand,
+html.dark .brand {
+  color: #4ade80;
+}
+
+[data-theme="dark"] .brand small,
+html.dark .brand small {
+  color: #94a3b8;
+}
+
+[data-theme="dark"] .main-nav,
+html.dark .main-nav {
+  color: #94a3b8;
+}
+
+[data-theme="dark"] .main-nav > a:not(.button),
+html.dark .main-nav > a:not(.button) {
+  color: #cbd5e1;
+}
+
+[data-theme="dark"] .main-nav > a:hover,
+[data-theme="dark"] .main-nav > a.active,
+html.dark .main-nav > a:hover,
+html.dark .main-nav > a.active {
+  color: #4ade80;
+}
+
+[data-theme="dark"] .header-search,
+html.dark .header-search {
+  background: #19251c;
+  border-color: #27392b;
+  color: #cbd5e1;
+}
+
+[data-theme="dark"] .header-search input,
+html.dark .header-search input {
+  color: #f0fdf4;
+}
+
+[data-theme="dark"] .header-search button,
+html.dark .header-search button {
+  color: #4ade80;
+}
+
+[data-theme="dark"] .language-selector,
+html.dark .language-selector {
+  background: #19251c;
+  border-color: #27392b;
+  color: #cbd5e1;
+}
+
+[data-theme="dark"] .language-selector:hover,
+html.dark .language-selector:hover {
+  background: #202e23;
+  border-color: #4ade80;
+}
+
+[data-theme="dark"] .lang-select,
+html.dark .lang-select {
+  color: #f0fdf4;
+}
+
+[data-theme="dark"] .lang-select option,
+html.dark .lang-select option {
+  background: #131d16;
+  color: #f0fdf4;
+}
+
+[data-theme="dark"] .theme-toggle-btn,
+html.dark .theme-toggle-btn {
+  background: #19251c;
+  border-color: #27392b;
+  color: #f59e0b;
+}
+
+[data-theme="dark"] .theme-toggle-btn:hover,
+html.dark .theme-toggle-btn:hover {
+  background: #202e23;
+  border-color: #4ade80;
+}
+
+/* Footer */
+[data-theme="dark"] .site-footer,
+html.dark .site-footer {
+  background: #090e0a;
+  border-top-color: #1c2b1f;
+  color: #94a3b8;
+}
+
+[data-theme="dark"] .footer-brand,
+html.dark .footer-brand {
+  color: #4ade80;
+}
+
+[data-theme="dark"] .site-footer > small,
+html.dark .site-footer > small {
+  color: #64748b;
+}
+
+/* Headings & Text */
+[data-theme="dark"] h1,
+[data-theme="dark"] h2,
+[data-theme="dark"] h3,
+[data-theme="dark"] h4,
+[data-theme="dark"] h5,
+[data-theme="dark"] h6,
+html.dark h1,
+html.dark h2,
+html.dark h3,
+html.dark h4,
+html.dark h5,
+html.dark h6 {
+  color: #f0fdf4;
+}
+
+[data-theme="dark"] .muted,
+html.dark .muted {
+  color: #94a3b8;
+}
+
+[data-theme="dark"] .text-link,
+html.dark .text-link {
+  color: #4ade80;
+}
+
+[data-theme="dark"] .text-link:hover,
+html.dark .text-link:hover {
+  color: #86efac;
+}
+
+/* Buttons */
+[data-theme="dark"] .button,
+html.dark .button {
+  background: #22c55e;
+  border-color: #22c55e;
+  color: #0c140e;
+  font-weight: 700;
+}
+
+[data-theme="dark"] .button:hover,
+html.dark .button:hover {
+  background: #4ade80;
+  border-color: #4ade80;
+  color: #0c140e;
+}
+
+[data-theme="dark"] .button-outline,
+html.dark .button-outline {
+  background: transparent;
+  color: #4ade80;
+  border-color: #4ade80;
+}
+
+[data-theme="dark"] .button-outline:hover,
+html.dark .button-outline:hover {
+  background: #4ade80;
+  color: #0c140e;
+}
+
+[data-theme="dark"] .button-dark,
+html.dark .button-dark {
+  background: #27392b;
+  border-color: #27392b;
+  color: #f0fdf4;
+}
+
+[data-theme="dark"] .icon-button,
+html.dark .icon-button {
+  color: #4ade80;
+}
+
+[data-theme="dark"] .icon-button:hover,
+html.dark .icon-button:hover {
+  background: #19251c;
+}
+
+/* Inputs, Textareas & Selects */
+[data-theme="dark"] input,
+[data-theme="dark"] textarea,
+[data-theme="dark"] select,
+html.dark input,
+html.dark textarea,
+html.dark select {
+  background: #18241b !important;
+  border-color: #2b3e2f !important;
+  color: #f0fdf4 !important;
+}
+
+[data-theme="dark"] input:focus,
+[data-theme="dark"] textarea:focus,
+[data-theme="dark"] select:focus,
+html.dark input:focus,
+html.dark textarea:focus,
+html.dark select:focus {
+  border-color: #4ade80 !important;
+}
+
+[data-theme="dark"] input::placeholder,
+[data-theme="dark"] textarea::placeholder,
+html.dark input::placeholder,
+html.dark textarea::placeholder {
+  color: #64748b;
+}
+
+/* Cards, Panels, Modals, Forms & Popovers */
+[data-theme="dark"] .stat-card,
+[data-theme="dark"] .garden-plant-card,
+[data-theme="dark"] .modal-card,
+[data-theme="dark"] .auth-page,
+[data-theme="dark"] .contact-form,
+[data-theme="dark"] .care-form,
+[data-theme="dark"] .checkout-form,
+[data-theme="dark"] .summary-panel,
+[data-theme="dark"] .nursery-prod-card,
+[data-theme="dark"] .stepwise-step-card,
+[data-theme="dark"] .doctor-msg.assistant,
+[data-theme="dark"] .account-popover,
+[data-theme="dark"] .notification-popover,
+[data-theme="dark"] .table-shell,
+[data-theme="dark"] .metric,
+[data-theme="dark"] .admin-shortcuts a,
+[data-theme="dark"] .admin-form,
+[data-theme="dark"] .message-list article,
+[data-theme="dark"] .review-form,
+[data-theme="dark"] .diagnosis-box,
+[data-theme="dark"] .solution-product-mini-card,
+[data-theme="dark"] .doctor-weather-metric,
+[data-theme="dark"] .nursery-cat-btn,
+[data-theme="dark"] .weather-widget,
+[data-theme="dark"] .care-strip,
+[data-theme="dark"] .empty-inline,
+[data-theme="dark"] .empty-state,
+[data-theme="dark"] .garden-calendar-wrapper,
+[data-theme="dark"] .soil-calculator-card,
+[data-theme="dark"] .payment-method-card,
+[data-theme="dark"] .reviews-breakdown-box,
+[data-theme="dark"] .coupon-form-card,
+[data-theme="dark"] .day-agenda-box,
+[data-theme="dark"] .agenda-task-card,
+[data-theme="dark"] .calc-results,
+[data-theme="dark"] .watering-box,
+[data-theme="dark"] .weather-popover,
+[data-theme="dark"] .status-select,
+[data-theme="dark"] .invoice-modal-content,
+[data-theme="dark"] .coupon-badge,
+[data-theme="dark"] .button-subtle-pill,
+html.dark .stat-card,
+html.dark .garden-plant-card,
+html.dark .modal-card,
+html.dark .auth-page,
+html.dark .contact-form,
+html.dark .care-form,
+html.dark .checkout-form,
+html.dark .summary-panel,
+html.dark .nursery-prod-card,
+html.dark .stepwise-step-card,
+html.dark .doctor-msg.assistant,
+html.dark .account-popover,
+html.dark .notification-popover,
+html.dark .table-shell,
+html.dark .metric,
+html.dark .admin-shortcuts a,
+html.dark .admin-form,
+html.dark .message-list article,
+html.dark .review-form,
+html.dark .diagnosis-box,
+html.dark .solution-product-mini-card,
+html.dark .doctor-weather-metric,
+html.dark .nursery-cat-btn,
+html.dark .weather-widget,
+html.dark .care-strip,
+html.dark .empty-inline,
+html.dark .empty-state,
+html.dark .garden-calendar-wrapper,
+html.dark .soil-calculator-card,
+html.dark .payment-method-card,
+html.dark .reviews-breakdown-box,
+html.dark .coupon-form-card,
+html.dark .day-agenda-box,
+html.dark .agenda-task-card,
+html.dark .calc-results,
+html.dark .watering-box,
+html.dark .weather-popover,
+html.dark .status-select,
+html.dark .invoice-modal-content,
+html.dark .coupon-badge,
+html.dark .button-subtle-pill {
+  background: #131d16 !important;
+  border-color: #223426 !important;
+  color: #f0fdf4 !important;
+}
+
+/* Products & Shop */
+[data-theme="dark"] .product-card,
+html.dark .product-card {
+  background: #131d16;
+  border: 1px solid #223426;
+  border-radius: 8px;
+  padding: 12px;
+}
+
+[data-theme="dark"] .product-image-wrap,
+html.dark .product-image-wrap {
+  background: #1a271e;
+  border-radius: 6px;
+}
+
+[data-theme="dark"] .product-name,
+html.dark .product-name {
+  color: #f0fdf4;
+}
+
+[data-theme="dark"] .product-bottom strong,
+html.dark .product-bottom strong {
+  color: #4ade80;
+}
+
+[data-theme="dark"] .favorite-button,
+html.dark .favorite-button {
+  background: rgba(19, 29, 22, 0.9);
+  color: #4ade80;
+}
+
+[data-theme="dark"] .filter-chip,
+html.dark .filter-chip {
+  border-color: #2b3e2f;
+  color: #cbd5e1;
+}
+
+[data-theme="dark"] .filter-chip:hover,
+[data-theme="dark"] .filter-chip.selected,
+html.dark .filter-chip:hover,
+html.dark .filter-chip.selected {
+  background: #22c55e;
+  border-color: #22c55e;
+  color: #0c140e;
+}
+
+[data-theme="dark"] .sort-control,
+html.dark .sort-control {
+  border-color: #2b3e2f;
+}
+
+[data-theme="dark"] .sort-control select,
+html.dark .sort-control select {
+  color: #f0fdf4;
+}
+
+/* Garden & Doctor Dashboard */
+[data-theme="dark"] .garden-feature-nav-bar,
+html.dark .garden-feature-nav-bar {
+  background: #101912;
+  border-color: #223426;
+}
+
+[data-theme="dark"] .garden-feature-nav-btn,
+html.dark .garden-feature-nav-btn {
+  color: #cbd5e1;
+}
+
+[data-theme="dark"] .garden-feature-nav-btn:hover,
+html.dark .garden-feature-nav-btn:hover {
+  background: #1a271e;
+  color: #4ade80;
+}
+
+[data-theme="dark"] .garden-feature-nav-btn.active,
+html.dark .garden-feature-nav-btn.active {
+  background: #22c55e;
+  color: #0c140e;
+  border-color: #22c55e;
+}
+
+[data-theme="dark"] .garden-tab-btn,
+html.dark .garden-tab-btn {
+  color: #cbd5e1;
+}
+
+[data-theme="dark"] .garden-tab-btn:hover,
+html.dark .garden-tab-btn:hover {
+  background: #1a271e;
+  color: #4ade80;
+}
+
+[data-theme="dark"] .garden-tab-btn.active,
+html.dark .garden-tab-btn.active {
+  background: #22c55e;
+  color: #0c140e;
+}
+
+[data-theme="dark"] .garden-title h1,
+html.dark .garden-title h1 {
+  color: #4ade80;
+}
+
+[data-theme="dark"] .plant-card-title h3,
+html.dark .plant-card-title h3 {
+  color: #4ade80;
+}
+
+[data-theme="dark"] .stat-card-num,
+html.dark .stat-card-num {
+  color: #4ade80;
+}
+
+[data-theme="dark"] .weather-temp-badge strong,
+html.dark .weather-temp-badge strong {
+  color: #4ade80;
+}
+
+[data-theme="dark"] .weather-conditions,
+html.dark .weather-conditions {
+  color: #cbd5e1;
+}
+
+[data-theme="dark"] .weather-advisory,
+html.dark .weather-advisory {
+  background: #17241a;
+  color: #cbd5e1;
+  border-left-color: #4ade80;
+}
+
+[data-theme="dark"] .btn-water,
+html.dark .btn-water {
+  background: #1a271e;
+  color: #4ade80;
+  border-color: #26382c;
+}
+
+[data-theme="dark"] .btn-water:hover,
+html.dark .btn-water:hover {
+  background: #22c55e;
+  color: #0c140e;
+}
+
+[data-theme="dark"] .drag-drop-zone,
+html.dark .drag-drop-zone {
+  background: #16221a;
+  border-color: #2f4333;
+  color: #cbd5e1;
+}
+
+[data-theme="dark"] .drag-drop-zone:hover,
+html.dark .drag-drop-zone:hover {
+  background: #1a291f;
+  border-color: #4ade80;
+}
+
+/* Care Calendar */
+[data-theme="dark"] .cal-weekdays,
+html.dark .cal-weekdays {
+  background: #101912;
+  border-bottom-color: #26382c;
+}
+
+[data-theme="dark"] .cal-days-grid,
+html.dark .cal-days-grid {
+  background: #223426;
+}
+
+[data-theme="dark"] .cal-day-cell,
+html.dark .cal-day-cell {
+  background: #131d16 !important;
+  color: #f0fdf4;
+}
+
+[data-theme="dark"] .cal-day-cell.empty,
+html.dark .cal-day-cell.empty {
+  background: #0d140e !important;
+}
+
+[data-theme="dark"] .cal-day-cell:hover:not(.empty),
+html.dark .cal-day-cell:hover:not(.empty) {
+  background: #19261c !important;
+}
+
+[data-theme="dark"] .cal-day-cell.selected,
+html.dark .cal-day-cell.selected {
+  background: #172d1d !important;
+  box-shadow: inset 0 0 0 2px #4ade80;
+}
+
+[data-theme="dark"] .cal-day-cell .day-number,
+html.dark .cal-day-cell .day-number {
+  color: #f0fdf4;
+}
+
+[data-theme="dark"] .icon-btn-subtle,
+html.dark .icon-btn-subtle {
+  background: #19251c;
+  border-color: #26382c;
+  color: #f0fdf4;
+}
+
+[data-theme="dark"] .current-month-label,
+html.dark .current-month-label {
+  color: #4ade80;
+}
+
+/* Soil Calculator & Potting */
+[data-theme="dark"] .segmented-toggle,
+html.dark .segmented-toggle {
+  background: #101912;
+}
+
+[data-theme="dark"] .segment-btn,
+html.dark .segment-btn {
+  color: #cbd5e1;
+}
+
+[data-theme="dark"] .segment-btn.active,
+html.dark .segment-btn.active {
+  background: #22c55e;
+  color: #0c140e;
+}
+
+[data-theme="dark"] .vol-number,
+html.dark .vol-number {
+  color: #4ade80;
+}
+
+/* Payment & Checkout */
+[data-theme="dark"] .payment-method-card.selected,
+html.dark .payment-method-card.selected {
+  border-color: #4ade80;
+  background: #16261a;
+  box-shadow: 0 0 0 1px #4ade80;
+}
+
+[data-theme="dark"] .big-rating,
+html.dark .big-rating {
+  color: #4ade80;
+}
+
+/* AI GreenBot / Chatbot */
+[data-theme="dark"] .chatbot-window,
+html.dark .chatbot-window {
+  background: #131d16;
+  border-color: #26382c;
+  box-shadow: 0 20px 60px rgba(0, 0, 0, 0.7);
+}
+
+[data-theme="dark"] .chatbot-header,
+html.dark .chatbot-header {
+  background: #16261b;
+  border-bottom: 1px solid #26382c;
+}
+
+[data-theme="dark"] .chatbot-messages,
+html.dark .chatbot-messages {
+  background: #0e1610;
+}
+
+[data-theme="dark"] .chat-bubble-row.bot .chat-bubble,
+html.dark .chat-bubble-row.bot .chat-bubble {
+  background: #1a271e;
+  border-color: #26382c;
+  color: #f0fdf4;
+}
+
+[data-theme="dark"] .quick-prompts-bar,
+html.dark .quick-prompts-bar {
+  background: #131d16;
+  border-top-color: #26382c;
+}
+
+[data-theme="dark"] .quick-chip,
+html.dark .quick-chip {
+  background: #1a271e;
+  border-color: #2d4133;
+  color: #cbd5e1;
+}
+
+[data-theme="dark"] .quick-chip:hover,
+html.dark .quick-chip:hover {
+  background: #22c55e;
+  color: #0c140e;
+}
+
+[data-theme="dark"] .chatbot-input-bar,
+html.dark .chatbot-input-bar {
+  background: #131d16;
+  border-top-color: #26382c;
+}
+
+[data-theme="dark"] .chat-text-input,
+html.dark .chat-text-input {
+  background: #1a271e !important;
+  border-color: #2d4133 !important;
+  color: #f0fdf4 !important;
+}
+
+[data-theme="dark"] .chat-text-input:focus,
+html.dark .chat-text-input:focus {
+  border-color: #4ade80 !important;
+}
+
+/* Universal Inline Styles & Table Catch-All for Dark Mode */
+[data-theme="dark"] [style*="background: white"],
+[data-theme="dark"] [style*="background:white"],
+[data-theme="dark"] [style*="background: #fff"],
+[data-theme="dark"] [style*="background:#fff"],
+[data-theme="dark"] [style*="background: #fafaf5"],
+[data-theme="dark"] [style*="background:#fafaf5"],
+[data-theme="dark"] [style*="background: #fbfcf9"],
+[data-theme="dark"] [style*="background:#fbfcf9"],
+[data-theme="dark"] [style*="backgroundColor: white"],
+[data-theme="dark"] [style*="backgroundColor:white"],
+[data-theme="dark"] [style*="backgroundColor: #fff"],
+[data-theme="dark"] [style*="backgroundColor:#fff"],
+html.dark [style*="background: white"],
+html.dark [style*="background:white"],
+html.dark [style*="background: #fff"],
+html.dark [style*="background:#fff"],
+html.dark [style*="background: #fafaf5"],
+html.dark [style*="background:#fafaf5"],
+html.dark [style*="background: #fbfcf9"],
+html.dark [style*="background:#fbfcf9"],
+html.dark [style*="backgroundColor: white"],
+html.dark [style*="backgroundColor:white"],
+html.dark [style*="backgroundColor: #fff"],
+html.dark [style*="backgroundColor:#fff"] {
+  background: #131d16 !important;
+  color: #f0fdf4 !important;
+  border-color: #223426 !important;
+}
+
+[data-theme="dark"] table,
+[data-theme="dark"] table th,
+[data-theme="dark"] table td,
+html.dark table,
+html.dark table th,
+html.dark table td {
+  border-color: #223426 !important;
+  color: #f0fdf4 !important;
+}
+
+[data-theme="dark"] table th,
+html.dark table th {
+  background: #19251c !important;
+}
 

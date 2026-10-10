@@ -207,11 +207,10 @@ export function Header() {
         {/* Theme Toggle Button */}
         <button 
           type="button"
-          className="theme-toggle-btn icon-button" 
+          className="theme-toggle-btn" 
           onClick={toggleTheme} 
           title={t("theme_toggle_title", "Toggle Light / Dark Mode")}
           aria-label={t("theme_toggle_title", "Toggle Light / Dark Mode")}
-          style={{ background: "none", border: "none", cursor: "pointer", padding: "4px" }}
         >
           {theme === "dark" ? <Sun size={18} style={{ color: "#f59e0b" }} /> : <Moon size={18} style={{ color: "var(--green)" }} />}
         </button>
