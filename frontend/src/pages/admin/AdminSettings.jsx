@@ -1,18 +1,29 @@
+import { Settings } from "lucide-react";
+import { AdminShell } from "../../components/AdminShell.jsx";
 import { useApp, useToast } from "../../context/AppContext.jsx";
+import { useLanguage } from "../../i18n/LanguageContext.jsx";
 import { Loading } from "../../components/Feedback.jsx";
 import { useLoad } from "../../hooks/useLoad.js";
 import { api } from "../../lib/api.js";
 
 const fields = [
-  ["site_name", "સાઇટનું નામ"], ["contact_email", "સંપર્ક ઇમેઇલ"], ["contact_phone", "ફોન"],
-  ["address", "સરનામું"], ["facebook", "ફેસબુક URL"], ["instagram", "ઇન્સ્ટાગ્રામ URL"],
-  ["twitter", "ટ્વિટર URL"], ["currency", "ચલણ પ્રતીક"], ["shipping_charge", "શિપિંગ ચાર્જ"], ["tax_rate", "ટેક્સ દર (%)"],
-  ["gemini_api_key", "Google Gemini AI API Key (AI ફોટો વિઝન અને રોગ નિદાન માટે)"]
+  ["site_name", "Store / Nursery Name", "સાઇટનું નામ"],
+  ["contact_email", "Support & Contact Email", "સંપર્ક ઇમેઇલ"],
+  ["contact_phone", "Helpline Phone Number", "ફોન"],
+  ["address", "Nursery Physical Address", "સરનામું"],
+  ["currency", "Currency Symbol", "ચલણ પ્રતીક"],
+  ["shipping_charge", "Standard Shipping Charge (₹)", "શિપિંગ ચાર્જ"],
+  ["tax_rate", "GST / Tax Rate (%)", "ટેક્સ દર (%)"],
+  ["facebook", "Facebook Page URL", "ફેસબુક URL"],
+  ["instagram", "Instagram Profile URL", "ઇન્સ્ટાગ્રામ URL"],
+  ["twitter", "Twitter/X URL", "ટ્વિટર URL"],
+  ["gemini_api_key", "Google Gemini AI API Key (AI Plant Doctor)", "Google Gemini AI API Key"],
 ];
 
 export default function AdminSettings() {
   const { setSettings } = useApp();
   const { data: settings, loading } = useLoad("/settings", {});
+  const { t, language } = useLanguage();
   const notify = useToast();
 
   async function submit(event) {
@@ -21,26 +32,34 @@ export default function AdminSettings() {
     try {
       const saved = await api("/admin/settings", { method: "PUT", body: values });
       setSettings(saved);
-      notify("સેટિંગ્સ સાચવવામાં આવ્યા.");
-    } catch (error) { notify(error.message, "error"); }
+      notify(t("settings_saved", "Store settings saved successfully."), "success");
+    } catch (error) {
+      notify(error.message, "error");
+    }
   }
 
   return (
-    <div className="admin-page">
-      <div className="page-heading">
+    <AdminShell current="/admin/settings">
+      <div className="admin-page-header">
         <div>
-          <p className="eyebrow">સ્ટોર પસંદગીઓ</p>
-          <h1>સેટિંગ્સ</h1>
+          <p className="eyebrow">
+            <Settings size={15} /> {t("store_configuration", "Store Configuration")}
+          </p>
+          <h1>{t("admin_settings", "Settings & Preferences")}</h1>
+          <p className="muted">
+            {t("admin_settings_sub", "Manage nursery contact info, AI vision API keys, shipping rates, and social handles.")}
+          </p>
         </div>
       </div>
+
       {loading ? (
         <Loading />
       ) : (
-        <form className="admin-form settings-form" onSubmit={submit}>
+        <form className="admin-form settings-form" onSubmit={submit} style={{ maxWidth: "860px" }}>
           <div className="admin-form-grid">
-            {fields.map(([key, label]) => (
+            {fields.map(([key, labelEn, labelGu]) => (
               <label key={key} className={key === "address" || key === "gemini_api_key" ? "wide-field" : ""}>
-                {label}
+                {language === "gu" ? labelGu : labelEn}
                 <input
                   name={key}
                   defaultValue={settings[key] || ""}
@@ -61,9 +80,11 @@ export default function AdminSettings() {
               </label>
             ))}
           </div>
-          <button className="button">સેટિંગ્સ સાચવો</button>
+          <div style={{ marginTop: "20px" }}>
+            <button className="button">{t("save_settings_btn", "Save Store Settings")}</button>
+          </div>
         </form>
       )}
-    </div>
+    </AdminShell>
   );
 }
