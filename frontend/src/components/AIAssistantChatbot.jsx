@@ -18,6 +18,7 @@ import { api } from "../lib/api.js";
 import { useApp } from "../context/AppContext.jsx";
 import { useLanguage } from "../i18n/LanguageContext.jsx";
 import { formatNameByLanguage } from "../lib/format.js";
+import { compressAndOptimizeImage } from "../lib/image-optimizer.js";
 
 const QUICK_PROMPTS_BY_LANG = {
   en: [
@@ -128,10 +129,11 @@ export default function AIAssistantChatbot() {
       let recommendedProducts = [];
 
       if (uploadedFile) {
-        // Send multipart form with photo
+        // Compress image before network upload for ultra-fast response
+        const optimizedFile = await compressAndOptimizeImage(uploadedFile, 800, 0.82);
         const form = new FormData();
         form.set("question", query || "What plant is this and what care does it need?");
-        form.set("plant_image", uploadedFile);
+        form.set("plant_image", optimizedFile);
         form.set("language", language);
         const res = await api("/garden/ask-doctor", { method: "POST", body: form });
         botResponseText = res.answer || res.message || "I analyzed your plant photo! Please inspect the soil and ensure adequate indirect sunlight.";

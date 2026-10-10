@@ -1301,14 +1301,33 @@ export const askPlantDoctor = asyncHandler(async (req, res) => {
     ? `Local Climate (Auto-Detected): ${parsedWeather.temperature || 28}°C, ${parsedWeather.humidity || 55}% humidity, ${parsedWeather.condition || "Pleasant"}, ${parsedWeather.precipitation ? `${parsedWeather.precipitation}mm rain` : "no rain"}.`
     : "";
 
-  let prompt = `You are a certified Botanical Doctor and master horticulturist.
+  let isGenericPlant = !plantName && !originalName && !plantSpecies;
+  let hasPhoto = Boolean(req.file && isValidPlantImage(req.file.buffer));
+
+  let prompt = "";
+  if (hasPhoto && isGenericPlant) {
+    prompt = `You are a certified Botanical Doctor and master horticulturist.
+The user uploaded a plant photo and asked: "${String(question).trim()}".
+${weatherContext}
+
+CRITICAL INSTRUCTIONS:
+1. First, accurately identify the exact common and botanical species of the plant in the photo (e.g. "🌱 Identified: Peace Lily (Spathiphyllum)" or "🌱 Identified: Tomato (Solanum lycopersicum)").
+2. Assess its visual health: state whether it is healthy, dehydrated, overwatered, or affected by any visible pests, nutritional deficiencies, or fungal spots.
+3. Provide concise, highly actionable care instructions: exact watering frequency, light needs, and organic remedies (such as neem oil spray, organic compost, or well-draining soil mix).
+4. Keep the entire response focused, practical, and under 3 to 4 sentences. Do not use markdown backticks.`;
+  } else {
+    prompt = `You are a certified Botanical Doctor and master horticulturist.
 Plant: ${plantTitle} (Species: ${species}).
 Current Health Status: ${healthStatus || "healthy"}${currentDisease ? `, Condition: ${currentDisease}` : ""}.
 ${weatherContext}
 User Question: "${String(question).trim()}".`;
 
-  if (req.file && isValidPlantImage(req.file.buffer)) {
-    prompt += `\nThe user also attached a photo of their plant/leaf. Inspect the image closely, identify the exact plant and any visible pests, nutritional deficiencies, or fungal spots, and address them in your answer.`;
+    if (hasPhoto) {
+      prompt += `\nThe user also attached a photo of their plant/leaf. Inspect the image closely, confirm the plant species, diagnose any visible leaf issues, and address them directly.`;
+    }
+
+    prompt += `\nTASK:
+Provide a clear, reassuring, and practical diagnostic answer in 2 to 4 sentences. Explicitly mention organic remedies (e.g. Organic Neem Oil spray, Vermicompost / compost feeding, Seaweed tonic, balanced watering, or well-drained pot) where applicable. Do not use markdown backticks or bullet points.`;
   }
 
   let targetLang = req.body.language || "en";
@@ -1321,15 +1340,13 @@ User Question: "${String(question).trim()}".`;
     langInstruction = "Write your response in English.";
   }
 
-  prompt += `\nTASK:
-Provide a clear, reassuring, and practical diagnostic answer in 2 to 4 sentences. Explicitly mention organic remedies (e.g. Organic Neem Oil spray, Vermicompost / compost feeding, Seaweed tonic, balanced watering, or well-drained pot) where applicable. Do not use markdown backticks or bullet points.
-${langInstruction}`;
+  prompt += `\n${langInstruction}`;
 
   let answer = await callGeminiAI({
     prompt,
     imageBuffer: req.file ? req.file.buffer : null,
     imageMimeType: req.file ? req.file.mimetype : null,
-    maxTokens: 500,
+    maxTokens: 350,
   });
 
   if (!answer) {
