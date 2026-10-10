@@ -4,16 +4,18 @@ import { ProductGrid } from "../components/ProductCard.jsx";
 import { Loading } from "../components/Feedback.jsx";
 import { useLoad } from "../hooks/useLoad.js";
 import { useLanguage } from "../i18n/LanguageContext.jsx";
+import { formatNameByLanguage } from "../lib/format.js";
 
 export default function ShopPage() {
-  const { t } = useLanguage();
+  const { t, language } = useLanguage();
   const [params, setParams] = useSearchParams();
   const selected = params.get("category") || "";
   const sort = params.get("sort") || "newest";
   const { data: categories } = useLoad("/categories", []);
   const { data: products, loading } = useLoad(`/products?category=${encodeURIComponent(selected)}&sort=${sort}`, []);
   
-  const title = categories.find((item) => item._id === selected)?.name || t("shop_all_plants", "All plants");
+  const rawTitle = categories.find((item) => item._id === selected)?.name;
+  const title = rawTitle ? formatNameByLanguage(rawTitle, language) : t("shop_all_plants", "All plants");
 
   return (
     <main className="page">
@@ -50,7 +52,7 @@ export default function ShopPage() {
             className={selected === category._id ? "filter-chip selected" : "filter-chip"} 
             onClick={() => setParams({ category: category._id, sort })}
           >
-            {category.name}
+            {formatNameByLanguage(category.name, language)}
           </button>
         ))}
       </div>

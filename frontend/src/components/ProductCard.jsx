@@ -3,7 +3,7 @@ import { Heart, Plus, Sprout } from "lucide-react";
 import { useApp, useToast } from "../context/AppContext.jsx";
 import { useLanguage } from "../i18n/LanguageContext.jsx";
 import { api } from "../lib/api.js";
-import { imageSource, money } from "../lib/format.js";
+import { imageSource, money, formatNameByLanguage } from "../lib/format.js";
 
 export function ProductGrid({ products }) {
   const { t } = useLanguage();
@@ -27,16 +27,21 @@ export function ProductGrid({ products }) {
 
 export default function ProductCard({ product }) {
   const { user, settings, syncCart, refreshUser } = useApp();
-  const { t } = useLanguage();
+  const { t, language } = useLanguage();
   const notify = useToast();
   const saved = user?.wishlist?.some((id) => String(id) === product._id);
+
+  const formattedCat = product.category?.name
+    ? formatNameByLanguage(product.category.name, language)
+    : t("nursery_favorite", "Nursery favorite");
+  const formattedName = formatNameByLanguage(product.name, language);
 
   async function addToCart() {
     if (!user) return notify(t("signed_in_cart_err", "Sign in to add items to your cart."), "error");
     try {
       await api("/cart/items", { method: "POST", body: { productId: product._id, quantity: 1 } });
       await syncCart();
-      notify(`${product.name} ${t("added_to_cart_msg", "added to your cart.")}`);
+      notify(`${formattedName} ${t("added_to_cart_msg", "added to your cart.")}`);
     } catch (error) { 
       notify(error.message, "error"); 
     }
@@ -57,7 +62,7 @@ export default function ProductCard({ product }) {
     <article className="product-card">
       <div className="product-image-wrap">
         <Link to={`/products/${product._id}`}>
-          <img className="product-image" src={imageSource(product.image)} alt={product.name} />
+          <img className="product-image" src={imageSource(product.image)} alt={formattedName} />
         </Link>
         <button 
           className={`favorite-button ${saved ? "is-saved" : ""}`} 
@@ -71,12 +76,12 @@ export default function ProductCard({ product }) {
       </div>
 
       <div className="product-copy">
-        <p className="product-category">{product.category?.name || t("nursery_favorite", "Nursery favorite")}</p>
-        <Link to={`/products/${product._id}`} className="product-name">{product.name}</Link>
+        <p className="product-category">{formattedCat}</p>
+        <Link to={`/products/${product._id}`} className="product-name">{formattedName}</Link>
         <div className="product-bottom">
           <strong>{money(product.price, settings.currency)}</strong>
           {product.stock > 0 ? (
-            <button className="add-button" onClick={addToCart} aria-label={`${product.name} ${t("add_to_cart", "Add to cart")}`}>
+            <button className="add-button" onClick={addToCart} aria-label={`${formattedName} ${t("add_to_cart", "Add to cart")}`}>
               <Plus size={19} />
             </button>
           ) : (

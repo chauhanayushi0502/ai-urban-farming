@@ -203,18 +203,51 @@ async function reverseGeocode(lat, lon) {
   try {
     const url = `https://api.bigdatacloud.net/data/reverse-geocode-client?latitude=${lat}&longitude=${lon}&localityLanguage=en`;
     const res = await fetch(url, { signal: AbortSignal.timeout(3500) });
-    if (!res.ok) return "";
-    const data = await res.json();
-    const city = data.city || data.locality || "";
-    const state = data.principalSubdivision || "";
-    const country = data.countryName || "";
-    if (city && state && city !== state) return `${city}, ${state}`;
-    if (city && country) return `${city}, ${country}`;
-    if (state && country) return `${state}, ${country}`;
-    return city || state || country || "";
-  } catch {
-    return "";
-  }
+    if (res.ok) {
+      const data = await res.json();
+      const city = data.city || data.locality || data.localityInfo?.administrative?.[2]?.name || data.localityInfo?.administrative?.[1]?.name || "";
+      const state = data.principalSubdivision || "";
+      const country = data.countryName || "";
+      
+      const cleanCity = city.trim();
+      const cleanState = state.trim();
+      const cleanCountry = country.trim();
+
+      if (cleanCity && cleanState && cleanCity.toLowerCase() !== cleanState.toLowerCase()) {
+        return `${cleanCity}, ${cleanState}`;
+      }
+      if (cleanCity && cleanCountry) return `${cleanCity}, ${cleanCountry}`;
+      if (cleanState && cleanCountry) return `${cleanState}, ${cleanCountry}`;
+      if (cleanCity || cleanState) return cleanCity || cleanState;
+    }
+  } catch {}
+
+  // Fallback to OpenStreetMap Nominatim
+  try {
+    const nomUrl = `https://nominatim.openstreetmap.org/reverse?lat=${lat}&lon=${lon}&format=json&accept-language=en`;
+    const nomRes = await fetch(nomUrl, {
+      headers: { "User-Agent": "AIUrbanFarming/1.0" },
+      signal: AbortSignal.timeout(3500)
+    });
+    if (nomRes.ok) {
+      const nomData = await nomRes.json();
+      const addr = nomData.address || {};
+      const city = addr.city || addr.town || addr.village || addr.suburb || addr.municipality || addr.county || "";
+      const state = addr.state || addr.region || addr.state_district || "";
+      const country = addr.country || "";
+      
+      const cleanCity = city.trim();
+      const cleanState = state.trim();
+
+      if (cleanCity && cleanState && cleanCity.toLowerCase() !== cleanState.toLowerCase()) {
+        return `${cleanCity}, ${cleanState}`;
+      }
+      if (cleanCity && country) return `${cleanCity}, ${country}`;
+      if (cleanState || cleanCity) return cleanState || cleanCity;
+    }
+  } catch {}
+
+  return "";
 }
 
 const weatherCache = new Map();
@@ -264,7 +297,7 @@ export async function getLiveWeather(lat = 23.0225, lon = 72.5714, locationLabel
   }
 
   try {
-    const url = `https://api.open-meteo.com/v1/forecast?latitude=${lat}&longitude=${lon}&current=temperature_2m,relative_humidity_2m,precipitation,weather_code,wind_speed_10m&daily=temperature_2m_max,temperature_2m_min,precipitation_sum&timezone=auto&forecast_days=3`;
+    const url = `https://api.open-meteo.com/v1/forecast?latitude=${lat}&longitude=${lon}&current=temperature_2m,relative_humidity_2m,precipitation,weather_code,wind_speed_10m&hourly=temperature_2m,precipitation_probability,relative_humidity_2m&daily=temperature_2m_max,temperature_2m_min,precipitation_sum&timezone=auto&forecast_days=5`;
     const [weatherRes, detectedPlace] = await Promise.all([
       fetch(url, { signal: AbortSignal.timeout(6000) }),
       locationLabel ? Promise.resolve(locationLabel) : reverseGeocode(lat, lon),
@@ -274,6 +307,7 @@ export async function getLiveWeather(lat = 23.0225, lon = 72.5714, locationLabel
     const data = await weatherRes.json();
     const current = data.current || {};
     const daily = data.daily || {};
+    const hourly = data.hourly || {};
     const temp = current.temperature_2m ?? 28;
     const humidity = current.relative_humidity_2m ?? 55;
     const precipitation = current.precipitation ?? 0;
@@ -281,6 +315,54 @@ export async function getLiveWeather(lat = 23.0225, lon = 72.5714, locationLabel
     const rainToday = (daily.precipitation_sum && daily.precipitation_sum[0]) ?? precipitation;
     const maxTemp = (daily.temperature_2m_max && daily.temperature_2m_max[0]) ?? temp;
     const minTemp = (daily.temperature_2m_min && daily.temperature_2m_min[0]) ?? (temp - 5);
+
+    // Build 12-hour forecast array
+    const hourlyTimes = hourly.time || [];
+    const hourlyTemps = hourly.temperature_2m || [];
+    const hourlyRainProb = hourly.precipitation_probability || [];
+    const nowHourStr = new Date().toISOString().slice(0, 13);
+    let startIdx = hourlyTimes.findIndex((t) => t.startsWith(nowHourStr));
+    if (startIdx === -1) startIdx = 0;
+
+    const hourlyForecast = hourlyTimes.slice(startIdx, startIdx + 12).map((timeStr, i) => {
+      const idx = startIdx + i;
+      const hTemp = Math.round(hourlyTemps[idx] ?? temp);
+      const rainChance = Math.round(hourlyRainProb[idx] ?? 0);
+      const timeDate = new Date(timeStr);
+      const hourLabel = timeDate.toLocaleTimeString("en-US", { hour: "numeric", hour12: true });
+
+      return {
+        time: hourLabel,
+        temp: hTemp,
+        rainChance,
+        icon: rainChance > 40 ? "🌧️" : (hTemp >= 32 ? "☀️" : (timeDate.getHours() < 6 || timeDate.getHours() > 19 ? "🌙" : "🌤️")),
+      };
+    });
+
+    // Build 5-day forecast array
+    const forecast = (daily.time || []).map((dateStr, idx) => {
+      const max = Math.round(daily.temperature_2m_max?.[idx] ?? temp);
+      const min = Math.round(daily.temperature_2m_min?.[idx] ?? (temp - 5));
+      const rain = daily.precipitation_sum?.[idx] ?? 0;
+
+      let dayCond = "Sunny";
+      if (rain > 2.0) dayCond = "Rainy";
+      else if (max >= 34) dayCond = "Hot";
+      else if (min <= 16) dayCond = "Cool";
+      else dayCond = "Pleasant";
+
+      const dateObj = new Date(dateStr);
+      const dayName = idx === 0 ? "Today" : idx === 1 ? "Tomorrow" : dateObj.toLocaleDateString("en-US", { weekday: "short" });
+
+      return {
+        date: dateStr,
+        dayName,
+        maxTemp: max,
+        minTemp: min,
+        rain,
+        condition: dayCond,
+      };
+    });
 
     // Determine gardening conditions & alerts
     let condition = "Sunny / Pleasant";
@@ -327,6 +409,8 @@ export async function getLiveWeather(lat = 23.0225, lon = 72.5714, locationLabel
       city: resolvedCity,
       latitude: lat,
       longitude: lon,
+      forecast,
+      hourlyForecast,
     };
     weatherCache.set(cacheKey, { timestamp: Date.now(), data: weatherResult });
     return weatherResult;

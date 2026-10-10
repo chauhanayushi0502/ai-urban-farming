@@ -5,12 +5,12 @@ import { Loading } from "../components/Feedback.jsx";
 import { useLoad } from "../hooks/useLoad.js";
 import { useLanguage } from "../i18n/LanguageContext.jsx";
 import { api } from "../lib/api.js";
-import { imageSource, money } from "../lib/format.js";
+import { imageSource, money, formatNameByLanguage } from "../lib/format.js";
 
 export default function CartPage() {
   const { data: cart, loading, setData: setCart } = useLoad("/cart", { items: [] });
   const { settings, syncCart } = useApp();
-  const { t } = useLanguage();
+  const { t, language } = useLanguage();
   const notify = useToast();
 
   if (loading) return <main className="page"><Loading /></main>;
@@ -64,10 +64,10 @@ export default function CartPage() {
             {items.map(({ product, quantity }) => (
               <article className="cart-row" key={product._id}>
                 <Link to={`/products/${product._id}`}>
-                  <img src={imageSource(product.image)} alt={product.name} />
+                  <img src={imageSource(product.image)} alt={formatNameByLanguage(product.name, language)} />
                 </Link>
                 <div className="cart-item-copy">
-                  <Link to={`/products/${product._id}`} className="product-name">{product.name}</Link>
+                  <Link to={`/products/${product._id}`} className="product-name">{formatNameByLanguage(product.name, language)}</Link>
                   <span className="muted">{t("each_word", "each")} {money(product.price, settings.currency)}</span>
                   <span className="stock-hint">{product.stock} {t("available_word", "available")}</span>
                 </div>

@@ -3,11 +3,11 @@ import { Link } from "react-router-dom";
 import { ProductGrid } from "../components/ProductCard.jsx";
 import { Loading } from "../components/Feedback.jsx";
 import { useLoad } from "../hooks/useLoad.js";
-import { imageSource } from "../lib/format.js";
+import { imageSource, formatNameByLanguage } from "../lib/format.js";
 import { useLanguage } from "../i18n/LanguageContext.jsx";
 
 export default function HomePage() {
-  const { t } = useLanguage();
+  const { t, language } = useLanguage();
   const { data: categories } = useLoad("/categories", []);
   const { data: products, loading } = useLoad("/products?limit=4&sort=newest", []);
 
@@ -48,8 +48,8 @@ export default function HomePage() {
         <div className="category-row">
           {categories.map((category, index) => (
             <Link key={category._id} to={`/shop?category=${category._id}`} className={`category-tile tile-${index % 4}`}>
-              <img src={imageSource(category.image || ["indoor.jpg", "outdoor.jpg", "floweringplant.jpg", "pots1.jpg"][index % 4])} alt={category.name} />
-              <span>{category.name}<ArrowUpRight size={16} /></span>
+              <img src={imageSource(category.image || ["indoor.jpg", "outdoor.jpg", "floweringplant.jpg", "pots1.jpg"][index % 4])} alt={formatNameByLanguage(category.name, language)} />
+              <span>{formatNameByLanguage(category.name, language)}<ArrowUpRight size={16} /></span>
             </Link>
           ))}
         </div>
