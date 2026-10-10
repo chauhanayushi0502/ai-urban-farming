@@ -4,7 +4,7 @@ import path from "node:path";
 import { assetDirectory } from "../config/app-config.js";
 
 const catalogDirectory = path.join(assetDirectory, "images", "catalog");
-for (const folder of ["categories", "products"]) mkdirSync(path.join(catalogDirectory, folder), { recursive: true });
+for (const folder of ["categories", "products", "reviews"]) mkdirSync(path.join(catalogDirectory, folder), { recursive: true });
 
 const imageFilter = (_req, file, done) => {
   if (["image/jpeg", "image/png", "image/webp"].includes(file.mimetype)) return done(null, true);

@@ -60,6 +60,7 @@ export function Header() {
       <nav className={`main-nav ${menuOpen ? "nav-open" : ""}`}>
         <NavLink to="/shop" onClick={() => setMenuOpen(false)}>{t("nav_shop", "Shop")}</NavLink>
         <NavLink to="/garden" onClick={() => setMenuOpen(false)}>{t("nav_garden", "AI Garden Doctor")}</NavLink>
+        <NavLink to="/calendar" onClick={() => setMenuOpen(false)}>{t("nav_calendar", "Care Calendar")}</NavLink>
         <NavLink to="/about" onClick={() => setMenuOpen(false)}>{t("nav_story", "Our story")}</NavLink>
         <NavLink to="/contact" onClick={() => setMenuOpen(false)}>{t("nav_contact", "Contact")}</NavLink>
 
@@ -99,6 +100,7 @@ export function Header() {
               <div className="account-popover">
                 <Link to="/profile">{t("nav_profile", "My profile")}</Link>
                 <Link to="/orders">{t("nav_orders", "My orders")}</Link>
+                <Link to="/calendar">{t("nav_calendar", "Care Calendar")}</Link>
                 {user.role === "admin" && <Link to="/admin">{t("nav_admin", "Admin panel")}</Link>}
                 <button onClick={logout}><LogOut size={15} /> {t("nav_signout", "Sign out")}</button>
               </div>
@@ -133,6 +135,7 @@ export function Footer() {
       <div>
         <Link to="/shop">{t("footer_shop", "Shop plants")}</Link>
         <Link to="/garden">{t("nav_garden", "AI Garden Doctor")}</Link>
+        <Link to="/calendar">{t("nav_calendar", "Care Calendar")}</Link>
         <Link to="/contact">{t("footer_contact", "Contact")}</Link>
       </div>
       <small>© {new Date().getFullYear()} {t("site_name", settings.site_name || "Green Leaf Nursery")}</small>

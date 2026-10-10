@@ -1,4 +1,4 @@
-import { ArrowLeft, Mail, Package, Settings, ShoppingBag, Sprout, Tags, Truck } from "lucide-react";
+import { ArrowLeft, Mail, Package, Settings, ShoppingBag, Sprout, Tags, Tag, Truck } from "lucide-react";
 import { Link, NavLink } from "react-router-dom";
 import { useLanguage } from "../i18n/LanguageContext.jsx";
 
@@ -10,6 +10,7 @@ export default function AdminShell({ children }) {
     ["/admin/products", t("admin_products", "Products"), ShoppingBag],
     ["/admin/categories", t("admin_categories", "Categories"), Tags],
     ["/admin/orders", t("admin_orders", "Orders"), Truck],
+    ["/admin/coupons", t("admin_coupons", "Coupons"), Tag],
     ["/admin/inventory", t("admin_inventory", "Inventory"), Sprout],
     ["/admin/messages", t("admin_messages", "Messages"), Mail],
     ["/admin/settings", t("admin_settings", "Settings"), Settings],
@@ -23,7 +24,8 @@ export default function AdminShell({ children }) {
         <nav>
           {sections.map(([path, title, Icon]) => (
             <NavLink end={path === "/admin"} to={path} key={path}>
-              <Icon size={17} />{title}
+              <Icon size={17} />
+              {title}
             </NavLink>
           ))}
         </nav>
@@ -35,3 +37,5 @@ export default function AdminShell({ children }) {
     </div>
   );
 }
+
+export { AdminShell };

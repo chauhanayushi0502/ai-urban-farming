@@ -12,9 +12,10 @@ export const submitProductReview = asyncHandler(async (req, res) => {
   const existing = await Review.findOne({ user: req.auth.id, product: product._id });
   if (!purchased && !existing) return res.status(403).json({ message: "You can only review products you have purchased." });
   const user = await User.findById(req.auth.id).select("fullName");
+  const image = req.file ? `reviews/${req.file.filename}` : (req.body.image || "");
   await Review.findOneAndUpdate(
     { user: req.auth.id, product: product._id },
-    { user: req.auth.id, product: product._id, reviewer: user.fullName, rating, comment },
+    { user: req.auth.id, product: product._id, reviewer: user.fullName, rating, comment, image, verifiedPurchase: true },
     { upsert: true, new: true, runValidators: true },
   );
   res.json({ message: "Thank you for your review." });

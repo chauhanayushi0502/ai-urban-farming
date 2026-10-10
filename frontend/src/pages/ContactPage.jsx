@@ -1,17 +1,21 @@
 import { useState } from "react";
-import { ArrowRight, Clock3, Mail, MapPin, Phone } from "lucide-react";
+import { ArrowRight, Clock3, Mail, MapPin, Phone, UserRound } from "lucide-react";
+import { Link } from "react-router-dom";
 import { useApp, useToast } from "../context/AppContext.jsx";
 import { useLanguage } from "../i18n/LanguageContext.jsx";
 import { api } from "../lib/api.js";
 
 export default function ContactPage() {
-  const { settings } = useApp();
+  const { user, settings } = useApp();
   const { t } = useLanguage();
   const notify = useToast();
   const [busy, setBusy] = useState(false);
 
   async function submit(event) {
     event.preventDefault();
+    if (!user) {
+      return notify(t("contact_signin_required", "Please sign in to send a message."), "error");
+    }
     setBusy(true);
     const values = Object.fromEntries(new FormData(event.currentTarget).entries());
     try { 
@@ -67,23 +71,36 @@ export default function ContactPage() {
           </p>
         </section>
 
-        <form className="contact-form form-stack" onSubmit={submit}>
-          <label>
-            {t("your_name", "Your name")}
-            <input name="name" required maxLength="100" />
-          </label>
-          <label>
-            {t("email_address", "Email address")}
-            <input name="email" type="email" required />
-          </label>
-          <label>
-            {t("how_can_we_help", "How can we help?")}
-            <textarea name="message" rows="5" required maxLength="3000" />
-          </label>
-          <button className="button" disabled={busy}>
-            {t("send_message", "Send message")} <ArrowRight size={17} />
-          </button>
-        </form>
+        {user ? (
+          <form className="contact-form form-stack" onSubmit={submit}>
+            <label>
+              {t("your_name", "Your name")}
+              <input name="name" defaultValue={user.fullName || ""} required maxLength="100" />
+            </label>
+            <label>
+              {t("email_address", "Email address")}
+              <input name="email" type="email" defaultValue={user.email || ""} required />
+            </label>
+            <label>
+              {t("how_can_we_help", "How can we help?")}
+              <textarea name="message" rows="5" required maxLength="3000" placeholder={t("contact_message_placeholder", "Write your inquiry or question...")} />
+            </label>
+            <button className="button" disabled={busy}>
+              {t("send_message", "Send message")} <ArrowRight size={17} />
+            </button>
+          </form>
+        ) : (
+          <div className="contact-form form-stack" style={{ background: "white", padding: "28px", borderRadius: "8px", border: "1px solid var(--line)" }}>
+            <UserRound size={32} color="var(--green)" />
+            <h3 style={{ margin: "10px 0 6px" }}>{t("contact_signin_prompt_title", "Sign in to send a message")}</h3>
+            <p className="muted" style={{ fontSize: "14px", margin: "0 0 16px" }}>
+              {t("contact_signin_prompt_desc", "You can view our nursery contact info anytime. To send an inquiry to our expert gardening team, please sign in to your account.")}
+            </p>
+            <Link to="/login?redirect=/contact" className="button" style={{ display: "inline-flex", width: "fit-content" }}>
+              {t("contact_signin_btn", "Sign in to send message")} <ArrowRight size={16} />
+            </Link>
+          </div>
+        )}
       </div>
     </main>
   );

@@ -10,7 +10,8 @@ export function setAuthCookie(res, user) {
 }
 
 export function clearAuthCookie(res) {
-  res.clearCookie("nursery_token", tokenCookie);
+  const { maxAge, ...options } = tokenCookie;
+  res.clearCookie("nursery_token", options);
 }
 
 export function userPayload(user) {

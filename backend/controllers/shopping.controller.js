@@ -1,9 +1,9 @@
 import { randomBytes } from "node:crypto";
-import { Cart, Order, Product, User } from "../models/index.js";
+import { Cart, Order, Product, User, Setting, Coupon } from "../models/index.js";
 import { asyncHandler } from "../middleware/async-handler.js";
-import { Setting } from "../models/index.js";
 import { createNotification } from "../services/notification.service.js";
 import { settingsDefaults } from "../config/app-config.js";
+import { calculateCouponDiscount } from "./coupon.controller.js";
 
 const roundMoney = (value) => Math.round((value + Number.EPSILON) * 100) / 100;
 
@@ -60,7 +60,9 @@ export const checkout = asyncHandler(async (req, res) => {
   if (Object.values(shippingAddress).some((value) => !value)) {
     return res.status(400).json({ message: "Complete all delivery address fields before placing your order." });
   }
-  if (String(req.body.paymentMethod || "cod") !== "cod") return res.status(400).json({ message: "Cash on delivery is the only available payment method." });
+  
+  const paymentMethod = ["cod", "upi", "card", "netbanking"].includes(req.body.paymentMethod) ? req.body.paymentMethod : "cod";
+  const couponCode = String(req.body.couponCode || "").trim().toUpperCase();
 
   const settings = await Setting.find({ key: { $in: ["shipping_charge", "tax_rate"] } }).lean();
   const settingValues = {
@@ -72,6 +74,8 @@ export const checkout = asyncHandler(async (req, res) => {
   const taxRate = Math.max(0, settingValues.tax_rate || 0);
   const decremented = [];
   let createdOrder;
+  let appliedCoupon = null;
+
   try {
     const items = [];
     let subtotal = 0;
@@ -87,29 +91,60 @@ export const checkout = asyncHandler(async (req, res) => {
       subtotal += product.price * cartItem.quantity;
     }
     subtotal = roundMoney(subtotal);
-    const taxAmount = roundMoney(subtotal * taxRate / 100);
+
+    let discountAmount = 0;
+    if (couponCode) {
+      appliedCoupon = await Coupon.findOne({ code: couponCode, isActive: true });
+      if (appliedCoupon) {
+        discountAmount = calculateCouponDiscount(appliedCoupon, subtotal);
+      }
+    }
+
+    const taxableAmount = Math.max(0, subtotal - discountAmount);
+    const taxAmount = roundMoney(taxableAmount * taxRate / 100);
     const shipping = subtotal === 0 ? 0 : roundMoney(shippingAmount);
-    const totalAmount = roundMoney(subtotal + shipping + taxAmount);
+    const totalAmount = roundMoney(taxableAmount + shipping + taxAmount);
+
+    const isPrepaid = ["upi", "card", "netbanking"].includes(paymentMethod);
+    const paymentStatus = isPrepaid ? "paid" : "pending";
+
     [createdOrder] = await Order.create([{
       user: req.auth.id,
       items,
       shippingAddress,
-      paymentMethod: "cod",
-      paymentStatus: "pending",
+      paymentMethod,
+      paymentStatus,
+      paymentDetails: {
+        method: paymentMethod,
+        transactionId: req.body.paymentDetails?.transactionId || (isPrepaid ? `TXN_${Date.now()}_${Math.random().toString(36).slice(-5).toUpperCase()}` : ""),
+        paidAt: isPrepaid ? new Date() : null,
+        bankOrUpi: req.body.paymentDetails?.bankOrUpi || "",
+      },
       subtotal,
+      discountAmount,
+      couponCode: discountAmount > 0 ? couponCode : "",
       shippingAmount: shipping,
       taxAmount,
       totalAmount,
-      status: "pending",
-      statusHistory: [{ status: "pending", note: "Order received" }],
+      status: isPrepaid ? "processing" : "pending",
+      statusHistory: [{
+        status: isPrepaid ? "processing" : "pending",
+        note: isPrepaid ? `Payment completed via ${paymentMethod.toUpperCase()}` : "Order received for Cash on Delivery",
+      }],
     }]);
+
+    if (appliedCoupon && discountAmount > 0) {
+      appliedCoupon.usageCount = (appliedCoupon.usageCount || 0) + 1;
+      await appliedCoupon.save();
+    }
+
     cart.items = [];
     await cart.save();
     await createNotification({
       user: req.auth.id,
       type: "order",
-      title: "Order received",
-      message: `Your order ${createdOrder._id.toString().slice(-7).toUpperCase()} is confirmed for cash on delivery.`,
+      title: isPrepaid ? "Payment Successful & Order Confirmed" : "Order received",
+      message: `Your order ${createdOrder._id.toString().slice(-7).toUpperCase()} is confirmed (${paymentMethod.toUpperCase()}) for ₹${totalAmount}.`,
       link: "/orders",
     });
     res.status(201).json(createdOrder);

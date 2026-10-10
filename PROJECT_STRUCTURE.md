@@ -1,29 +1,34 @@
 # Plant Nursery Project Structure
 
-## MERN application
+## MERN Application Architecture
 
 - `frontend/`: React single-page application built with Vite
-- `frontend/src/AppRouter.jsx`: route composition
-- `frontend/src/pages/`: one page module per storefront, account, and care route
-- `frontend/src/pages/admin/`: one page module per admin route
-- `frontend/src/components/`: shared navigation, product cards, access guards, feedback, and admin shell
-- `frontend/src/context/`: authenticated user, cart count, settings, and notifications
-- `frontend/src/hooks/` and `frontend/src/lib/`: API loading, requests, and formatting helpers
-- `frontend/src/styles.css`: shared responsive styles
+- `frontend/src/AppRouter.jsx`: Route composition and global AI assistant mounting
+- `frontend/src/pages/`: One page module per storefront, account, checkout, and care route
+- `frontend/src/pages/admin/`: Admin pages (Dashboard, Products, Categories, Orders, Coupons, Inventory, Messages, Settings)
+- `frontend/src/components/`:
+  - `AIAssistantChatbot.jsx`: Floating 24/7 conversational botanical AI assistant ("GreenBot")
+  - `GardenCalendar.jsx`: Interactive garden care calendar and watering/fertilizing checklist
+  - `SoilPottingCalculator.jsx`: Potting mix volume, recipe breakdown, and fertilizer dosage calculator
+  - `InvoiceModal.jsx`: Branded nursery tax invoice modal with printable formatting
+  - `GardenSynergy.jsx`: Companion planting optimizer & pest repellence
+  - `PrintableCareGuide.jsx`: Plant-specific printable care sheets
+  - `AdminShell.jsx`, `SiteLayout.jsx`, `Access.jsx`, `ProductCard.jsx`, `Feedback.jsx`
+- `frontend/src/context/`: Authenticated user, cart count, settings, and notifications
+- `frontend/src/hooks/` and `frontend/src/lib/`: API loading, image optimizer, and formatting helpers
+- `frontend/src/styles.css`: Complete responsive design and print stylesheets
 - `backend/server.js`: Express server startup and MongoDB connection
-- `backend/app.js`: middleware, API mount, shared assets, and production frontend
-- `backend/controllers/`: feature logic for authentication, catalog, shopping, reviews, content, and admin
-- `backend/routes/`: grouped API route definitions
-- `backend/models/`: Mongoose schemas
+- `backend/app.js`: Middleware, API mount, shared assets, and production frontend
+- `backend/controllers/`: Feature logic for authentication, catalog, shopping, coupons, reviews, content, garden AI, and admin
+- `backend/routes/`: Grouped API route definitions (auth, catalog, customer, content, coupon, garden, admin)
+- `backend/models/`: Mongoose schemas (User, Product, Category, Cart, Order, Coupon, Review, GardenPlant, PlantDiagnosis, Notification)
 - `backend/auth/`: JWT cookie authentication and admin role checks
 - `backend/config/`: MongoDB and application configuration
-- `backend/middleware/`: upload validation, async handling, and error responses
-- `backend/scripts/`: catalog seed, admin setup, and legacy MySQL import
-- `assets/images/catalog/`: existing nursery catalog and page imagery, served by Express
+- `backend/middleware/`: Upload validation, async handling, and error responses
+- `backend/scripts/`: Catalog & coupon seed (`seed.js`) and admin setup (`seed-admin.js`)
+- `assets/images/catalog/`: Shared catalog and review imagery served by Express
 
-## Run locally
-
-Install dependencies, seed the MongoDB catalog, and run the Vite and Express development servers:
+## Run Locally
 
 ```powershell
 npm install
@@ -32,8 +37,3 @@ npm run dev
 ```
 
 Open `http://localhost:5173`. MongoDB defaults to `mongodb://127.0.0.1:27017/plant_nursery`.
-
-## Optional database migration
-
-If you still have the former MySQL database, import its records with `npm run import:mysql`; see the main README for connection variables. To create an administrator, add `ADMIN_EMAIL` and `ADMIN_PASSWORD` to `.env`, run `npm run seed:admin`, and sign in at `http://localhost:5173/login`.
-

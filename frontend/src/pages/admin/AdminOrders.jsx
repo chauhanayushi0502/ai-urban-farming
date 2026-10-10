@@ -1,8 +1,13 @@
+import { useState } from "react";
+import { FileText, Printer } from "lucide-react";
+import { AdminShell } from "../../components/AdminShell.jsx";
 import { useToast } from "../../context/AppContext.jsx";
+import { useLanguage } from "../../i18n/LanguageContext.jsx";
 import { DataTable } from "../../components/Feedback.jsx";
 import { useLoad } from "../../hooks/useLoad.js";
 import { api } from "../../lib/api.js";
 import { money } from "../../lib/format.js";
+import InvoiceModal from "../../components/InvoiceModal.jsx";
 
 const nextStatuses = {
   pending: ["processing", "cancelled"],
@@ -13,24 +18,107 @@ const nextStatuses = {
 };
 
 const statusLabels = {
-  pending: "પેન્ડિંગ",
-  processing: "પ્રોસેસિંગ",
-  shipped: "મોકલાયેલ",
-  delivered: "ડિલિવર થયેલ",
-  cancelled: "રદ થયેલ",
+  pending: "પેન્ડિંગ (Pending)",
+  processing: "પ્રોસેસિંગ (Processing)",
+  shipped: "શિપ થઈ ગયું (Shipped)",
+  delivered: "ડિલિવર થઈ ગયું (Delivered)",
+  cancelled: "રદ કરેલ (Cancelled)",
 };
 
 export default function AdminOrders() {
   const { data: orders, loading, setData } = useLoad("/admin/orders", []);
+  const { t, language } = useLanguage();
   const notify = useToast();
+  const [selectedInvoiceOrder, setSelectedInvoiceOrder] = useState(null);
 
   async function update(order, status) {
     try {
       const updated = await api(`/admin/orders/${order._id}`, { method: "PATCH", body: { status } });
-      setData(orders.map((item) => item._id === order._id ? { ...item, ...updated } : item));
-      notify("ઓર્ડર સ્થિતિ અપડેટ થઈ.");
-    } catch (error) { notify(error.message, "error"); }
+      setData(orders.map((item) => (item._id === order._id ? { ...item, ...updated } : item)));
+      notify(t("order_status_updated", "Order status updated."), "success");
+    } catch (error) {
+      notify(error.message, "error");
+    }
   }
 
-  return <div className="admin-page"><div className="page-heading"><div><p className="eyebrow">ગ્રાહક પ્રવૃત્તિ</p><h1>ઓર્ડર્સ</h1></div></div><DataTable loading={loading} empty="હજુ સુધી કોઈ ઓર્ડર આપવામાં આવ્યા નથી."><table><thead><tr><th>ઓર્ડર</th><th>ગ્રાહક</th><th>તારીખ</th><th>ટ્રેકિંગ</th><th>કુલ</th><th>સ્થિતિ</th></tr></thead><tbody>{orders.map((order) => <tr key={order._id}><td>#{order.legacyId || order._id.slice(-7).toUpperCase()}</td><td>{order.user?.fullName || "ગ્રાહક"}<small className="table-subline">{order.user?.email}</small></td><td>{new Date(order.createdAt).toLocaleDateString()}</td><td>{order.trackingNumber || "—"}</td><td>{money(order.totalAmount)}</td><td><select className="status-select" value={order.status} onChange={(event) => update(order, event.target.value)}>{[order.status, ...(nextStatuses[order.status] || [])].map((status) => <option key={status} value={status}>{statusLabels[status] || status}</option>)}</select></td></tr>)}</tbody></table></DataTable></div>;
+  return (
+    <AdminShell current="/admin/orders">
+      <div className="admin-page-header">
+        <div>
+          <p className="eyebrow">{t("customer_activity", "Customer Activity")}</p>
+          <h1>{t("admin_orders", "Orders & Dispatch")}</h1>
+          <p className="muted">{t("admin_orders_sub", "Manage order fulfillment, delivery status, and view customer tax invoices.")}</p>
+        </div>
+      </div>
+
+      <DataTable loading={loading} empty={t("no_orders_yet", "No orders have been placed yet.")}>
+        <table>
+          <thead>
+            <tr>
+              <th>{t("order_label", "Order")}</th>
+              <th>{t("customer_label", "Customer")}</th>
+              <th>{t("date_label", "Date")}</th>
+              <th>{t("payment", "Payment")}</th>
+              <th>{t("tracking", "Tracking")}</th>
+              <th>{t("total_label", "Total")}</th>
+              <th>{t("status_label", "Status")}</th>
+              <th>{t("invoice_label", "Invoice")}</th>
+            </tr>
+          </thead>
+          <tbody>
+            {orders.map((order) => (
+              <tr key={order._id}>
+                <td>
+                  <strong>#{order.legacyId || order._id.slice(-7).toUpperCase()}</strong>
+                </td>
+                <td>
+                  <strong>{order.user?.fullName || t("customer_label", "Customer")}</strong>
+                  <small className="table-subline">{order.user?.email}</small>
+                </td>
+                <td>{new Date(order.createdAt).toLocaleDateString()}</td>
+                <td>
+                  <span className="badge-pill">
+                    {order.paymentMethod ? order.paymentMethod.toUpperCase() : "COD"}
+                  </span>
+                </td>
+                <td>{order.trackingNumber || "—"}</td>
+                <td>
+                  <strong>{money(order.totalAmount)}</strong>
+                </td>
+                <td>
+                  <select
+                    className="status-select"
+                    value={order.status}
+                    onChange={(event) => update(order, event.target.value)}
+                  >
+                    {[order.status, ...(nextStatuses[order.status] || [])].map((status) => (
+                      <option key={status} value={status}>
+                        {language === "gu" && statusLabels[status] ? statusLabels[status] : status}
+                      </option>
+                    ))}
+                  </select>
+                </td>
+                <td>
+                  <button
+                    type="button"
+                    className="button-subtle-pill"
+                    onClick={() => setSelectedInvoiceOrder(order)}
+                  >
+                    <FileText size={14} /> {t("view_btn", "View")}
+                  </button>
+                </td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      </DataTable>
+
+      {selectedInvoiceOrder && (
+        <InvoiceModal
+          order={selectedInvoiceOrder}
+          onClose={() => setSelectedInvoiceOrder(null)}
+        />
+      )}
+    </AdminShell>
+  );
 }
