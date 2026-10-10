@@ -7,7 +7,7 @@
     "dev": "concurrently -k \"npm:dev:server\" \"npm:dev:client\"",
     "dev:server": "node --watch backend/server.js",
     "dev:client": "vite --host 0.0.0.0",
-    "build": "vite build && node -e \"const fs=require('fs'); fs.cpSync('assets', 'frontend/dist/assets', {recursive: true, force: true});\"",
+    "build": "vite build && node backend/scripts/build-assets.js",
     "start": "node backend/server.js",
     "seed": "node backend/scripts/seed.js",
     "seed:admin": "node backend/scripts/seed-admin.js",
