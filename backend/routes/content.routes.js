@@ -7,7 +7,7 @@ import { plantPhotoUpload } from "../middleware/uploads.js";
 const router = Router();
 
 router.get("/settings", getSettings);
-router.post("/contact", submitContactMessage);
+router.post("/contact", authenticate, submitContactMessage);
 router.get("/plant-review/history", authenticate, listPlantReviewHistory);
 router.post("/plant-review", authenticate, plantPhotoUpload.single("plant_image"), reviewPlantPhoto);
 

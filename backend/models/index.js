@@ -54,6 +54,7 @@ const productSchema = new Schema(
 );
 
 productSchema.index({ name: "text", description: "text" });
+productSchema.index({ category: 1, price: 1, stock: -1 });
 
 const cartSchema = new Schema(
   {
@@ -64,6 +65,21 @@ const cartSchema = new Schema(
         quantity: { type: Number, min: 1, required: true },
       },
     ],
+  },
+  { timestamps: true },
+);
+
+const couponSchema = new Schema(
+  {
+    code: { type: String, required: true, unique: true, uppercase: true, trim: true },
+    discountType: { type: String, enum: ["percentage", "fixed"], default: "percentage" },
+    discountValue: { type: Number, required: true, min: 1 },
+    minOrderAmount: { type: Number, default: 0 },
+    maxDiscountAmount: { type: Number, default: 0 },
+    validUntil: { type: Date, default: null },
+    isActive: { type: Boolean, default: true },
+    usageCount: { type: Number, default: 0 },
+    description: { type: String, default: "" },
   },
   { timestamps: true },
 );
@@ -89,9 +105,12 @@ const orderSchema = new Schema(
       state: { type: String, default: "" },
       postalCode: { type: String, default: "" },
     },
-    paymentMethod: { type: String, enum: ["cod"], default: "cod" },
+    paymentMethod: { type: String, enum: ["cod", "upi", "card", "netbanking"], default: "cod" },
     paymentStatus: { type: String, enum: ["pending", "paid", "refunded"], default: "pending" },
+    paymentDetails: { type: Object, default: {} },
     subtotal: { type: Number, min: 0, default: 0 },
+    discountAmount: { type: Number, min: 0, default: 0 },
+    couponCode: { type: String, uppercase: true, trim: true, default: "" },
     shippingAmount: { type: Number, min: 0, default: 0 },
     taxAmount: { type: Number, min: 0, default: 0 },
     totalAmount: { type: Number, required: true, min: 0 },
@@ -106,6 +125,9 @@ const orderSchema = new Schema(
   { timestamps: true },
 );
 
+orderSchema.index({ user: 1, createdAt: -1 });
+orderSchema.index({ status: 1 });
+
 const reviewSchema = new Schema(
   {
     legacyId: { type: Number, unique: true, sparse: true },
@@ -114,6 +136,8 @@ const reviewSchema = new Schema(
     reviewer: { type: String, required: true },
     rating: { type: Number, min: 1, max: 5, required: true },
     comment: { type: String, required: true, maxlength: 2000 },
+    image: { type: String, default: "" },
+    verifiedPurchase: { type: Boolean, default: true },
   },
   { timestamps: true },
 );
@@ -142,6 +166,8 @@ const notificationSchema = new Schema(
   { timestamps: true },
 );
 
+notificationSchema.index({ user: 1, readAt: 1, createdAt: -1 });
+
 const plantCareReviewSchema = new Schema(
   {
     user: { type: Schema.Types.ObjectId, ref: "User", required: true, index: true },
@@ -160,7 +186,7 @@ const gardenPlantSchema = new Schema(
     location: { type: String, enum: ["balcony", "indoor", "terrace", "garden_bed"], default: "balcony" },
     potSize: { type: String, default: "Medium (8-10 inch)" },
     soilType: { type: String, default: "Potting Mix with Compost" },
-    healthStatus: { type: String, enum: ["healthy", "needs_attention", "diseased", "recovering"], default: "healthy" },
+    healthStatus: { type: String, enum: ["healthy", "needs_attention", "diseased", "recovering", "underwatered", "overwatered"], default: "healthy" },
     currentDisease: { type: String, default: "" },
     wateringIntervalDays: { type: Number, min: 1, max: 30, default: 2 },
     lastWateredAt: { type: Date, default: Date.now },
@@ -184,6 +210,9 @@ const gardenPlantSchema = new Schema(
   },
   { timestamps: true },
 );
+
+gardenPlantSchema.index({ user: 1, nextWateringDue: 1 });
+gardenPlantSchema.index({ user: 1, healthStatus: 1 });
 
 const plantDiagnosisSchema = new Schema(
   {
@@ -219,3 +248,4 @@ export const Notification = model("Notification", notificationSchema);
 export const PlantCareReview = model("PlantCareReview", plantCareReviewSchema);
 export const GardenPlant = model("GardenPlant", gardenPlantSchema);
 export const PlantDiagnosis = model("PlantDiagnosis", plantDiagnosisSchema);
+export const Coupon = model("Coupon", couponSchema);

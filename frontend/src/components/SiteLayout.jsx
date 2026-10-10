@@ -34,13 +34,14 @@ export function Header() {
       <nav className={`main-nav ${menuOpen ? "nav-open" : ""}`}>
         <NavLink to="/shop" onClick={() => setMenuOpen(false)}>Shop</NavLink>
         <NavLink to="/garden" onClick={() => setMenuOpen(false)}>AI Garden Doctor</NavLink>
+        <NavLink to="/calendar" onClick={() => setMenuOpen(false)}>Care Calendar</NavLink>
         <NavLink to="/about" onClick={() => setMenuOpen(false)}>Our story</NavLink>
         <NavLink to="/contact" onClick={() => setMenuOpen(false)}>Contact</NavLink>
         {user ? <>
           <NavLink to="/wishlist" className="nav-icon" title="Wishlist" aria-label="Wishlist"><Heart size={19} /></NavLink>
           <NavLink to="/cart" className="nav-icon cart-link" title="Cart" aria-label={`Cart, ${cartCount} items`}><ShoppingBag size={19} />{cartCount > 0 && <span className="count-badge">{cartCount}</span>}</NavLink>
           <NotificationBell />
-          <div className="account-menu"><button className="account-trigger"><UserRound size={17} /><span>{user.fullName.split(" ")[0]}</span><ChevronDown size={14} /></button><div className="account-popover"><Link to="/profile">My profile</Link><Link to="/orders">My orders</Link>{user.role === "admin" && <Link to="/admin">Admin panel</Link>}<button onClick={logout}><LogOut size={15} /> Sign out</button></div></div>
+          <div className="account-menu"><button className="account-trigger"><UserRound size={17} /><span>{user.fullName.split(" ")[0]}</span><ChevronDown size={14} /></button><div className="account-popover"><Link to="/profile">My profile</Link><Link to="/orders">My orders</Link><Link to="/calendar">Care Calendar</Link>{user.role === "admin" && <Link to="/admin">Admin panel</Link>}<button onClick={logout}><LogOut size={15} /> Sign out</button></div></div>
         </> : <><Link className="nav-login" to="/login">Sign in</Link><Link className="button button-small" to="/register">Join us <ArrowUpRight size={15} /></Link></>}
       </nav>
     </header>
@@ -49,7 +50,7 @@ export function Header() {
 
 export function Footer() {
   const { settings } = useApp();
-  return <footer className="site-footer"><Link to="/" className="brand footer-brand"><span className="brand-mark"><Leaf size={18} /></span><span>Green Leaf<small>GROW A LITTLE EVERY DAY</small></span></Link><p>Healthy plants, thoughtful growing.</p><div><Link to="/shop">Shop plants</Link><Link to="/garden">AI Garden Doctor</Link><Link to="/contact">{settings.contact_email || "Contact"}</Link></div><small>© {new Date().getFullYear()} {settings.site_name || "Green Leaf Plant Nursery"}</small></footer>;
+  return <footer className="site-footer"><Link to="/" className="brand footer-brand"><span className="brand-mark"><Leaf size={18} /></span><span>Green Leaf<small>GROW A LITTLE EVERY DAY</small></span></Link><p>Healthy plants, thoughtful growing.</p><div><Link to="/shop">Shop plants</Link><Link to="/garden">AI Garden Doctor</Link><Link to="/calendar">Care Calendar</Link><Link to="/contact">{settings.contact_email || "Contact"}</Link></div><small>© {new Date().getFullYear()} {settings.site_name || "Green Leaf Plant Nursery"}</small></footer>;
 }
 
 export function ToastMessage({ toast }) {
