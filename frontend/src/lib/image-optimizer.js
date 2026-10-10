@@ -286,7 +286,8 @@ export async function analyzePlantFoliageHealth(file) {
             }
 
             // 2. Yellow / chlorotic stress (nutrient deficiency or excess water)
-            const isYellow = (r >= 80 && g >= 80 && b <= 75 && Math.abs(r - g) <= 35 && (r + g) > 190);
+            // Yellow leaves have high red+green, very low blue, and must be distinct from healthy warm-green foliage
+            const isYellow = (r >= 110 && g >= 110 && b <= 60 && Math.abs(r - g) <= 25 && g <= r * 1.05);
             if (isYellow) yellowChlorosis++;
 
             // 3. Brown necrotic lesions / leaf spots
@@ -297,8 +298,9 @@ export async function analyzePlantFoliageHealth(file) {
             const isDeadBrown = (r >= 45 && r <= 180 && g >= 25 && g <= 130 && b >= 15 && b <= 95 && r >= g * 1.08 && g >= b * 0.95);
             if (isDeadBrown) deadCrispyBrown++;
 
-            // 5. Flower petals or pink/red foliar spots (e.g., Polka Dot Plant / Hypoestes)
-            const isPinkOrRedFoliage = (r >= 100 && r > g * 1.05 && b >= 60 && Math.abs(r - b) < 65) || (r >= 130 && g <= 100 && b <= 110);
+            // 5. Flower petals or genuine pink/magenta foliar spots (e.g. Hypoestes)
+            // Must have high red & blue relative to green (magenta/pink) and low green
+            const isPinkOrRedFoliage = (r >= 140 && b >= 80 && g < r * 0.75 && g < b * 0.90) || (r >= 170 && g <= 80 && b <= 90);
             if (isPinkOrRedFoliage) {
               pinkFoliage++;
               flowerPetals++;
