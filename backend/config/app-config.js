@@ -6,7 +6,9 @@ const backendDirectory = path.resolve(path.dirname(fileURLToPath(import.meta.url
 export const projectRoot = path.resolve(backendDirectory, "..");
 export const assetDirectory = path.join(projectRoot, "assets");
 export const frontendBuildDirectory = path.join(projectRoot, "frontend", "dist");
-export const jwtSecret = process.env.JWT_SECRET || (process.env.NODE_ENV === "production" ? "" : "local-development-secret-change-before-deploy");
+export const jwtSecret =
+  process.env.JWT_SECRET ||
+  "plant-nursery-super-secret-jwt-key-2026-fallback-production";
 export const tokenCookie = {
   httpOnly: true,
   sameSite: "lax",

@@ -5,10 +5,7 @@ let isConnected = false;
 
 export default async function handler(req, res) {
   try {
-    if (!isConnected && process.env.MONGO_URI) {
-      await connectDatabase();
-      isConnected = true;
-    }
+    await connectDatabase();
   } catch (err) {
     console.warn("Serverless DB connection notice:", err.message);
   }
