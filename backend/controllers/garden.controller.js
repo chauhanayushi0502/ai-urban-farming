@@ -1308,8 +1308,19 @@ User Question: "${String(question).trim()}".`;
     prompt += `\nThe user also attached a photo of their plant/leaf. Inspect the image closely, identify the exact plant and any visible pests, nutritional deficiencies, or fungal spots, and address them in your answer.`;
   }
 
+  let targetLang = req.body.language || "en";
+  let langInstruction = "";
+  if (targetLang === "gu") {
+    langInstruction = "IMPORTANT: Write your response entirely in natural Gujarati (ગુજરાતી) language so a Gujarati home gardener can understand easily.";
+  } else if (targetLang === "hi") {
+    langInstruction = "IMPORTANT: Write your response entirely in natural Hindi (हिन्दी) language so an Indian home gardener can understand easily.";
+  } else {
+    langInstruction = "Write your response in English.";
+  }
+
   prompt += `\nTASK:
-Provide a clear, reassuring, and practical diagnostic answer in 2 to 4 sentences. Explicitly mention organic remedies (e.g. Organic Neem Oil spray, Vermicompost / compost feeding, Seaweed tonic, balanced watering, or well-drained pot) where applicable. Do not use markdown backticks or bullet points.`;
+Provide a clear, reassuring, and practical diagnostic answer in 2 to 4 sentences. Explicitly mention organic remedies (e.g. Organic Neem Oil spray, Vermicompost / compost feeding, Seaweed tonic, balanced watering, or well-drained pot) where applicable. Do not use markdown backticks or bullet points.
+${langInstruction}`;
 
   let answer = await callGeminiAI({
     prompt,
@@ -1319,8 +1330,14 @@ Provide a clear, reassuring, and practical diagnostic answer in 2 to 4 sentences
   });
 
   if (!answer) {
-    const tempText = parsedWeather?.temperature ? `In your current ${parsedWeather.temperature}°C weather, ` : "";
-    answer = `${tempText}maintain moist but well-draining soil for your ${species} (${plantTitle}). Ensure it receives bright filtered sunlight and check moisture 2 inches deep before watering. Applying a mild organic neem spray or feeding with organic compost / seaweed plant food every 14 days will keep foliage healthy and pest-free!`;
+    if (targetLang === "gu") {
+      answer = `તમારા ${species} (${plantTitle}) માટે જમીનમાં પૂરતો ભેજ રાખો પરંતુ પાણી જમા ન થવા દો. છોડને સારો સૂર્યપ્રકાશ આપો અને દર 14 દિવસે જૈવિક વર્મીકમ્પોસ્ટ ખાતર અથવા લીમડાના તેલનો સ્પ્રે કરો જેથી છોડ હંમેશા તંદુરસ્ત રહે!`;
+    } else if (targetLang === "hi") {
+      answer = `अपने ${species} (${plantTitle}) के लिए मिट्टी में उचित नमी बनाए रखें लेकिन पानी जमने न दें। पौधे को अच्छी धूप दें और हर 14 दिन में जैविक वर्मीकंपोस्ट या नीम तेल का छिड़काव करें ताकि पत्तियां स्वस्थ और कीट-मुक्त रहें!`;
+    } else {
+      const tempText = parsedWeather?.temperature ? `In your current ${parsedWeather.temperature}°C weather, ` : "";
+      answer = `${tempText}maintain moist but well-draining soil for your ${species} (${plantTitle}). Ensure it receives bright filtered sunlight and check moisture 2 inches deep before watering. Applying a mild organic neem spray or feeding with organic compost / seaweed plant food every 14 days will keep foliage healthy and pest-free!`;
+    }
   }
 
   answer = answer.replace(/```/g, "").trim();

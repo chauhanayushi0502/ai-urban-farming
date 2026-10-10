@@ -6,13 +6,13 @@ import { Loading } from "../components/Feedback.jsx";
 import { useLanguage } from "../i18n/LanguageContext.jsx";
 import { useLoad } from "../hooks/useLoad.js";
 import { api } from "../lib/api.js";
-import { imageSource, money } from "../lib/format.js";
+import { imageSource, money, formatNameByLanguage } from "../lib/format.js";
 import InvoiceModal from "../components/InvoiceModal.jsx";
 
 export default function OrdersPage() {
   const { data: orders, loading, setData } = useLoad("/orders/mine", []);
   const { settings } = useApp();
-  const { t } = useLanguage();
+  const { t, language } = useLanguage();
   const notify = useToast();
   const [selectedInvoiceOrder, setSelectedInvoiceOrder] = useState(null);
 
@@ -136,9 +136,9 @@ export default function OrdersPage() {
                 <div className="order-products">
                   {order.items.map((item, index) => (
                     <div className="order-product" key={`${item.product}-${index}`}>
-                      <img src={imageSource(item.image)} alt={item.name} />
+                      <img src={imageSource(item.image)} alt={formatNameByLanguage(item.name, language)} />
                       <div>
-                        <strong>{item.name}</strong>
+                        <strong>{formatNameByLanguage(item.name, language)}</strong>
                         <span className="muted">
                           {t("quantity", "Qty")} {item.quantity} · {money(item.price, settings.currency)} {t("each_word", "each")}
                         </span>

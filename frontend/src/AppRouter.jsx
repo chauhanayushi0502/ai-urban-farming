@@ -1,5 +1,5 @@
 import { lazy, Suspense } from "react";
-import { Route, Routes } from "react-router-dom";
+import { Route, Routes, Navigate } from "react-router-dom";
 import { Protected, AdminProtected } from "./components/Access.jsx";
 import { Footer, Header, ToastMessage } from "./components/SiteLayout.jsx";
 import { Loading, NotFound } from "./components/Feedback.jsx";
@@ -24,7 +24,6 @@ const ProfilePage = lazy(() => import("./pages/ProfilePage.jsx"));
 const OrdersPage = lazy(() => import("./pages/OrdersPage.jsx"));
 const GardenPage = lazy(() => import("./pages/GardenPage.jsx"));
 const CropPlanner = lazy(() => import("./components/CropPlanner.jsx"));
-const GardenerPilotPortal = lazy(() => import("./components/GardenerPilotPortal.jsx"));
 
 const AdminCategories = lazy(() => import("./pages/admin/AdminCategories.jsx"));
 const AdminDashboard = lazy(() => import("./pages/admin/AdminDashboard.jsx"));
@@ -45,7 +44,7 @@ function AppRoutes() {
           <Route path="/" element={<HomePage />} />
           <Route path="/shop" element={<ShopPage />} />
           <Route path="/planner" element={<CropPlanner />} />
-          <Route path="/pilot" element={<main className="page"><GardenerPilotPortal openPhotoScanModal={() => window.location.href = "/garden"} /></main>} />
+          <Route path="/pilot" element={<Navigate to="/garden" replace />} />
           <Route path="/search" element={<SearchPage />} />
           <Route path="/products/:id" element={<ProductPage />} />
           <Route path="/login" element={<AuthPage mode="login" />} />

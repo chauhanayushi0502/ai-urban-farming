@@ -16,16 +16,33 @@ import {
 } from "lucide-react";
 import { api } from "../lib/api.js";
 import { useApp } from "../context/AppContext.jsx";
+import { useLanguage } from "../i18n/LanguageContext.jsx";
+import { formatNameByLanguage } from "../lib/format.js";
 
-const QUICK_PROMPTS = [
-  "🌿 Why are my plant leaves turning yellow?",
-  "💧 How often should I water my indoor plants?",
-  "🐛 How to make organic neem spray for pests?",
-  "🪴 What is the best potting mix ratio?",
-];
+const QUICK_PROMPTS_BY_LANG = {
+  en: [
+    "🌿 Why are my plant leaves turning yellow?",
+    "💧 How often should I water my indoor plants?",
+    "🐛 How to make organic neem spray for pests?",
+    "🪴 What is the best potting mix ratio?",
+  ],
+  gu: [
+    "🌿 પાંદડા કેમ પીળા પડી રહ્યા છે?",
+    "💧 ઇન્ડોર છોડને કેટલું પાણી આપવું?",
+    "🐛 લીમડાનું તેલ કેવી રીતે વાપરવું?",
+    "🪴 કુંડા માટે શ્રેષ્ઠ માટીનું મિશ્રણ કયું?",
+  ],
+  hi: [
+    "🌿 पत्तियां पीली क्यों पड़ रही हैं?",
+    "💧 इनडोर पौधों को कितना पानी देना चाहिए?",
+    "🐛 नीम का तेल कैसे इस्तेमाल करें?",
+    "🪴 गमले के लिए सबसे अच्छी मिट्टी कौन सी है?",
+  ],
+};
 
 export default function AIAssistantChatbot() {
   const { user } = useApp();
+  const { t, language } = useLanguage();
   const [isOpen, setIsOpen] = useState(false);
   const [input, setInput] = useState("");
   const [file, setFile] = useState(null);
@@ -34,7 +51,10 @@ export default function AIAssistantChatbot() {
   const [messages, setMessages] = useState([
     {
       sender: "bot",
-      text: "Hello! 🌱 I'm **GreenBot**, your AI Botanical & Urban Gardening Assistant. Ask me anything about plant care, pest diagnosis, potting soil, or nursery recommendations!",
+      text: t(
+        "bot_greeting",
+        "Hello! 🌱 I'm **GreenBot**, your AI Botanical & Urban Gardening Assistant. Ask me anything about plant care, pest diagnosis, potting soil, or nursery recommendations!"
+      ),
       time: new Date().toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" }),
     },
   ]);
@@ -94,6 +114,7 @@ export default function AIAssistantChatbot() {
         const form = new FormData();
         form.set("question", query || "What plant is this and what care does it need?");
         form.set("plant_image", uploadedFile);
+        form.set("language", language);
         const res = await api("/garden/ask-doctor", { method: "POST", body: form });
         botResponseText = res.answer || res.message || "I analyzed your plant photo! Please inspect the soil and ensure adequate indirect sunlight.";
         recommendedProducts = res.recommendedProducts || [];
@@ -104,6 +125,7 @@ export default function AIAssistantChatbot() {
           body: {
             question: query,
             plantName: "Garden Houseplant",
+            language,
           },
         });
         botResponseText = res.answer || res.message || "Ensure your plant is in a well-draining pot and check soil moisture before watering.";
@@ -140,13 +162,13 @@ export default function AIAssistantChatbot() {
         <button
           className="chatbot-floating-btn"
           onClick={() => setIsOpen(true)}
-          aria-label="Open AI Plant Assistant"
+          aria-label={t("ask_greenbot", "Ask GreenBot")}
         >
           <div className="bot-pulse-ring" />
           <div className="bot-icon-circle">
             <Bot size={24} />
           </div>
-          <span className="bot-btn-label">Ask GreenBot</span>
+          <span className="bot-btn-label">{t("ask_greenbot", "Ask GreenBot")}</span>
         </button>
       )}
 
@@ -161,8 +183,8 @@ export default function AIAssistantChatbot() {
                 <span className="online-dot" />
               </div>
               <div>
-                <h4>GreenBot AI Doctor</h4>
-                <p className="bot-status-text">Instant Botanical & Care Assistant</p>
+                <h4>{t("bot_title", "GreenBot AI Doctor")}</h4>
+                <p className="bot-status-text">{t("bot_sub", "Instant Botanical & Care Assistant")}</p>
               </div>
             </div>
             <button
@@ -196,7 +218,7 @@ export default function AIAssistantChatbot() {
                   {/* Recommended Products if any */}
                   {msg.products && msg.products.length > 0 && (
                     <div className="bot-product-recs">
-                      <span className="rec-header">🌿 Recommended Solutions:</span>
+                      <span className="rec-header">{t("rec_solutions", "🌿 Recommended Solutions:")}</span>
                       {msg.products.slice(0, 2).map((p) => (
                         <a
                           key={p._id}
@@ -206,7 +228,7 @@ export default function AIAssistantChatbot() {
                           rel="noreferrer"
                         >
                           <ShoppingBag size={13} />
-                          <span>{p.name} - ₹{p.price}</span>
+                          <span>{formatNameByLanguage(p.name, language)} - ₹{p.price}</span>
                           <ExternalLink size={12} />
                         </a>
                       ))}
@@ -229,7 +251,7 @@ export default function AIAssistantChatbot() {
                     <span />
                     <span />
                   </div>
-                  <span className="typing-text text-xs muted">GreenBot is consulting botanical knowledge…</span>
+                  <span className="typing-text text-xs muted">{t("bot_typing", "GreenBot is consulting botanical knowledge…")}</span>
                 </div>
               </div>
             )}
@@ -239,7 +261,7 @@ export default function AIAssistantChatbot() {
           {/* Quick Prompt Chips */}
           {messages.length < 4 && !loading && (
             <div className="quick-prompts-bar">
-              {QUICK_PROMPTS.map((prompt, i) => (
+              {(QUICK_PROMPTS_BY_LANG[language] || QUICK_PROMPTS_BY_LANG.en).map((prompt, i) => (
                 <button
                   key={i}
                   type="button"
@@ -289,7 +311,7 @@ export default function AIAssistantChatbot() {
             <input
               type="text"
               className="chat-text-input"
-              placeholder="Ask about plant care, pests, soil…"
+              placeholder={t("bot_input_placeholder", "Ask about plant care, pests, soil…")}
               value={input}
               onChange={(e) => setInput(e.target.value)}
               disabled={loading}

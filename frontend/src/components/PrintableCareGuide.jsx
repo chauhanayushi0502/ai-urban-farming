@@ -1,7 +1,10 @@
 import { Printer, Sprout, Droplets, Sun, Sparkles, X, Check, ShieldCheck } from "lucide-react";
+import { useLanguage } from "../i18n/LanguageContext.jsx";
+import { formatNameByLanguage } from "../lib/format.js";
 
 export default function PrintableCareGuide({ plant, onClose, settings }) {
   if (!plant) return null;
+  const { t, language } = useLanguage();
 
   function handlePrint() {
     window.print();
@@ -21,8 +24,8 @@ export default function PrintableCareGuide({ plant, onClose, settings }) {
             <span style={{ fontSize: "11px", textTransform: "uppercase", letterSpacing: "1px", fontWeight: "700", color: "var(--green)" }}>
               {settings?.site_name || "Green Leaf Nursery"} Official Care Sheet
             </span>
-            <h2 style={{ fontSize: "20px", margin: "4px 0 0" }}>{plant.name}</h2>
-            <p className="muted" style={{ fontSize: "12px", margin: "2px 0 0" }}>Botanical Classification: {speciesName}</p>
+            <h2 style={{ fontSize: "20px", margin: "4px 0 0" }}>{formatNameByLanguage(plant.name, language)}</h2>
+            <p className="muted" style={{ fontSize: "12px", margin: "2px 0 0" }}>Botanical Classification: {formatNameByLanguage(speciesName, language)}</p>
           </div>
           <button className="modal-close" onClick={onClose} aria-label="Close">
             <X size={18} />

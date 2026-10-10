@@ -1,8 +1,10 @@
 import { Printer, X, CheckCircle, Clock, ShieldCheck, Download } from "lucide-react";
-import { money } from "../lib/format.js";
+import { money, formatNameByLanguage } from "../lib/format.js";
+import { useLanguage } from "../i18n/LanguageContext.jsx";
 
 export default function InvoiceModal({ order, onClose }) {
   if (!order) return null;
+  const { language } = useLanguage();
 
   const handlePrint = () => {
     window.print();
@@ -107,7 +109,7 @@ export default function InvoiceModal({ order, onClose }) {
                 <tr key={idx}>
                   <td>{idx + 1}</td>
                   <td>
-                    <strong>{item.name}</strong>
+                    <strong>{formatNameByLanguage(item.name, language)}</strong>
                   </td>
                   <td className="text-center">{item.quantity}</td>
                   <td className="text-right">{money(item.price)}</td>

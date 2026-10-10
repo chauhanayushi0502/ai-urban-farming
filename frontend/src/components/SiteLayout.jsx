@@ -63,7 +63,6 @@ export function Header() {
         <NavLink to="/garden" onClick={() => setMenuOpen(false)}>{t("nav_garden", "AI Garden Doctor")}</NavLink>
         <NavLink to="/calendar" onClick={() => setMenuOpen(false)}>{t("nav_calendar", "Care Calendar")}</NavLink>
         <NavLink to="/planner" onClick={() => setMenuOpen(false)}>{t("nav_planner", "Crop Planner")}</NavLink>
-        <NavLink to="/pilot" onClick={() => setMenuOpen(false)}>{t("nav_pilot", "Gardener Pilot")}</NavLink>
         <NavLink to="/about" onClick={() => setMenuOpen(false)}>{t("nav_story", "Our story")}</NavLink>
         <NavLink to="/contact" onClick={() => setMenuOpen(false)}>{t("nav_contact", "Contact")}</NavLink>
 

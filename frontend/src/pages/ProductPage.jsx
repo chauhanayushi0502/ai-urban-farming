@@ -21,13 +21,13 @@ import { useApp, useToast } from "../context/AppContext.jsx";
 import { useLanguage } from "../i18n/LanguageContext.jsx";
 import { useLoad } from "../hooks/useLoad.js";
 import { api } from "../lib/api.js";
-import { imageSource, money } from "../lib/format.js";
+import { imageSource, money, formatNameByLanguage, formatDescriptionByLanguage } from "../lib/format.js";
 import PrintableCareGuide from "../components/PrintableCareGuide.jsx";
 
 export default function ProductPage() {
   const { id } = useParams();
   const { user, settings, syncCart } = useApp();
-  const { t } = useLanguage();
+  const { t, language } = useLanguage();
   const { data: product, loading, error, reload } = useLoad(`/products/${id}`, null);
   const notify = useToast();
   const [quantity, setQuantity] = useState(1);
@@ -110,11 +110,11 @@ export default function ProductPage() {
       </Link>
       <div className="product-detail">
         <div className="detail-photo">
-          <img src={imageSource(product.image)} alt={product.name} loading="lazy" decoding="async" />
+          <img src={imageSource(product.image)} alt={formatNameByLanguage(product.name, language)} loading="lazy" decoding="async" />
         </div>
         <section className="detail-copy">
-          <p className="eyebrow">{product.category?.name || "Green Leaf collection"}</p>
-          <h1>{product.name}</h1>
+          <p className="eyebrow">{formatNameByLanguage(product.category?.name || "Green Leaf collection", language)}</p>
+          <h1>{formatNameByLanguage(product.name, language)}</h1>
           <div className="rating-line">
             <span className="stars">
               <Star size={17} fill="currentColor" /> {product.averageRating || t("new_tag", "New")}
@@ -132,7 +132,7 @@ export default function ProductPage() {
               : t("stock_out", "Currently out of stock")}
           </p>
           <p className="detail-description">
-            {product.description ||
+            {formatDescriptionByLanguage(product.description, language, product.name) ||
               t("product_default_desc", "A thoughtful addition to your indoor garden. Give it a little care and room to grow.")}
           </p>
 
@@ -204,7 +204,7 @@ export default function ProductPage() {
                   />
                 ))}
               </div>
-              <span className="text-xs muted">Based on {reviews.length} reviews</span>
+              <span className="text-xs muted">{t("based_on_reviews", "Based on {count} reviews").replace("{count}", reviews.length)}</span>
             </div>
 
             <div className="breakdown-bars">
@@ -279,7 +279,7 @@ export default function ProductPage() {
               <select value={rating} onChange={(event) => setRating(Number(event.target.value))}>
                 {[5, 4, 3, 2, 1].map((value) => (
                   <option value={value} key={value}>
-                    {value} ★ {value === 5 ? "(Loved it!)" : value === 4 ? "(Very Good)" : value === 3 ? "(Average)" : "(Needs Care)"}
+                    {value === 5 ? t("rating_5", "5 ★ (Loved it!)") : value === 4 ? t("rating_4", "4 ★ (Very Good)") : value === 3 ? t("rating_3", "3 ★ (Average)") : value === 2 ? t("rating_2", "2 ★ (Needs Care)") : t("rating_1", "1 ★ (Poor)")}
                   </option>
                 ))}
               </select>

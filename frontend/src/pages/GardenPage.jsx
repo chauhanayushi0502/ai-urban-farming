@@ -34,7 +34,7 @@ import {
 } from "lucide-react";
 import { useToast, useApp } from "../context/AppContext.jsx";
 import { api } from "../lib/api.js";
-import { imageSource, money } from "../lib/format.js";
+import { imageSource, money, formatNameByLanguage, formatDescriptionByLanguage } from "../lib/format.js";
 import { validatePlantImageFile, compressAndOptimizeImage, checkIsLikelyPlantImage, analyzePlantFoliageHealth } from "../lib/image-optimizer.js";
 import GardenSynergyWidget from "../components/GardenSynergy.jsx";
 import PrintableCareGuide from "../components/PrintableCareGuide.jsx";
@@ -911,11 +911,11 @@ export default function GardenPage({ initialTab }) {
       <div className="garden-header">
         <div className="garden-title">
           <p className="eyebrow">
-            <Sprout size={15} /> Urban Agriculture & AI Care
+            <Sprout size={15} /> {t("garden_eyebrow", "Urban Agriculture & AI Care")}
           </p>
-          <h1>AI Plant Doctor & Garden Assistant</h1>
+          <h1>{t("garden_h1", "AI Plant Doctor & Garden Assistant")}</h1>
           <p>
-            Upload your plant leaf photo to let AI identify the botanical plant species, diagnose diseases, provide tailored care routines, and set automated reminders.
+            {t("garden_desc", "Upload your plant leaf photo to let AI identify the botanical plant species, diagnose diseases, provide tailored care routines, and set automated reminders.")}
           </p>
         </div>
         <div className="garden-header-actions">
@@ -923,13 +923,13 @@ export default function GardenPage({ initialTab }) {
             className="button button-outline button-small"
             onClick={() => openDoctorModal(null)}
           >
-            <HeartPulse size={15} /> 🩺 AI Doctor & Climate Clinic
+            <HeartPulse size={15} /> {t("btn_ai_doctor", "🩺 AI Doctor & Climate Clinic")}
           </button>
           <button
             className="button button-outline button-small"
             onClick={() => openDiagnosisModal()}
           >
-            <Sparkles size={15} /> Quick Leaf Scan
+            <Sparkles size={15} /> {t("btn_quick_scan", "Quick Leaf Scan")}
           </button>
           <button
             className="button button-small"
@@ -955,7 +955,7 @@ export default function GardenPage({ initialTab }) {
               setModalType("add");
             }}
           >
-            <Plus size={16} /> Add Plant (AI Photo Scanner)
+            <Plus size={16} /> {t("btn_add_plant_scanner", "Add Plant (AI Photo Scanner)")}
           </button>
         </div>
       </div>
@@ -970,7 +970,7 @@ export default function GardenPage({ initialTab }) {
               <span className="live-gps-dot" title="Live GPS & Climate Signal" />
               <div className="garden-weather-city-title">
                 <MapPin size={17} color="var(--green)" />
-                <span>{weather.city || (locationDetected ? "Live GPS Location" : "Auto-Detected Climate")}</span>
+                <span>{weather.city || (locationDetected ? t("live_gps_loc", "Live GPS Location") : t("auto_detected_climate", "Auto-Detected Climate"))}</span>
               </div>
             </div>
 
@@ -982,7 +982,7 @@ export default function GardenPage({ initialTab }) {
                     <Search size={14} color="var(--muted)" />
                     <input
                       type="text"
-                      placeholder="Search city/area (e.g. Mumbai, Pune)..."
+                      placeholder={t("search_city_placeholder", "Search city/area (e.g. Mumbai, Pune)...")}
                       value={locationSearchQuery}
                       onChange={(e) => handleLocationSearch(e.target.value)}
                       autoFocus
@@ -1007,7 +1007,7 @@ export default function GardenPage({ initialTab }) {
                     onClick={() => setShowLocationSearch(true)}
                     title="Search weather for another city or locality"
                   >
-                    <Search size={13} /> Change City
+                    <Search size={13} /> {t("change_city", "Change City")}
                   </button>
                 )}
 
@@ -1044,7 +1044,7 @@ export default function GardenPage({ initialTab }) {
                 title="Detect live GPS location from browser"
               >
                 <Navigation size={13} className={locationDetecting ? "spin" : ""} />
-                {locationDetecting ? "Locating…" : "Use My Live Location"}
+                {locationDetecting ? t("locating", "Locating…") : t("use_live_location", "Use My Live Location")}
               </button>
 
               {/* Refresh Button */}
@@ -1064,37 +1064,37 @@ export default function GardenPage({ initialTab }) {
           {/* 5 Weather Metrics Grid */}
           <div className="garden-weather-stats-row">
             <div className="garden-weather-stat-card">
-              <span className="w-label"><Thermometer size={12} color="#d9534f" /> Temperature</span>
+              <span className="w-label"><Thermometer size={12} color="#d9534f" /> {t("weather_temp", "Temperature")}</span>
               <span className="w-val">{weather.temperature}°C</span>
               <span className="w-sub">
                 {weather.minTemperature !== undefined && weather.maxTemperature !== undefined
                   ? `L: ${weather.minTemperature}° • H: ${weather.maxTemperature}°`
-                  : "Live Ambient"}
+                  : t("live_ambient", "Live Ambient")}
               </span>
             </div>
 
             <div className="garden-weather-stat-card">
-              <span className="w-label"><Droplets size={12} color="#2b75a0" /> Humidity</span>
+              <span className="w-label"><Droplets size={12} color="#2b75a0" /> {t("weather_humidity", "Humidity")}</span>
               <span className="w-val">{weather.humidity}%</span>
-              <span className="w-sub">{weather.humidity > 75 ? "High moisture" : "Optimal"}</span>
+              <span className="w-sub">{weather.humidity > 75 ? t("high_moisture", "High moisture") : t("optimal_moisture", "Optimal")}</span>
             </div>
 
             <div className="garden-weather-stat-card">
-              <span className="w-label"><Sun size={12} color="#f0ad4e" /> Condition</span>
+              <span className="w-label"><Sun size={12} color="#f0ad4e" /> {t("weather_condition", "Condition")}</span>
               <span className="w-val" style={{ fontSize: "13px" }}>{weather.condition}</span>
-              <span className="w-sub">{weather.rainAlert ? "Rain alert" : "Gardening friendly"}</span>
+              <span className="w-sub">{weather.rainAlert ? t("rain_alert", "Rain alert") : t("gardening_friendly", "Gardening friendly")}</span>
             </div>
 
             <div className="garden-weather-stat-card">
-              <span className="w-label"><CloudRain size={12} color="#5bc0de" /> Rainfall</span>
+              <span className="w-label"><CloudRain size={12} color="#5bc0de" /> {t("weather_rain", "Rainfall")}</span>
               <span className="w-val">{weather.precipitation || 0} mm</span>
-              <span className="w-sub">{weather.precipitation > 0 ? "Precipitation today" : "No rain today"}</span>
+              <span className="w-sub">{weather.precipitation > 0 ? t("precip_today", "Precipitation today") : t("no_rain_today", "No rain today")}</span>
             </div>
 
             <div className="garden-weather-stat-card">
-              <span className="w-label"><Wind size={12} color="#6c757d" /> Wind Speed</span>
+              <span className="w-label"><Wind size={12} color="#6c757d" /> {t("weather_wind", "Wind Speed")}</span>
               <span className="w-val">{weather.windSpeed || 8} km/h</span>
-              <span className="w-sub">Gentle breeze</span>
+              <span className="w-sub">{t("gentle_breeze", "Gentle breeze")}</span>
             </div>
           </div>
 
@@ -1102,7 +1102,7 @@ export default function GardenPage({ initialTab }) {
           <div className="garden-weather-advice-box">
             <HeartPulse size={16} color="var(--green)" style={{ flexShrink: 0, marginTop: "1px" }} />
             <div>
-              <strong>🩺 Live Climate AI Advisory: </strong>
+              <strong>{t("live_climate_advisory", "🩺 Live Climate AI Advisory:")} </strong>
               {weather.tip}
             </div>
           </div>
@@ -1113,44 +1113,44 @@ export default function GardenPage({ initialTab }) {
       <div className="garden-overview-grid">
         <div className="stat-card">
           <div className="stat-card-top">
-            <span>Total Plants</span>
+            <span>{t("stat_total_plants", "Total Plants")}</span>
             <Sprout size={20} />
           </div>
           <div className="stat-card-num">{stats.total}</div>
-          <div className="stat-card-desc">Active in your garden</div>
+          <div className="stat-card-desc">{t("stat_active_in_garden", "Active in your garden")}</div>
         </div>
 
         <div className="stat-card">
           <div className="stat-card-top">
-            <span>Water Due Today</span>
+            <span>{t("stat_water_due_today", "Water Due Today")}</span>
             <Droplets size={20} color="#2b75a0" />
           </div>
           <div className="stat-card-num">{stats.needsWater}</div>
           <div className="stat-card-desc">
-            {stats.needsWater > 0 ? "Needs hydration today" : "All plants sufficiently hydrated"}
+            {stats.needsWater > 0 ? t("stat_needs_hydration", "Needs hydration today") : t("stat_all_hydrated", "All plants sufficiently hydrated")}
           </div>
         </div>
 
         <div className="stat-card">
           <div className="stat-card-top">
-            <span>Needs Attention</span>
+            <span>{t("stat_needs_attention", "Needs Attention")}</span>
             <AlertTriangle size={20} color="var(--rust)" />
           </div>
           <div className="stat-card-num">{stats.diseased}</div>
           <div className="stat-card-desc">
-            {stats.diseased > 0 ? "Under medical observation" : "No diseases detected"}
+            {stats.diseased > 0 ? t("stat_under_obs", "Under medical observation") : t("stat_no_diseases", "No diseases detected")}
           </div>
         </div>
 
         <div className="stat-card">
           <div className="stat-card-top">
-            <span>Garden Health</span>
+            <span>{t("stat_garden_health", "Garden Health")}</span>
             <HeartPulse size={20} color="#358044" />
           </div>
           <div className="stat-card-num">
             {stats.total > 0 ? `${Math.round(((stats.healthy || 0) / stats.total) * 100)}%` : "100%"}
           </div>
-          <div className="stat-card-desc">Overall vitality score</div>
+          <div className="stat-card-desc">{t("stat_vitality_score", "Overall vitality score")}</div>
         </div>
       </div>
 
@@ -1169,46 +1169,46 @@ export default function GardenPage({ initialTab }) {
               <Sprout size={28} />
             </div>
             <h2 style={{ fontSize: "24px", color: "var(--foreground)", margin: "0 0 10px" }}>
-              Unlock Your Personal AI Smart Garden
+              {t("unlock_smart_garden", "Unlock Your Personal AI Smart Garden")}
             </h2>
             <p className="muted" style={{ fontSize: "15px", lineHeight: "1.6", margin: "0 0 24px" }}>
-              You can view live climate data and explore all nursery products below. To add your own plants, diagnose leaf diseases with AI, consult the AI Plant Doctor, and receive automated watering alerts, please sign in to your account.
+              {t("unlock_smart_garden_desc", "You can view live climate data and explore all nursery products below. To add your own plants, diagnose leaf diseases with AI, consult the AI Plant Doctor, and receive automated watering alerts, please sign in to your account.")}
             </p>
 
             {/* 4 Feature highlight pills */}
             <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(220px, 1fr))", gap: "12px", textAlign: "left", marginBottom: "28px" }}>
               <div style={{ background: "white", padding: "14px 16px", borderRadius: "8px", border: "1px solid #d4ebd8" }}>
                 <strong style={{ display: "flex", alignItems: "center", gap: "8px", color: "var(--green-deep)", fontSize: "14px" }}>
-                  <Sparkles size={16} /> AI Disease Scanner
+                  <Sparkles size={16} /> {t("feature_ai_scanner", "AI Disease Scanner")}
                 </strong>
-                <p style={{ margin: "4px 0 0", fontSize: "12px", color: "#555" }}>Snap leaf photos for instant pathogen analysis & organic remedies.</p>
+                <p style={{ margin: "4px 0 0", fontSize: "12px", color: "#555" }}>{t("feature_ai_scanner_sub", "Snap leaf photos for instant pathogen analysis & organic remedies.")}</p>
               </div>
               <div style={{ background: "white", padding: "14px 16px", borderRadius: "8px", border: "1px solid #d4ebd8" }}>
                 <strong style={{ display: "flex", alignItems: "center", gap: "8px", color: "#2563eb", fontSize: "14px" }}>
-                  <HeartPulse size={16} /> AI Plant Doctor
+                  <HeartPulse size={16} /> {t("feature_ai_doctor", "AI Plant Doctor")}
                 </strong>
-                <p style={{ margin: "4px 0 0", fontSize: "12px", color: "#555" }}>Ask unlimited questions tailored to your plant species & city climate.</p>
+                <p style={{ margin: "4px 0 0", fontSize: "12px", color: "#555" }}>{t("feature_ai_doctor_sub", "Ask unlimited questions tailored to your plant species & city climate.")}</p>
               </div>
               <div style={{ background: "white", padding: "14px 16px", borderRadius: "8px", border: "1px solid #d4ebd8" }}>
                 <strong style={{ display: "flex", alignItems: "center", gap: "8px", color: "#0891b2", fontSize: "14px" }}>
-                  <Droplets size={16} /> Smart Watering
+                  <Droplets size={16} /> {t("feature_smart_watering", "Smart Watering")}
                 </strong>
-                <p style={{ margin: "4px 0 0", fontSize: "12px", color: "#555" }}>Get automated notifications so you never over- or under-water.</p>
+                <p style={{ margin: "4px 0 0", fontSize: "12px", color: "#555" }}>{t("feature_smart_watering_sub", "Get automated notifications so you never over- or under-water.")}</p>
               </div>
               <div style={{ background: "white", padding: "14px 16px", borderRadius: "8px", border: "1px solid #d4ebd8" }}>
                 <strong style={{ display: "flex", alignItems: "center", gap: "8px", color: "#d97706", fontSize: "14px" }}>
-                  <ShieldCheck size={16} /> Care History Logs
+                  <ShieldCheck size={16} /> {t("feature_care_history", "Care History Logs")}
                 </strong>
-                <p style={{ margin: "4px 0 0", fontSize: "12px", color: "#555" }}>Track growth, treatments, and recoveries over time.</p>
+                <p style={{ margin: "4px 0 0", fontSize: "12px", color: "#555" }}>{t("feature_care_history_sub", "Track growth, treatments, and recoveries over time.")}</p>
               </div>
             </div>
 
             <div style={{ display: "flex", gap: "12px", justifyContent: "center", flexWrap: "wrap" }}>
               <Link to="/login?redirect=/garden" className="button" style={{ padding: "10px 22px", fontSize: "14px" }}>
-                Sign In to Access Features <ArrowRight size={16} />
+                {t("signin_to_access", "Sign In to Access Features")} <ArrowRight size={16} />
               </Link>
               <Link to="/register?redirect=/garden" className="button button-outline" style={{ padding: "10px 22px", fontSize: "14px" }}>
-                Create Free Account
+                {t("create_free_acc", "Create Free Account")}
               </Link>
             </div>
           </div>
@@ -1222,28 +1222,28 @@ export default function GardenPage({ initialTab }) {
               className={`garden-feature-nav-btn ${activeGardenTab === "plants" ? "active" : ""}`}
               onClick={() => setActiveGardenTab("plants")}
             >
-              <Sprout size={16} /> My Plants ({plants.length})
+              <Sprout size={16} /> {t("tab_my_plants", "My Plants")} ({plants.length})
             </button>
             <button
               type="button"
               className={`garden-feature-nav-btn ${activeGardenTab === "calendar" ? "active" : ""}`}
               onClick={() => setActiveGardenTab("calendar")}
             >
-              <Calendar size={16} /> Care Calendar & Schedule
+              <Calendar size={16} /> {t("tab_care_calendar", "Care Calendar & Schedule")}
             </button>
             <button
               type="button"
               className={`garden-feature-nav-btn ${activeGardenTab === "calculator" ? "active" : ""}`}
               onClick={() => setActiveGardenTab("calculator")}
             >
-              <Calculator size={16} /> Soil & Potting Calculator
+              <Calculator size={16} /> {t("tab_soil_calc", "Soil & Potting Calculator")}
             </button>
             <button
               type="button"
               className={`garden-feature-nav-btn ${activeGardenTab === "synergy" ? "active" : ""}`}
               onClick={() => setActiveGardenTab("synergy")}
             >
-              <Sparkles size={16} /> Companion Synergy
+              <Sparkles size={16} /> {t("tab_synergy", "Companion Synergy")}
             </button>
           </div>
 
@@ -1273,30 +1273,30 @@ export default function GardenPage({ initialTab }) {
                 className={`garden-tab-btn ${filter === "all" ? "active" : ""}`}
                 onClick={() => setFilter("all")}
               >
-                All Plants ({plants.length})
+                {t("filter_all_plants", "All Plants")} ({plants.length})
               </button>
               <button
                 className={`garden-tab-btn ${filter === "needs_water" ? "active" : ""}`}
                 onClick={() => setFilter("needs_water")}
               >
-                Needs Water ({stats.needsWater})
+                {t("filter_needs_water", "Needs Water")} ({stats.needsWater})
               </button>
               <button
                 className={`garden-tab-btn ${filter === "diseased" ? "active" : ""}`}
                 onClick={() => setFilter("diseased")}
               >
-                Under Care / Diseased ({stats.diseased})
+                {t("filter_diseased", "Under Care / Diseased")} ({stats.diseased})
               </button>
               <button
                 className={`garden-tab-btn ${filter === "healthy" ? "active" : ""}`}
                 onClick={() => setFilter("healthy")}
               >
-                Healthy ({stats.healthy})
+                {t("filter_healthy", "Healthy")} ({stats.healthy})
               </button>
             </div>
 
             <span className="muted" style={{ fontSize: "12px" }}>
-              {plants.length} plant{plants.length !== 1 ? "s" : ""} registered
+              {plants.length} {t("plants_registered", "plants registered")}
             </span>
           </div>
 
@@ -1304,9 +1304,9 @@ export default function GardenPage({ initialTab }) {
           {filteredPlants.length === 0 ? (
             <div style={{ textAlign: "center", padding: "48px 20px", background: "white", borderRadius: "8px", border: "1px solid var(--line)", marginBottom: "36px" }}>
               <Sprout size={36} color="var(--muted)" style={{ margin: "0 auto 12px" }} />
-              <h3>No plants found in your garden</h3>
+              <h3>{t("no_plants_found", "No plants found in your garden")}</h3>
               <p className="muted" style={{ fontSize: "13px" }}>
-                Add your plant by uploading a photo with the AI scanner above.
+                {t("no_plants_desc", "Add your plant by uploading a photo with the AI scanner above.")}
               </p>
             </div>
           ) : (
@@ -1327,23 +1327,23 @@ export default function GardenPage({ initialTab }) {
 
                       <div className="plant-card-head">
                         <div className="plant-card-title">
-                          <h3>{plant.name}</h3>
+                          <h3>{formatNameByLanguage(plant.name, language)}</h3>
                           <div className="plant-card-species">
                             <span className="plant-card-original-badge">
-                              🌱 Original: {origName}
+                              🌱 {t("original_label", "Original:")} {formatNameByLanguage(origName, language)}
                             </span>
                             <span style={{ display: "block", marginTop: "4px", fontSize: "11px", color: "var(--muted)" }}>
-                              Location: {plant.location || "balcony"}
+                              {t("location_label", "Location:")} {plant.location || "balcony"}
                             </span>
                           </div>
                         </div>
                         <span className={`health-pill ${statusClass}`}>
-                          {statusClass === "healthy" && "🟢 Healthy"}
-                          {statusClass === "underwatered" && "⚠️ Dehydrated"}
-                          {statusClass === "overwatered" && "💧 Overwatered"}
-                          {statusClass === "diseased" && "🔴 Diseased"}
-                          {statusClass === "needs_attention" && "🟡 Needs Care"}
-                          {statusClass === "recovering" && "🔵 Recovering"}
+                          {statusClass === "healthy" && t("health_healthy", "🟢 Healthy")}
+                          {statusClass === "underwatered" && t("health_dehydrated", "⚠️ Dehydrated")}
+                          {statusClass === "overwatered" && t("health_overwatered", "💧 Overwatered")}
+                          {statusClass === "diseased" && t("health_diseased", "🔴 Diseased")}
+                          {statusClass === "needs_attention" && t("health_needs_care", "🟡 Needs Care")}
+                          {statusClass === "recovering" && t("health_recovering", "🔵 Recovering")}
                         </span>
                       </div>
 
@@ -1357,16 +1357,16 @@ export default function GardenPage({ initialTab }) {
                       {/* Watering Status Box */}
                       <div className="watering-box">
                         <div className="watering-box-row">
-                          <span>💧 How Much Water:</span>
+                          <span>{t("how_much_water", "💧 How Much Water:")}</span>
                           <strong>{plant.waterQuantityMl || "300ml - 400ml"}</strong>
                         </div>
                         <div className="watering-box-row" style={{ marginTop: "4px" }}>
-                          <span>⏰ When to Water:</span>
+                          <span>{t("when_to_water", "⏰ When to Water:")}</span>
                           <strong>
                             {isDue ? (
-                              <span style={{ color: "var(--rust)" }}>💧 Due Today</span>
+                              <span style={{ color: "var(--rust)" }}>{t("due_today", "💧 Due Today")}</span>
                             ) : (
-                              <span style={{ color: "var(--green)" }}>{plant.wateringEvaluation?.statusText || "✓ On Track"}</span>
+                              <span style={{ color: "var(--green)" }}>{plant.wateringEvaluation?.statusText || t("on_track", "✓ On Track")}</span>
                             )}
                           </strong>
                         </div>
@@ -1382,7 +1382,7 @@ export default function GardenPage({ initialTab }) {
                         <div className="nutrient-box">
                           <div style={{ display: "flex", alignItems: "center", gap: "6px", fontSize: "11px", fontWeight: "700", color: "#6a521a" }}>
                             <Sparkles size={13} color="#a07c2a" />
-                            <span>Nutrients & Plant Food:</span>
+                            <span>{t("nutrients_label", "Nutrients & Plant Food:")}</span>
                           </div>
                           <div style={{ fontSize: "11px", color: "#5a4d2e", marginTop: "3px", lineHeight: "1.4" }}>
                             {plant.nutrientAdvice}
@@ -1393,14 +1393,14 @@ export default function GardenPage({ initialTab }) {
                       {/* In-app Notification status */}
                       <div className="notification-status-tag">
                         <Bell size={12} color="var(--green)" />
-                        <span>In-App Reminders Active ✓</span>
+                        <span>{t("reminders_active", "In-App Reminders Active ✓")}</span>
                       </div>
 
                       {/* IoT Moisture Reading */}
                       {moisture != null && (
                         <div className="plant-iot-bar">
                           <div className="plant-iot-label">
-                            <span>IoT Soil Moisture:</span>
+                            <span>{t("iot_soil_moisture", "IoT Soil Moisture:")}</span>
                             <strong>
                               {moisture}%{" "}
                               {moisture < 20 ? "(Dry)" : moisture > 70 ? "(Damp)" : "(Good)"}
@@ -1426,7 +1426,7 @@ export default function GardenPage({ initialTab }) {
                         style={{ width: "100%", justifyContent: "center" }}
                         onClick={() => openStepCareModal(plant)}
                       >
-                        <Sparkles size={14} /> View Step-by-Step Care Guide
+                        <Sparkles size={14} /> {t("view_step_care", "View Step-by-Step Care Guide")}
                       </button>
 
                       <div className="plant-card-actions" style={{ paddingTop: "8px" }}>
@@ -1435,14 +1435,14 @@ export default function GardenPage({ initialTab }) {
                           onClick={() => handleWaterPlant(plant)}
                           title="Log that you watered this plant today"
                         >
-                          <Droplets size={14} /> Watered
+                          <Droplets size={14} /> {t("btn_watered", "Watered")}
                         </button>
                         <button
                           className="btn-scan"
                           onClick={() => openDoctorModal(plant)}
                           title="Ask AI Plant Doctor advice for this plant"
                         >
-                          <MessageSquare size={14} /> Doctor
+                          <MessageSquare size={14} /> {t("btn_doctor", "Doctor")}
                         </button>
                         <button
                           className="btn-mini-icon"
@@ -1488,15 +1488,15 @@ export default function GardenPage({ initialTab }) {
         <div className="nursery-section-head">
           <div>
             <p className="eyebrow">
-              <ShoppingBag size={14} /> Green Leaf Nursery Catalog
+              <ShoppingBag size={14} /> {t("nursery_catalog", "Green Leaf Nursery Catalog")}
             </p>
-            <h2>Recommended Care Products & Plants (Category-Wise)</h2>
+            <h2>{t("rec_care_products", "Recommended Care Products & Plants (Category-Wise)")}</h2>
             <p className="muted" style={{ margin: "2px 0 0", fontSize: "13px" }}>
-              Organic medicines, nutrient foods, breathable planters, and healthy plants directly from our nursery.
+              {t("rec_care_sub", "Organic medicines, nutrient foods, breathable planters, and healthy plants directly from our nursery.")}
             </p>
           </div>
           <Link to="/products" className="button button-outline button-small">
-            Browse Full Shop <ArrowRight size={14} />
+            {t("browse_full_shop", "Browse Full Shop")} <ArrowRight size={14} />
           </Link>
         </div>
 
@@ -1507,7 +1507,7 @@ export default function GardenPage({ initialTab }) {
             className={`nursery-cat-btn ${selectedCategoryTab === "all" ? "active" : ""}`}
             onClick={() => setSelectedCategoryTab("all")}
           >
-            All Products ({nurseryProducts.length})
+            {t("all_products", "All Products")} ({nurseryProducts.length})
           </button>
           {categories.map((c) => (
             <button
@@ -1516,7 +1516,7 @@ export default function GardenPage({ initialTab }) {
               className={`nursery-cat-btn ${selectedCategoryTab.toLowerCase() === c.name.toLowerCase() ? "active" : ""}`}
               onClick={() => setSelectedCategoryTab(c.name)}
             >
-              {c.name}
+              {formatNameByLanguage(c.name, language)}
             </button>
           ))}
         </div>
@@ -1528,19 +1528,19 @@ export default function GardenPage({ initialTab }) {
               <Link to={`/products/${product._id}`}>
                 <img
                   src={imageSource(product.image)}
-                  alt={product.name}
+                  alt={formatNameByLanguage(product.name, language)}
                   className="nursery-prod-img"
                   loading="lazy"
                 />
               </Link>
               <div className="nursery-prod-body">
                 <span className="nursery-prod-category">
-                  {product.category?.name || "Nursery Plant"}
+                  {formatNameByLanguage(product.category?.name || "Nursery Plant", language)}
                 </span>
                 <Link to={`/products/${product._id}`} className="nursery-prod-title">
-                  {product.name}
+                  {formatNameByLanguage(product.name, language)}
                 </Link>
-                <p className="nursery-prod-desc">{product.description}</p>
+                <p className="nursery-prod-desc">{formatDescriptionByLanguage(product.description, language, product.name)}</p>
 
                 <div className="nursery-prod-footer">
                   <span className="nursery-prod-price">
@@ -1551,7 +1551,7 @@ export default function GardenPage({ initialTab }) {
                     className="nursery-prod-buy-btn"
                     onClick={() => handleAddProductToCart(product)}
                   >
-                    <Plus size={14} /> Add to Cart
+                    <Plus size={14} /> {t("add_to_cart", "Add to Cart")}
                   </button>
                 </div>
               </div>

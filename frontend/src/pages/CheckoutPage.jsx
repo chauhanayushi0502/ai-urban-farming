@@ -22,13 +22,13 @@ import { useApp, useToast } from "../context/AppContext.jsx";
 import { useLanguage } from "../i18n/LanguageContext.jsx";
 import { useLoad } from "../hooks/useLoad.js";
 import { api } from "../lib/api.js";
-import { imageSource, money } from "../lib/format.js";
+import { imageSource, money, formatNameByLanguage } from "../lib/format.js";
 
 const roundMoney = (amount) => Math.round((amount + Number.EPSILON) * 100) / 100;
 
 export default function CheckoutPage() {
   const { user, settings, syncCart } = useApp();
-  const { t } = useLanguage();
+  const { t, language } = useLanguage();
   const { data: cart, loading } = useLoad("/cart", { items: [] });
   const { data: publicCoupons } = useLoad("/coupons/public", []);
   const notify = useToast();
@@ -505,7 +505,7 @@ export default function CheckoutPage() {
             <div className="checkout-item" key={product._id}>
               <img src={imageSource(product.image)} alt="" />
               <span>
-                {product.name} <small>× {quantity}</small>
+                {formatNameByLanguage(product.name, language)} <small>× {quantity}</small>
               </span>
               <strong>{money(product.price * quantity, settings.currency)}</strong>
             </div>

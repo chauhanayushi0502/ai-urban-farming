@@ -24,7 +24,6 @@ import { useNavigate } from "react-router-dom";
 import { useApp, useToast } from "../context/AppContext.jsx";
 import { useLanguage } from "../i18n/LanguageContext.jsx";
 import { api } from "../lib/api.js";
-import GardenerPilotPortal from "./GardenerPilotPortal.jsx";
 
 export default function CropPlanner() {
   const { user, syncCart } = useApp();
@@ -558,11 +557,6 @@ export default function CropPlanner() {
           </div>
         </div>
       )}
-
-      {/* ========================================================
-          3. REGIONAL & SEASONAL RECOMMENDATIONS, PHOTO HEALTH & PILOT PORTAL
-         ======================================================== */}
-      <GardenerPilotPortal openPhotoScanModal={() => navigate("/garden")} />
     </section>
   );
 }
